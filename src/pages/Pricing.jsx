@@ -19,9 +19,9 @@ import { Check, X, Zap, Crown, Shield, LogOut, CheckCircle } from 'lucide-react'
 import { useToast } from '../components/Toast';
 import './Pricing.css';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:4000';
 // Add trailing slash removal to ensure consistent URL concatenation
-const cleanApiUrl = API_BASE_URL.replace(/\/$/, "");
+const cleanApiUrl = API_URL.replace(/\/$/, "");
 
 const PLANS = [
   {

@@ -68,16 +68,7 @@ export function AppProvider({ children }) {
     ] : []
   );
 
-  // ── Sync Tutors from Firestore ──────────────────────────────────────────
-  useEffect(() => {
-    if (isMockMode || !db) return;
-    const q = query(collection(db, 'users'), where('role', '==', 'tutor'));
-    const unsub = onSnapshot(q, (snap) => {
-      const tutors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      setMockTutors(tutors);
-    });
-    return unsub;
-  }, [isMockMode]);
+  // Teacher lists and other secure listeners are now managed inside the auth observer.
 
   // ── Leads State ──
   const [mockLeads, setMockLeads] = useState([
@@ -414,25 +405,22 @@ export function AppProvider({ children }) {
             }
           );
         } else if (profile.role === 'student') {
-          // Materials Listener (Student view: see materials for ALL their enrolled batches)
+          // Materials Listener
           const batchIds = profile.enrolled_batches?.map(b => b.batch_id) || (profile.batch_id ? [profile.batch_id] : []);
-          
           if (batchIds.length > 0) {
             unsubMaterials = onSnapshot(
-              query(
-                collection(db, 'tutor_materials'), 
-                where('batch_id', 'in', batchIds),
-                where('visibility', '==', 'private')
-              ),
-              (snap) => {
-                const materials = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                setMockMaterials(materials);
-              }
+              query(collection(db, 'tutor_materials'), where('batch_id', 'in', batchIds), where('visibility', '==', 'private')),
+              (snap) => setMockMaterials(snap.docs.map(d => ({ id: d.id, ...d.data() })))
             );
-          } else {
-            setMockMaterials([]);
           }
         }
+
+        // ── Teacher Lists Listener (Always sync after login) ──
+        const tutorQ = query(collection(db, 'users'), where('role', '==', 'tutor'));
+        unsubProfile = onSnapshot(tutorQ, (snap) => {
+          const tutors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          setMockTutors(tutors);
+        });
       } catch (err) {
         console.error('Auth sync error:', err);
         setLoading(false);
