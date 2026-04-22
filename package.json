@@ -15,7 +15,10 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.14.1",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "firebase-admin": "^13.1.0",
+    "razorpay": "^2.9.7",
+    "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
