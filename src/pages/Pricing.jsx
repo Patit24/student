@@ -102,13 +102,31 @@ export default function Pricing() {
   const [serverOnline, setServerOnline] = useState(false);
   const [success,      setSuccess]      = useState(false); // post-payment success state
 
-  // Check if payment server is available
+  // USER REQUIREMENT 4: Retry connection if first attempt fails (Cold Start handling)
   useEffect(() => {
-    fetch(`${SERVER_URL}/api/health`, { signal: AbortSignal.timeout(3000) })
-      .then(r => r.json())
-      .then(d => setServerOnline(d.razorpay === true))
-      .catch(() => setServerOnline(false));
-  }, []);
+    let retryCount = 0;
+    const maxRetries = 2;
+
+    const checkHealth = () => {
+      fetch(`${cleanApiUrl}/api/health`, { signal: AbortSignal.timeout(5000) })
+        .then(r => r.json())
+        .then(d => {
+          setServerOnline(d.razorpay === true);
+          setLoadingServer(false);
+        })
+        .catch(() => {
+          if (retryCount < maxRetries) {
+            retryCount++;
+            setTimeout(checkHealth, 2000); // 2s delay between retries
+          } else {
+            setServerOnline(false);
+            setLoadingServer(false);
+          }
+        });
+    };
+
+    checkHealth();
+  }, [cleanApiUrl]);
 
   // Removed auto-redirect to allow upgrades/plan changes
   /* 
