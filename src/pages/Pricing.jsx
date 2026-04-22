@@ -19,6 +19,8 @@ import { Check, X, Zap, Crown, Shield, LogOut, CheckCircle } from 'lucide-react'
 import './Pricing.css';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:4000';
+// Add trailing slash removal to ensure consistent URL concatenation
+const cleanApiUrl = SERVER_URL.replace(/\/$/, "");
 
 const PLANS = [
   {
@@ -130,15 +132,20 @@ export default function Pricing() {
       return;
     }
 
-    // ── Demo mode (no server / mock) ─────────────────────────────────────────
-    if (!serverOnline || isMockMode) {
+    // ── Real payment via server ───────────────────────────────────────────────
+    if (isMockMode) {
+      toast.info("Demo Mode: Subscribing instantly...");
       await updateTutorSubscription(plan.id);
       setSuccess(true);
       setTimeout(() => navigate('/tutor'), 2000);
       return;
     }
 
-    // ── Real payment via server ───────────────────────────────────────────────
+    if (!serverOnline) {
+      setRzpError('Payment server is offline. Please try again in a few minutes.');
+      setPaying(null);
+      return;
+    }
     const sdkLoaded = await loadRazorpay();
     if (!sdkLoaded) {
       setRzpError('Razorpay SDK failed to load. Check your internet connection.');
@@ -148,7 +155,7 @@ export default function Pricing() {
 
     let orderData;
     try {
-      const res = await fetch(`${SERVER_URL}/api/create-order`, {
+      const res = await fetch(`${cleanApiUrl}/api/resume/create-order`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({

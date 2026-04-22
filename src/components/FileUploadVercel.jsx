@@ -18,6 +18,7 @@ export default function FileUploadVercel({
   const toast = useToast();
 
   const API_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:4000';
+  const cleanApiUrl = API_URL.replace(/\/$/, "");
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
@@ -38,7 +39,7 @@ export default function FileUploadVercel({
     formData.append('folder', folder);
 
     try {
-      const response = await fetch(`${API_URL}/api/upload`, {
+      const response = await fetch(`${cleanApiUrl}/api/upload`, {
         method: 'POST',
         body: formData,
       });

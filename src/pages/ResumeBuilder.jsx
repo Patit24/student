@@ -12,6 +12,7 @@ import { ref, set, push, onValue } from 'firebase/database';
 import FileUploadVercel from '../components/FileUploadVercel';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:4000';
+const cleanApiUrl = SERVER_URL.replace(/\/$/, "");
 
 function loadRazorpay() {
   return new Promise((resolve) => {
@@ -213,7 +214,7 @@ export default function ResumeBuilder() {
     if (!sdkLoaded) return toast.error('Razorpay failed to load');
 
     try {
-      const res = await fetch(`${SERVER_URL}/api/resume/create-order`, {
+      const res = await fetch(`${cleanApiUrl}/api/resume/create-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ uid: currentUser.uid }),
