@@ -16,11 +16,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AuthContext';
 import { Check, X, Zap, Crown, Shield, LogOut, CheckCircle } from 'lucide-react';
+import { useToast } from '../components/Toast';
 import './Pricing.css';
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:4000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 // Add trailing slash removal to ensure consistent URL concatenation
-const cleanApiUrl = SERVER_URL.replace(/\/$/, "");
+const cleanApiUrl = API_BASE_URL.replace(/\/$/, "");
 
 const PLANS = [
   {
@@ -101,6 +102,7 @@ export default function Pricing() {
   const [rzpError,     setRzpError]     = useState('');
   const [serverOnline, setServerOnline] = useState(false);
   const [success,      setSuccess]      = useState(false); // post-payment success state
+  const [loadingServer, setLoadingServer] = useState(true);
 
   // USER REQUIREMENT 4: Retry connection if first attempt fails (Cold Start handling)
   useEffect(() => {
