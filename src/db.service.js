@@ -239,17 +239,10 @@ export async function lookupStudentByEmail(email) {
   return { id: d.id, ...d.data() };
 }
 
-/** Generate a secure readable temp password. e.g. Ant#mNpRk42 */
+/** Generate a secure readable temp password. e.g. Student@123456 */
 export function generateTempPassword() {
-  const chars   = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
-  const special = '!@#$';
-  const rand    = (s) => s[Math.floor(Math.random() * s.length)];
-  return (
-    'Ant' +
-    rand(special) +
-    Array.from({ length: 5 }, () => rand(chars)).join('') +
-    Math.floor(10 + Math.random() * 90)
-  );
+  const rand = Math.floor(100000 + Math.random() * 900000);
+  return `Student@${rand}`;
 }
 
 /**
@@ -272,6 +265,7 @@ export async function createStudentAccount(email, name, tutorId, batchId, monthl
       storageBucket:     'antigravity-tuition-os.firebasestorage.app',
       messagingSenderId: '1021639170510',
       appId:             '1:1021639170510:web:9d6a803eb5226d5be0f39f',
+      databaseURL:       'https://antigravity-tuition-os-default-rtdb.asia-southeast1.firebasedatabase.app',
     };
     secondaryApp = initializeApp(config, 'student-creator');
   }
