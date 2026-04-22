@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AuthContext';
-import { Shield, Check, Zap, LogOut, X, CheckCircle, Smartphone, QrCode, Crown } from 'lucide-react';
+import { Shield, Check, Zap, LogOut, X, CheckCircle, Smartphone, QrCode, Crown, Sparkles, ArrowRight } from 'lucide-react';
 import { useToast } from '../components/Toast';
-import './Pricing.css';
 
 const MY_UPI_ID = "9014842370@ybl";
 const MY_NAME   = "Antigravity Tuition";
@@ -11,50 +10,53 @@ const MY_NAME   = "Antigravity Tuition";
 const PLANS = [
   {
     id: 'starter',
-    label: 'STARTER',
+    label: 'Basic',
     priceINR: 0,
     period: '',
     tag: 'FREE',
     icon: Shield,
     color: '#94A3B8',
+    gradient: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
     features: [
-      { text: '1 Batch Allowed',    ok: true },
-      { text: '5 Students Max',     ok: true },
-      { text: 'Basic Analytics',    ok: true },
-      { text: 'Standard Support',   ok: true },
-      { text: 'Live Classes',       ok: false },
+      '1 Active Batch',
+      '5 Students Limit',
+      'Basic Performance Stats',
+      'Community Support',
+      'Cloud Storage (1GB)',
     ],
   },
   {
     id: 'growth',
-    label: 'GROWTH',
-    priceINR: 499,
+    label: 'Growth',
+    priceINR: 199,
     period: '/mo',
     tag: 'POPULAR',
     icon: Zap,
     color: '#F5C518',
+    gradient: 'linear-gradient(135deg, #F5C518 0%, #B45309 100%)',
     features: [
-      { text: '5 Batches Allowed',  ok: true },
-      { text: '50 Students Max',    ok: true },
-      { text: 'Live Classes',       ok: true },
-      { text: 'Exam Generation',    ok: true },
-      { text: 'Priority Support',   ok: true },
+      '5 Active Batches',
+      '50 Students Limit',
+      'Smart AI Exam Gen',
+      'Live Streaming Access',
+      'Priority Email Support',
     ],
   },
   {
     id: 'pro',
-    label: 'ELITE',
-    priceINR: 799,
+    label: 'Elite',
+    priceINR: 399,
     period: '/mo',
-    tag: 'UNLIMITED',
-    icon: Shield,
+    tag: 'BEST VALUE',
+    icon: Crown,
     color: '#818CF8',
+    gradient: 'linear-gradient(135deg, #6366f1 0%, #312e81 100%)',
     features: [
-      { text: 'Unlimited Batches',  ok: true },
-      { text: 'Unlimited Students', ok: true },
-      { text: 'Custom Branding',    ok: true },
-      { text: 'White-labeling',     ok: true },
-      { text: '24/7 Dedicated Mgr', ok: true },
+      'Unlimited Batches',
+      'Unlimited Students',
+      'White-label Dashboard',
+      'Custom Branding',
+      '24/7 Dedicated Manager',
     ],
   },
 ];
@@ -68,6 +70,7 @@ export default function Pricing() {
   const [success, setSuccess] = useState(false);
   const [upiModal, setUpiModal] = useState({ show: false, url: '', plan: null });
   const [txId, setTxId] = useState('');
+  const [hoveredPlan, setHoveredPlan] = useState(null);
 
   const handleLogout = async () => { await logout(); navigate('/'); };
 
@@ -78,15 +81,13 @@ export default function Pricing() {
       return;
     }
 
-    const upiUrl = `upi://pay?pa=${MY_UPI_ID}&pn=${encodeURIComponent(MY_NAME)}&am=${plan.priceINR}&cu=INR&tn=${encodeURIComponent(`Sub: ${plan.label}`)}`;
+    const upiUrl = `upi://pay?pa=${MY_UPI_ID}&pn=${encodeURIComponent(MY_NAME)}&am=${plan.priceINR}&cu=INR&tn=${encodeURIComponent(`Upgrade: ${plan.label}`)}`;
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
     if (isMobile) {
       window.location.href = upiUrl;
-      setUpiModal({ show: true, url: upiUrl, plan });
-    } else {
-      setUpiModal({ show: true, url: upiUrl, plan });
     }
+    setUpiModal({ show: true, url: upiUrl, plan });
   };
 
   const handleConfirmPayment = async () => {
@@ -106,10 +107,10 @@ export default function Pricing() {
 
       setSuccess(true);
       setUpiModal({ show: false, url: '', plan: null });
-      toast.success("Request Submitted! Verification in progress.");
+      toast.success("Payment Received! Verifying now.");
       setTimeout(() => navigate('/tutor'), 4000);
     } catch (err) {
-      toast.error("Error: " + err.message);
+      toast.error("Submission Error: " + err.message);
     } finally {
       setPaying(null);
     }
@@ -117,69 +118,86 @@ export default function Pricing() {
 
   if (success) {
     return (
-      <div className="pr-root" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '80vh', background: '#07090F' }}>
-        <div style={{ textAlign: 'center', maxWidth: '400px', padding: '2rem' }}>
-          <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(245,197,24,0.1)', border: '2px solid #F5C518', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
-            <CheckCircle size={40} color="#F5C518" />
-          </div>
-          <h2 style={{ color: '#F0F4FF', marginBottom: '1rem' }}>Request Submitted! 🎉</h2>
-          <p style={{ color: '#7A8BA8', lineHeight: '1.6' }}>
-            We have received your payment details. Our team will verify the transaction and activate your plan shortly.
-          </p>
-          <button onClick={() => navigate('/tutor')} className="btn btn-primary mt-6 w-full">Go to Dashboard</button>
+      <div className="new-pr-root success-view">
+        <div className="success-card">
+          <div className="check-ring"><CheckCircle size={48} /></div>
+          <h2>Verification in Progress</h2>
+          <p>We've received your transaction reference. Our team will activate your <strong>{PLANS.find(p => p.id === upiModal.plan?.id)?.label || 'Premium'}</strong> features within 60 minutes.</p>
+          <button onClick={() => navigate('/tutor')} className="new-pr-btn primary">Go to Dashboard</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="pr-root" style={{ background: '#07090F', minHeight: '100vh' }}>
-      <div className="pr-header" style={{ textAlign: 'center', paddingTop: '4rem', paddingBottom: '2rem' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 1rem', background: 'rgba(245,197,24,0.1)', borderRadius: '99px', color: '#F5C518', fontSize: '0.75rem', fontWeight: 700, marginBottom: '1.5rem' }}>
-          <Crown size={14} /> PREMIUM PLANS
-        </div>
-        <h1 style={{ fontSize: '3rem', fontWeight: 800, color: '#F0F4FF', margin: 0 }}>Upgrade Your <span style={{ color: '#F5C518' }}>Center</span></h1>
-        <p style={{ color: '#7A8BA8', marginTop: '1rem', fontSize: '1.1rem' }}>Instant UPI Payment — Active in 60 minutes.</p>
-        
-        <button onClick={handleLogout} style={{ position: 'absolute', top: '2rem', right: '2rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#F0F4FF', padding: '0.5rem 1rem', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <LogOut size={14} /> Log Out
-        </button>
+    <div className="new-pr-root">
+      {/* Animated Background */}
+      <div className="new-pr-bg">
+        <div className="blob blob1"></div>
+        <div className="blob blob2"></div>
+        <div className="blob blob3"></div>
       </div>
 
-      <div className="pr-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', maxWidth: '1100px', margin: '0 auto', padding: '2rem' }}>
+      <nav className="new-pr-nav">
+        <div className="logo">Antigravity <span>Tuition</span></div>
+        <button onClick={handleLogout} className="logout-link"><LogOut size={16} /> Logout</button>
+      </nav>
+
+      <header className="new-pr-header">
+        <div className="badge"><Sparkles size={14} /> NEW LOWER PRICING</div>
+        <h1>Elevate Your <span>Coaching Center</span></h1>
+        <p>Choose the plan that fits your growth. Instant UPI activation.</p>
+      </header>
+
+      <div className="new-pr-grid">
         {PLANS.map((plan) => {
           const Icon = plan.icon;
+          const isFeatured = plan.id === 'growth';
           const isCurrent = currentUser?.subscription_tier === plan.id || currentUser?.pending_plan === plan.id;
+          
           return (
-            <div key={plan.id} className="pr-card" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '2.5rem', transition: 'all 0.3s ease', position: 'relative', overflow: 'hidden' }}>
-              {plan.tag === 'POPULAR' && <div style={{ position: 'absolute', top: '1.5rem', right: '-2.5rem', background: '#F5C518', color: '#000', padding: '0.2rem 3rem', transform: 'rotate(45deg)', fontSize: '0.7rem', fontWeight: 900 }}>BEST VALUE</div>}
-              <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: `${plan.color}20`, color: plan.color, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.5rem' }}>
-                <Icon size={24} />
+            <div 
+              key={plan.id} 
+              className={`new-pr-card ${isFeatured ? 'featured' : ''} ${hoveredPlan === plan.id ? 'hovered' : ''}`}
+              onMouseEnter={() => setHoveredPlan(plan.id)}
+              onMouseLeave={() => setHoveredPlan(null)}
+              style={{ '--accent': plan.color }}
+            >
+              {isFeatured && <div className="popular-ribbon">Most Popular</div>}
+              
+              <div className="card-top">
+                <div className="icon-box" style={{ background: `${plan.color}15`, color: plan.color }}>
+                  <Icon size={28} />
+                </div>
+                <h3>{plan.label}</h3>
+                <div className="price-tag">
+                  {plan.priceINR === 0 ? <span className="amount">Free</span> : (
+                    <>
+                      <span className="currency">₹</span>
+                      <span className="amount">{plan.priceINR}</span>
+                      <span className="period">/mo</span>
+                    </>
+                  )}
+                </div>
               </div>
-              <h3 style={{ color: '#F0F4FF', margin: 0, fontSize: '1.5rem' }}>{plan.label}</h3>
-              <div style={{ marginTop: '1rem', marginBottom: '2rem' }}>
-                {plan.priceINR === 0 ? <span style={{ fontSize: '2.5rem', fontWeight: 800, color: '#F0F4FF' }}>Free</span> : (
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.2rem' }}>
-                    <span style={{ fontSize: '1.5rem', color: '#F5C518', fontWeight: 700 }}>₹</span>
-                    <span style={{ fontSize: '2.5rem', fontWeight: 800, color: '#F0F4FF' }}>{plan.priceINR}</span>
-                    <span style={{ color: '#7A8BA8' }}>/mo</span>
-                  </div>
-                )}
-              </div>
-              <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 2.5rem 0', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {plan.features.map((f, i) => (
-                  <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: f.ok ? '#F0F4FF' : '#475569', fontSize: '0.9rem' }}>
-                    <Check size={16} color={f.ok ? plan.color : '#475569'} />
-                    <span>{f.text}</span>
-                  </li>
+
+              <ul className="feature-list">
+                {plan.features.map((text, i) => (
+                  <li key={i}><Check size={16} className="check" /> {text}</li>
                 ))}
               </ul>
-              <button
-                style={{ width: '100%', padding: '1rem', borderRadius: '12px', border: 'none', background: isCurrent ? 'rgba(255,255,255,0.05)' : plan.color, color: isCurrent ? '#475569' : '#000', fontWeight: 700, cursor: isCurrent ? 'not-allowed' : 'pointer', transition: 'all 0.2s ease' }}
+
+              <button 
+                className={`new-pr-btn ${isFeatured ? 'primary' : 'outline'}`}
                 disabled={isCurrent}
                 onClick={() => handleSubscribe(plan)}
               >
-                {isCurrent ? 'Current Plan' : plan.priceINR === 0 ? 'Get Started' : `Upgrade to ${plan.label}`}
+                {isCurrent ? 'Current Plan' : (
+                  <>
+                    {plan.priceINR === 0 ? 'Start Learning' : `Get ${plan.label}`}
+                    <ArrowRight size={18} className="arrow" />
+                  </>
+                )}
               </button>
             </div>
           );
@@ -188,60 +206,216 @@ export default function Pricing() {
 
       {/* UPI MODAL */}
       {upiModal.show && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(10px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-          <div style={{ background: '#0F172A', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px', padding: '2rem', maxWidth: '400px', width: '100%', position: 'relative' }}>
-            <button onClick={() => setUpiModal({ ...upiModal, show: false })} style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'none', border: 'none', color: '#7A8BA8', cursor: 'pointer' }}><X size={24}/></button>
+        <div className="new-modal-overlay">
+          <div className="new-modal-content">
+            <button className="close-btn" onClick={() => setUpiModal({ ...upiModal, show: false })}><X size={24} /></button>
             
-            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-              <h3 style={{ color: '#F5C518', fontSize: '1.5rem', margin: '0 0 0.5rem 0' }}>Complete Payment</h3>
-              <p style={{ color: '#7A8BA8', margin: 0, fontSize: '0.9rem' }}>Scan or use UPI apps below</p>
+            <div className="modal-header">
+              <div className="modal-icon"><Smartphone size={32} /></div>
+              <h3>Complete Payment</h3>
+              <p>Scan QR or pay via UPI ID below</p>
             </div>
 
-            <div style={{ background: 'white', padding: '1rem', borderRadius: '16px', marginBottom: '2rem', display: 'flex', justifyContent: 'center' }}>
-              <img 
-                src={`https://chart.googleapis.com/chart?chs=250x250&cht=qr&chl=${encodeURIComponent(upiModal.url)}&choe=UTF-8`} 
-                alt="UPI QR Code" 
-                style={{ width: '200px', height: '200px' }}
+            <div className="qr-container">
+              <img src={`https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${encodeURIComponent(upiModal.url)}&choe=UTF-8`} alt="QR" />
+              <div className="qr-border"></div>
+            </div>
+
+            <div className="payment-details">
+              <div className="detail-row">
+                <span>UPI ID</span>
+                <span className="val">{MY_UPI_ID}</span>
+              </div>
+              <div className="detail-row">
+                <span>Amount</span>
+                <span className="val highlight">₹{upiModal.plan?.priceINR}</span>
+              </div>
+            </div>
+
+            <div className="utr-input-box">
+              <label>Enter Transaction ID (UTR)</label>
+              <input 
+                type="text" 
+                placeholder="12-digit reference number"
+                value={txId}
+                onChange={e => setTxId(e.target.value)}
               />
+              <p className="hint">Required for manual verification</p>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <p style={{ fontSize: '0.75rem', color: '#7A8BA8', margin: '0 0 0.2rem 0' }}>UPI ID:</p>
-                <p style={{ fontSize: '1rem', fontWeight: 700, color: '#F0F4FF', margin: 0 }}>{MY_UPI_ID}</p>
-              </div>
-
-              <div style={{ marginTop: '1rem' }}>
-                <p style={{ fontSize: '0.85rem', color: '#F0F4FF', marginBottom: '0.5rem' }}>Transaction ID / UTR (12 Digits):</p>
-                <input 
-                  type="text" 
-                  style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', background: '#1E293B', border: '1px solid rgba(255,255,255,0.1)', color: '#fff', fontSize: '1rem' }}
-                  placeholder="e.g. 412356789012" 
-                  value={txId} 
-                  onChange={e => setTxId(e.target.value)} 
-                />
-              </div>
-
-              <button 
-                onClick={handleConfirmPayment}
-                disabled={paying}
-                style={{ width: '100%', padding: '1rem', borderRadius: '12px', background: '#F5C518', color: '#000', border: 'none', fontWeight: 800, fontSize: '1rem', cursor: 'pointer', marginTop: '1rem' }}
-              >
-                {paying ? 'Submitting...' : 'I HAVE PAID'}
-              </button>
-              
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1rem', opacity: 0.6 }}>
-                <Smartphone size={16} color="#7A8BA8" />
-                <QrCode size={16} color="#7A8BA8" />
-              </div>
-            </div>
+            <button 
+              className="new-pr-btn primary full"
+              onClick={handleConfirmPayment}
+              disabled={paying}
+            >
+              {paying ? 'Verifying...' : 'Submit Payment Proof'}
+            </button>
           </div>
         </div>
       )}
 
       <style>{`
-        .pr-root { font-family: 'Inter', system-ui, sans-serif; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+
+        .new-pr-root {
+          font-family: 'Outfit', sans-serif;
+          background: #020617;
+          color: #f8fafc;
+          min-height: 100vh;
+          position: relative;
+          overflow-x: hidden;
+          padding-bottom: 4rem;
+        }
+
+        /* Animated Background */
+        .new-pr-bg {
+          position: fixed;
+          top: 0; left: 0; right: 0; bottom: 0;
+          z-index: 0;
+          overflow: hidden;
+        }
+        .blob {
+          position: absolute;
+          width: 600px; height: 600px;
+          border-radius: 50%;
+          filter: blur(80px);
+          opacity: 0.15;
+          animation: move 20s infinite alternate;
+        }
+        .blob1 { background: #F5C518; top: -10%; right: -10%; }
+        .blob2 { background: #6366f1; bottom: -10%; left: -10%; animation-delay: -5s; }
+        .blob3 { background: #ec4899; top: 30%; left: 20%; animation-delay: -10s; }
+
+        @keyframes move {
+          from { transform: translate(0, 0) scale(1); }
+          to { transform: translate(100px, 50px) scale(1.1); }
+        }
+
+        .new-pr-nav {
+          position: relative; z-index: 10;
+          display: flex; justify-content: space-between; align-items: center;
+          padding: 2rem 5%;
+        }
+        .new-pr-nav .logo { font-weight: 800; fontSize: 1.5rem; letterSpacing: -0.03em; }
+        .new-pr-nav .logo span { color: #F5C518; }
+        .logout-link { background: none; border: none; color: #64748b; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; transition: 0.3s; }
+        .logout-link:hover { color: #f8fafc; }
+
+        .new-pr-header {
+          position: relative; z-index: 10;
+          text-align: center;
+          padding: 4rem 1rem 6rem;
+        }
+        .new-pr-header .badge {
+          display: inline-flex; align-items: center; gap: 0.5rem;
+          background: rgba(245,197,24,0.1); border: 1px solid rgba(245,197,24,0.2);
+          color: #F5C518; padding: 0.5rem 1.2rem; border-radius: 99px;
+          font-weight: 600; font-size: 0.8rem; margin-bottom: 2rem;
+        }
+        .new-pr-header h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 800; line-height: 1.1; margin: 0; }
+        .new-pr-header h1 span { color: #F5C518; }
+        .new-pr-header p { color: #94a3b8; font-size: 1.2rem; margin-top: 1.5rem; }
+
+        .new-pr-grid {
+          position: relative; z-index: 10;
+          display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          gap: 2rem; max-width: 1200px; margin: 0 auto; padding: 0 2rem;
+        }
+
+        .new-pr-card {
+          background: rgba(15, 23, 42, 0.6);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: 32px;
+          padding: 3rem;
+          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+          display: flex; flex-direction: column;
+          position: relative;
+        }
+        .new-pr-card.featured { border: 2px solid #F5C518; transform: translateY(-10px); }
+        .new-pr-card.hovered { border-color: var(--accent); transform: translateY(-5px); box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5); }
+
+        .popular-ribbon {
+          position: absolute; top: 1.5rem; right: 1.5rem;
+          background: #F5C518; color: #000;
+          padding: 0.4rem 1rem; border-radius: 99px;
+          font-weight: 800; font-size: 0.7rem; text-transform: uppercase;
+        }
+
+        .card-top { margin-bottom: 2.5rem; }
+        .icon-box { width: 64px; height: 64px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 2rem; }
+        .card-top h3 { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .price-tag { display: flex; align-items: baseline; gap: 0.25rem; }
+        .currency { font-size: 1.5rem; color: #F5C518; font-weight: 600; }
+        .amount { font-size: 3.5rem; font-weight: 800; }
+        .period { color: #64748b; font-size: 1rem; }
+
+        .feature-list { list-style: none; padding: 0; margin: 0 0 3rem 0; flex-grow: 1; display: flex; flex-direction: column; gap: 1.2rem; }
+        .feature-list li { display: flex; align-items: center; gap: 1rem; color: #cbd5e1; font-weight: 500; }
+        .feature-list li .check { color: var(--accent); }
+
+        .new-pr-btn {
+          width: 100%; padding: 1.2rem; border-radius: 16px; border: none;
+          font-weight: 800; font-size: 1rem; cursor: pointer;
+          display: flex; align-items: center; justify-content: center; gap: 0.75rem;
+          transition: all 0.3s;
+        }
+        .new-pr-btn.primary { background: #F5C518; color: #020617; }
+        .new-pr-btn.primary:hover { background: #fff; transform: scale(1.02); }
+        .new-pr-btn.outline { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: #fff; }
+        .new-pr-btn.outline:hover { background: rgba(255,255,255,0.08); border-color: #fff; }
+        .new-pr-btn .arrow { transition: transform 0.3s; }
+        .new-pr-btn:hover .arrow { transform: translateX(5px); }
+        .new-pr-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Modal */
+        .new-modal-overlay {
+          position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+          backdrop-filter: blur(12px); z-index: 1000;
+          display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+        }
+        .new-modal-content {
+          background: #0f172a; border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 40px; padding: 3rem; width: 100%; max-width: 450px;
+          position: relative; animation: slideUp 0.5s cubic-bezier(0.2, 1, 0.2, 1);
+        }
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .close-btn { position: absolute; top: 2rem; right: 2rem; background: none; border: none; color: #64748b; cursor: pointer; }
+        .modal-header { text-align: center; margin-bottom: 2.5rem; }
+        .modal-icon { width: 80px; height: 80px; background: rgba(245,197,24,0.1); color: #F5C518; border-radius: 24px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; }
+        .modal-header h3 { font-size: 1.8rem; font-weight: 800; margin: 0; }
+        .modal-header p { color: #64748b; margin-top: 0.5rem; }
+
+        .qr-container { position: relative; width: 220px; height: 220px; margin: 0 auto 2.5rem; background: #fff; padding: 10px; border-radius: 24px; }
+        .qr-container img { width: 100%; height: 100%; }
+        .qr-border { position: absolute; inset: -5px; border: 2px dashed #F5C518; border-radius: 28px; opacity: 0.3; animation: spin 10s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .payment-details { display: grid; gap: 0.75rem; margin-bottom: 2.5rem; }
+        .detail-row { display: flex; justify-content: space-between; padding: 1.2rem; background: rgba(255,255,255,0.03); border-radius: 16px; font-size: 0.9rem; }
+        .detail-row span:first-child { color: #64748b; }
+        .detail-row .val { font-weight: 700; color: #f8fafc; }
+        .detail-row .highlight { color: #F5C518; font-size: 1.1rem; }
+
+        .utr-input-box label { display: block; font-size: 0.85rem; color: #64748b; margin-bottom: 0.75rem; font-weight: 600; }
+        .utr-input-box input { width: 100%; padding: 1.2rem; background: #1e293b; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; color: #fff; font-size: 1.1rem; margin-bottom: 0.5rem; outline: none; transition: 0.3s; }
+        .utr-input-box input:focus { border-color: #F5C518; box-shadow: 0 0 0 4px rgba(245,197,24,0.1); }
+        .utr-input-box .hint { font-size: 0.75rem; color: #64748b; }
+
+        .success-view { display: flex; align-items: center; justify-content: center; padding: 2rem; }
+        .success-card { background: rgba(15,23,42,0.8); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 48px; padding: 4rem; text-align: center; max-width: 500px; animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes scaleIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .check-ring { width: 100px; height: 100px; background: rgba(34,197,94,0.1); color: #22c55e; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 2rem; border: 2px solid rgba(34,197,94,0.2); }
+        .success-card h2 { font-size: 2.2rem; font-weight: 800; margin-bottom: 1.5rem; }
+        .success-card p { color: #94a3b8; line-height: 1.6; margin-bottom: 2.5rem; }
+
+        @media (max-width: 768px) {
+          .new-pr-header { padding: 3rem 1.5rem; }
+          .new-pr-grid { padding: 0 1.5rem; }
+          .new-pr-card { padding: 2rem; }
+          .new-modal-content { padding: 2rem; }
+        }
       `}</style>
     </div>
   );
