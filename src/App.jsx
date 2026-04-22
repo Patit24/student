@@ -14,7 +14,6 @@ import StudentDashboard from './pages/StudentDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import TutorDiscovery from './pages/TutorDiscovery';
 import TutorProfile from './pages/TutorProfile';
-import AboutPage from './pages/AboutPage';
 import './index.css';
 
 function AppRoutes() {
