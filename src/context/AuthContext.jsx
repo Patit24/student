@@ -326,13 +326,9 @@ export function AppProvider({ children }) {
       return;
     }
 
-    let unsubStudents = null;
-    let unsubBatches  = null;
-    let unsubProfile  = null;
-    let unsubMaterials = null;
-    let unsubPurchases = null;
+    let unsubAuth, unsubProfile, unsubBatches, unsubStudents, unsubMaterials, unsubPurchases, unsubTutorList;
 
-    const unsubAuth = onAuthStateChanged(auth, async (user) => {
+    unsubAuth = onAuthStateChanged(auth, async (user) => {
       // ── Bypass Check: If we already have a mock/bypass admin, don't let null auth kick them out ──
       if (!user && currentUser?.uid === 'admin-1') {
         setLoading(false);
@@ -417,7 +413,7 @@ export function AppProvider({ children }) {
 
         // ── Teacher Lists Listener (Always sync after login) ──
         const tutorQ = query(collection(db, 'users'), where('role', '==', 'tutor'));
-        unsubProfile = onSnapshot(tutorQ, (snap) => {
+        unsubTutorList = onSnapshot(tutorQ, (snap) => {
           const tutors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
           setMockTutors(tutors);
         });
@@ -432,7 +428,9 @@ export function AppProvider({ children }) {
       if (unsubStudents) unsubStudents();
       if (unsubBatches)  unsubBatches();
       if (unsubProfile)  unsubProfile();
+      if (unsubTutorList) unsubTutorList();
       if (unsubMaterials) unsubMaterials();
+      if (unsubPurchases) unsubPurchases();
     };
   }, [isMockMode]);
 
