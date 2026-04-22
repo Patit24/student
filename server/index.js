@@ -19,6 +19,7 @@ const bodyParser = require('body-parser');
 const crypto     = require('crypto');
 const Razorpay   = require('razorpay');
 const admin      = require('firebase-admin');
+const uploadRoutes = require('./uploadRoutes');
 
 // ── Firebase Admin init ─────────────────────────────────────────────────────
 // Provide the service account JSON path via env variable
@@ -28,6 +29,7 @@ try {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     databaseURL: process.env.FIREBASE_DATABASE_URL || 'https://antigravity-tuition-os-default-rtdb.firebaseio.com',
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'antigravity-tuition-os.appspot.com',
   });
   firebaseReady = true;
   console.log('✅ Firebase Admin initialized');
@@ -87,6 +89,8 @@ async function grantSubscription(tutorId, tier, razorpayData = {}) {
 }
 
 // ── Routes ───────────────────────────────────────────────────────────────────
+
+app.use('/api/upload', uploadRoutes);
 
 /** Health check */
 app.get('/api/health', (req, res) => {

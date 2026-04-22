@@ -9,7 +9,9 @@ import {
 } from 'lucide-react';
 import { rtdb, storage } from '../firebase';
 import { ref, set, push, onValue } from 'firebase/database';
-import { ref as sRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+// No longer importing direct storage upload tools for browser
+
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:4000';
 
 // --- TEMPLATES ---
 const ResumePreview = ({ data, templateId }) => {
@@ -184,14 +186,24 @@ export default function ResumeBuilder() {
     if (!file) return;
     
     setUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('uid', currentUser?.uid || 'guest');
+
     try {
-      const storageRef = sRef(storage, `resumes/${currentUser?.uid || 'guest'}_photo`);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
-      setResumeData(prev => ({ ...prev, personal: { ...prev.personal, photo: url } }));
-      toast.success('Photo uploaded! ✨');
+      const res = await fetch(`${SERVER_URL}/api/upload/resume`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error('Relay upload failed');
+
+      const data = await res.json();
+      setResumeData(prev => ({ ...prev, personal: { ...prev.personal, photo: data.url } }));
+      toast.success('Photo uploaded via relay! ✨');
     } catch (err) {
-      toast.error('Upload failed');
+      console.error('Relay Error:', err);
+      toast.error('CORS Relay failed. Please check if server is running.');
     } finally {
       setUploading(false);
     }
