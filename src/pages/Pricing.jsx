@@ -254,11 +254,11 @@ export default function Pricing() {
           display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
           padding: '0.3rem 0.8rem', borderRadius: '999px', fontSize: '0.75rem',
           marginTop: '0.5rem',
-          background: serverOnline ? 'rgba(34,197,94,0.1)' : 'rgba(245,197,24,0.1)',
-          border: `1px solid ${serverOnline ? 'rgba(34,197,94,0.3)' : 'rgba(245,197,24,0.3)'}`,
-          color: serverOnline ? '#22C55E' : '#F5C518',
+          background: 'rgba(34,197,94,0.1)',
+          border: '1px solid rgba(34,197,94,0.3)',
+          color: '#22C55E',
         }}>
-          {serverOnline ? '🔒 Live Payments Active' : '⚡ Demo Mode — payments activate instantly'}
+          <Shield size={16} /> 🔒 Secure Checkout
         </div>
 
         <button className="pr-logout-btn" onClick={handleLogout} id="pricing-logout">
@@ -344,11 +344,8 @@ export default function Pricing() {
         </div>
       )}
 
-      <p className="pr-footer-note">
-        {serverOnline
-          ? '🔒 Payments processed securely via Razorpay · Cancel anytime · No hidden fees'
-          : '⚡ Running in Demo Mode — Start the payment server to enable real payments.'
-        }
+      <p className="pricing-sub" style={{ marginBottom: '3rem' }}>
+        Choose the plan that fits your tuition business. No hidden fees.
       </p>
     </div>
   );
