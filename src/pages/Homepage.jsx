@@ -314,6 +314,33 @@ export default function Homepage() {
             <p>Students are automatically blocked from classes the moment fees are overdue.</p>
             <FeeAnimation />
           </div>
+
+          {/* Card 4 - New Resume Builder */}
+          <div className={`hp-bento-card hp-bento-lg ${bentoVis ? 'hp-reveal-up' : 'hp-hidden-up'}`} style={{ animationDelay: '0.5s', background: 'linear-gradient(135deg, rgba(79,70,229,0.1) 0%, rgba(0,0,0,0) 100%)' }}>
+            <div className="hp-card-icon-row">
+              <FileText size={22} color="#F5C518" />
+              <span className="hp-card-num">04</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+              <div style={{ flex: 1, minWidth: '200px' }}>
+                <h3>Professional Resume Builder</h3>
+                <p>Build job-ready resumes with AI-optimized templates. Live preview, multiple themes, and instant PDF export.</p>
+                <Link to="/resume-builder" className="hp-btn-primary mt-4" style={{ padding: '0.6rem 1.2rem', fontSize: '0.85rem', width: 'fit-content' }}>
+                  Create My Resume <ChevronRight size={16} />
+                </Link>
+              </div>
+              <div className="resume-preview-mini no-print" style={{ 
+                background: 'white', width: '140px', height: '180px', borderRadius: '8px', padding: '10px',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.5)', transform: 'rotate(5deg) translateY(-10px)'
+              }}>
+                <div style={{ width: '40px', height: '40px', background: '#EEE', borderRadius: '4px', marginBottom: '8px' }} />
+                <div style={{ width: '80%', height: '8px', background: '#333', marginBottom: '4px' }} />
+                <div style={{ width: '60%', height: '6px', background: '#AAA', marginBottom: '12px' }} />
+                {[1,2,3,4].map(i => <div key={i} style={{ width: '100%', height: '4px', background: '#EEE', marginBottom: '3px' }} />)}
+                <div style={{ position: 'absolute', bottom: '8px', right: '8px', background: '#F5C518', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 800, color: '#000' }}>PREMIUM</div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
