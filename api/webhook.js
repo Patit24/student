@@ -1,5 +1,5 @@
-const crypto = require('crypto');
-const { initFirebase, admin } = require('./lib/firebase');
+import crypto from 'crypto';
+import { initFirebase, admin } from './lib/firebase.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
@@ -24,7 +24,6 @@ export default async function handler(req, res) {
     const app = initFirebase();
     if (!app) return res.status(500).json({ error: 'Firebase not initialized' });
 
-    // USER REQUIREMENT 2: Fast sync to update payment_status
     try {
       if (notes.type === 'resume_unlock' && notes.uid) {
         await admin.database().ref(`user_resumes/${notes.uid}`).update({

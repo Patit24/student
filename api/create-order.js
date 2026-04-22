@@ -1,4 +1,4 @@
-const Razorpay = require('razorpay');
+import Razorpay from 'razorpay';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
@@ -15,7 +15,6 @@ export default async function handler(req, res) {
   });
 
   try {
-    // Check Razorpay Reachability
     const isResume = type === 'resume_unlock';
     const finalAmount = isResume ? 4900 : Math.round(amount_inr * 100);
     const finalReceipt = isResume ? `resume_${uid}_${Date.now()}` : `ag_${tutor_id}_${Date.now()}`;
@@ -36,7 +35,6 @@ export default async function handler(req, res) {
 
   } catch (err) {
     console.error('Razorpay Error:', err);
-    // USER REQUIREMENT 3: Return specific JSON error if Razorpay unreachable
     res.status(502).json({ 
       status: 'error', 
       message: 'Razorpay unreachable',
