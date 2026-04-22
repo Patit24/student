@@ -481,8 +481,8 @@ export default function TutorDashboard() {
     if (!isMockMode) {
       try {
         const { createStudentAccount } = await import('../db.service');
-        await createStudentAccount(studentEmail, studentName, currentUser.uid, studentBatchId);
-        setCredentialModal({ name: studentName, email: studentEmail, password: tempPassword });
+        const { tempPassword: actualPassword } = await createStudentAccount(studentEmail, studentName, currentUser.uid, studentBatchId);
+        setCredentialModal({ name: studentName, email: studentEmail, password: actualPassword });
         toast.success(`Account created!`);
       } catch (err) {
         toast.error(`Failed: ${err.message}`);

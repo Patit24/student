@@ -9,9 +9,20 @@ import {
 } from 'lucide-react';
 import { rtdb, storage } from '../firebase';
 import { ref, set, push, onValue } from 'firebase/database';
-// No longer importing direct storage upload tools for browser
+import FileUploadVercel from '../components/FileUploadVercel';
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:4000';
+
+function loadRazorpay() {
+  return new Promise((resolve) => {
+    if (window.Razorpay) { resolve(true); return; }
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload  = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
 
 // --- TEMPLATES ---
 const ResumePreview = ({ data, templateId }) => {
@@ -181,34 +192,6 @@ export default function ResumeBuilder() {
     }
   };
 
-  const handlePhotoUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    setUploading(true);
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('uid', currentUser?.uid || 'guest');
-
-    try {
-      const res = await fetch(`${SERVER_URL}/api/upload/resume`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!res.ok) throw new Error('Relay upload failed');
-
-      const data = await res.json();
-      setResumeData(prev => ({ ...prev, personal: { ...prev.personal, photo: data.url } }));
-      toast.success('Photo uploaded via relay! ✨');
-    } catch (err) {
-      console.error('Relay Error:', err);
-      toast.error('CORS Relay failed. Please check if server is running.');
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const handleSave = async () => {
     if (!currentUser) return toast.error('Please login to save');
     try {
@@ -223,13 +206,47 @@ export default function ResumeBuilder() {
     }
   };
 
-  const handlePayment = () => {
-    // Mock Razorpay
-    alert('💳 Redirecting to Razorpay Secure Gateway...\nAmount: ₹49');
-    setTimeout(() => {
-      setIsPremiumPaid(true);
-      toast.success('Payment Successful! Premium Template Unlocked 🔓');
-    }, 1500);
+  const handlePayment = async () => {
+    if (!currentUser) return toast.error('Please login to continue');
+    
+    const sdkLoaded = await loadRazorpay();
+    if (!sdkLoaded) return toast.error('Razorpay failed to load');
+
+    try {
+      const res = await fetch(`${SERVER_URL}/api/resume/create-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid: currentUser.uid }),
+      });
+
+      if (!res.ok) throw new Error('Could not create order');
+      const orderData = await res.json();
+
+      const options = {
+        key: orderData.key_id,
+        amount: orderData.amount,
+        currency: 'INR',
+        name: 'Antigravity Resume Builder',
+        description: 'Unlock Premium Templates',
+        order_id: orderData.order_id,
+        handler: async function (response) {
+          toast.success('Payment Received! Unlocking theme...');
+          setIsPremiumPaid(true);
+          // Realtime Database will also be updated by webhook
+          await set(ref(rtdb, `user_resumes/${currentUser.uid}/payment_status`), 'success');
+        },
+        prefill: {
+          name: currentUser.name || '',
+          email: currentUser.email || '',
+        },
+        theme: { color: '#4F70E5' },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      toast.error(`Payment error: ${err.message}`);
+    }
   };
 
   const handleExport = () => {
@@ -263,14 +280,18 @@ export default function ResumeBuilder() {
             <div className="animate-fade-in">
               <h3>Personal Details</h3>
               <div className="flex-col gap-4 mt-4">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="photo-upload-box" onClick={() => document.getElementById('photo-input').click()}>
-                    {resumeData.personal.photo ? <img src={resumeData.personal.photo} alt="P" /> : <Camera size={24} />}
-                    <input type="file" id="photo-input" hidden onChange={handlePhotoUpload} accept="image/*" />
-                  </div>
-                  <div className="text-muted" style={{ fontSize: '0.8rem' }}>
-                    {uploading ? 'Uploading...' : 'Upload profile photo (Optional)'}
-                  </div>
+                <div className="mb-4">
+                  <FileUploadVercel 
+                    uid={currentUser?.uid} 
+                    folder="resumes" 
+                    onUploadSuccess={(url) => setResumeData(prev => ({ ...prev, personal: { ...prev.personal, photo: url } }))}
+                    label="Upload Profile Photo"
+                  />
+                  {resumeData.personal.photo && (
+                    <div className="mt-2 text-center">
+                      <img src={resumeData.personal.photo} alt="Preview" style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }} />
+                    </div>
+                  )}
                 </div>
                 <input type="text" className="input-field" placeholder="Full Name" value={resumeData.personal.name} onChange={e => handleInputChange('personal', 'name', e.target.value)} />
                 <input type="email" className="input-field" placeholder="Email Address" value={resumeData.personal.email} onChange={e => handleInputChange('personal', 'email', e.target.value)} />

@@ -184,9 +184,10 @@ export function AppProvider({ children }) {
       setMockUser(user);
       return user;
     }
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const cleanEmail = email.toLowerCase().trim();
+    const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
     const profile = {
-      email, role, name, is_verified: true,
+      email: cleanEmail, role, name, is_verified: true,
       createdAt: new Date(),
       subscription_status: role === 'tutor' ? 'inactive' : 'active',
     };
@@ -220,7 +221,8 @@ export function AppProvider({ children }) {
       setMockUser(user);
       return user;
     }
-    const credential = await signInWithEmailAndPassword(auth, email, password);
+    const cleanEmail = email.toLowerCase().trim();
+    const credential = await signInWithEmailAndPassword(auth, cleanEmail, password);
     const docSnap    = await getDoc(doc(db, 'users', credential.user.uid));
     const profile    = docSnap.exists() ? docSnap.data() : {};
     const merged     = { ...credential.user, uid: credential.user.uid, ...profile };
