@@ -17,8 +17,8 @@ export default function FileUploadVercel({
   const [status, setStatus] = useState('idle'); // idle | uploading | success | error
   const toast = useToast();
 
-  const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:4000';
-  const cleanApiUrl = API_URL.replace(/\/$/, "");
+  const API_URL = import.meta.env.VITE_APP_API_URL;
+  const cleanApiUrl = (API_URL || "").replace(/\/$/, "");
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];

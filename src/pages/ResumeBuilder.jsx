@@ -11,8 +11,8 @@ import { rtdb, storage } from '../firebase';
 import { ref, set, push, onValue } from 'firebase/database';
 import FileUploadVercel from '../components/FileUploadVercel';
 
-const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:4000';
-const cleanApiUrl = API_URL.replace(/\/$/, "");
+const API_URL = import.meta.env.VITE_APP_API_URL;
+const cleanApiUrl = (API_URL || "").replace(/\/$/, "");
 
 function loadRazorpay() {
   return new Promise((resolve) => {
