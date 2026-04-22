@@ -1,19 +1,19 @@
 {
-  "name": "antigravity-payment-server",
+  "name": "antigravity-backend",
   "version": "1.0.0",
-  "description": "Razorpay + Firebase webhook server for Antigravity Tuition OS",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "dev": "node --watch index.js"
+    "dev": "nodemon index.js"
   },
   "dependencies": {
-    "body-parser": "^1.20.2",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
     "express": "^4.18.2",
-    "firebase-admin": "^12.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "firebase-admin": "^11.11.0",
+    "razorpay": "^2.9.2",
     "multer": "^1.4.5-lts.1",
-    "razorpay": "^2.9.2"
+    "crypto": "^1.0.1"
   }
 }

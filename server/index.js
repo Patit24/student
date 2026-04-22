@@ -1,263 +1,139 @@
-/**
- * Antigravity Tuition OS — Payment Server
- * ─────────────────────────────────────────
- * Endpoints:
- *   POST /api/create-order        → creates a Razorpay order (one-time payment)
- *   POST /api/create-subscription → creates a Razorpay subscription (recurring)
- *   POST /api/webhook             → Razorpay webhook (payment.captured / subscription.activated)
- *
- * Setup:
- *   1. Copy .env.example → .env and fill in keys
- *   2. npm install  (in /server)
- *   3. node index.js
- */
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import multer from 'multer';
+import crypto from 'crypto';
+import admin from 'firebase-admin';
+import Razorpay from 'razorpay';
 
-require('dotenv').config();
-const express    = require('express');
-const cors       = require('cors');
-const bodyParser = require('body-parser');
-const crypto     = require('crypto');
-const Razorpay   = require('razorpay');
-const admin      = require('firebase-admin');
-const uploadRoutes = require('./uploadRoutes');
+dotenv.config();
 
-// ── Firebase Admin init ─────────────────────────────────────────────────────
-// Provide the service account JSON path via env variable
-let firebaseReady = false;
-try {
-  const serviceAccount = require(process.env.FIREBASE_SERVICE_ACCOUNT_PATH || './serviceAccountKey.json');
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL: process.env.FIREBASE_DATABASE_URL || 'https://antigravity-tuition-os-default-rtdb.firebaseio.com',
-    storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'antigravity-tuition-os.appspot.com',
-  });
-  firebaseReady = true;
-  console.log('✅ Firebase Admin initialized');
-} catch (err) {
-  console.warn('⚠️  Firebase Admin not initialized:', err.message);
-  console.warn('   Place serviceAccountKey.json in /server or set FIREBASE_SERVICE_ACCOUNT_PATH in .env');
-}
-
-// ── Razorpay init ────────────────────────────────────────────────────────────
-const razorpay = new Razorpay({
-  key_id:     process.env.RAZORPAY_KEY_ID     || '',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || '',
-});
-const razorpayReady = !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
-
-// ── App ──────────────────────────────────────────────────────────────────────
 const app = express();
+const PORT = process.env.PORT || 4000;
 
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
-}));
-
-// Raw body needed for webhook signature verification
-app.use('/api/webhook', bodyParser.raw({ type: 'application/json' }));
+// ── MIDDLEWARE ──────────────────────────────────────────────────────────────
+app.use(cors());
 app.use(express.json());
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-function planToTier(amountINR) {
-  if (amountINR >= 7999) return 'pro';
-  if (amountINR >= 2499) return 'growth';
-  return 'starter';
-}
+// ── FIREBASE INITIALIZATION ─────────────────────────────────────────────────
+const initFirebase = () => {
+  if (admin.apps.length > 0) return admin.apps[0];
 
-async function grantSubscription(tutorId, tier, razorpayData = {}) {
-  if (!firebaseReady || !tutorId) return;
+  const keyJson = process.env.FIREBASE_KEY_JSON;
+  if (!keyJson) {
+    console.error("❌ CRITICAL: FIREBASE_KEY_JSON missing in .env");
+    return null;
+  }
 
-  const now        = new Date();
-  const expiry     = new Date(now);
-  expiry.setMonth(expiry.getMonth() + 1); // +1 month
+  try {
+    const serviceAccount = JSON.parse(keyJson.trim());
+    return admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+      databaseURL: process.env.FIREBASE_DATABASE_URL || "https://antigravity-tuition-os-default-rtdb.asia-southeast1.firebasedatabase.app",
+      storageBucket: process.env.FIREBASE_BUCKET || "antigravity-tuition-os.firebasestorage.app"
+    });
+  } catch (err) {
+    console.error("❌ Firebase Init Error:", err.message);
+    return null;
+  }
+};
 
-  const update = {
-    is_subscribed:       true,
-    subscription_tier:   tier,
-    subscription_status: 'active',
-    subscription_date:   now.toISOString(),
-    subscription_expiry: expiry.toISOString(),
-    ...razorpayData,
-  };
+const firebaseApp = initFirebase();
 
-  // Update Firestore
-  await admin.firestore().collection('users').doc(tutorId).update(update);
+// ── RAZORPAY INITIALIZATION ─────────────────────────────────────────────────
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID || '',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || '',
+});
 
-  // Also update Realtime Database (for instant onValue listener)
-  await admin.database().ref(`tutors/${tutorId}`).update(update);
+// ── MULTER CONFIG ───────────────────────────────────────────────────────────
+const upload = multer({ storage: multer.memoryStorage() });
 
-  console.log(`✅ Subscription granted → tutor:${tutorId} tier:${tier}`);
-}
+// ── ROUTES ──────────────────────────────────────────────────────────────────
 
-// ── Routes ───────────────────────────────────────────────────────────────────
-
-app.use('/api/upload', uploadRoutes);
-
-/** Health check */
+// 1. Health Check
 app.get('/api/health', (req, res) => {
-  res.json({
-    status:        'ok',
-    razorpay:      razorpayReady,
-    firebase:      firebaseReady,
-    timestamp:     new Date().toISOString(),
+  res.status(200).json({
+    status: 'ok',
+    firebase: !!firebaseApp,
+    razorpay: !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET),
+    server: 'AWS EC2',
+    uptime: process.uptime()
   });
 });
 
-/**
- * POST /api/create-order
- * Body: { amount_inr: 2499, tutor_id: "uid", plan_id: "growth" }
- * Returns: { order_id, amount, currency, key_id }
- */
+// 2. Create Razorpay Order
 app.post('/api/create-order', async (req, res) => {
-  const { amount_inr, tutor_id, plan_id } = req.body;
-
-  if (!amount_inr || !tutor_id) {
-    return res.status(400).json({ error: 'amount_inr and tutor_id are required' });
-  }
-
-  if (!razorpayReady) {
-    return res.status(503).json({ error: 'Razorpay not configured. Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to .env' });
-  }
-
+  const { amount_inr, tutor_id, plan_id, type, uid } = req.body;
   try {
+    const isResume = type === 'resume_unlock';
+    const finalAmount = isResume ? 4900 : Math.round(amount_inr * 100);
+    
     const order = await razorpay.orders.create({
-      amount:   Math.round(amount_inr * 100), // paise
+      amount: finalAmount,
       currency: 'INR',
-      receipt:  `ag_${tutor_id}_${Date.now()}`,
-      notes:    { tutor_id, plan_id },
+      receipt: `ag_${Date.now()}`,
+      notes: { tutor_id, plan_id, uid, type }
     });
 
-    res.json({
-      order_id: order.id,
-      amount:   order.amount,
-      currency: order.currency,
-      key_id:   process.env.RAZORPAY_KEY_ID,
-    });
+    res.json({ order_id: order.id, amount: order.amount, key_id: process.env.RAZORPAY_KEY_ID });
   } catch (err) {
-    console.error('Order creation failed:', err);
-    res.status(500).json({ error: err.error?.description || err.message });
+    res.status(502).json({ error: 'Razorpay Error', message: err.message });
   }
 });
 
-/**
- * POST /api/create-subscription
- * Body: { plan_id: "plan_XXXX", tutor_id: "uid", total_count: 12 }
- * Returns: { subscription_id, key_id }
- *
- * NOTE: plan_id must be created in the Razorpay Dashboard first.
- */
-app.post('/api/create-subscription', async (req, res) => {
-  const { plan_id, tutor_id, total_count = 12 } = req.body;
-
-  if (!plan_id || !tutor_id) {
-    return res.status(400).json({ error: 'plan_id and tutor_id are required' });
-  }
-
-  if (!razorpayReady) {
-    return res.status(503).json({ error: 'Razorpay not configured' });
-  }
-
-  try {
-    const subscription = await razorpay.subscriptions.create({
-      plan_id,
-      total_count,
-      quantity:  1,
-      notes:     { tutor_id },
-    });
-
-    res.json({
-      subscription_id: subscription.id,
-      key_id:          process.env.RAZORPAY_KEY_ID,
-    });
-  } catch (err) {
-    console.error('Subscription creation failed:', err);
-    res.status(500).json({ error: err.error?.description || err.message });
-  }
-});
-
-/**
- * POST /api/webhook
- * Razorpay sends events here. Verifies signature and grants subscription on success.
- *
- * Register this URL in Razorpay Dashboard → Settings → Webhooks:
- *   https://your-server.com/api/webhook
- * Secret: set RAZORPAY_WEBHOOK_SECRET in .env
- */
+// 3. Webhook for Payments
 app.post('/api/webhook', async (req, res) => {
-  const secret    = process.env.RAZORPAY_WEBHOOK_SECRET || '';
-  const signature = req.headers['x-razorpay-signature'] || '';
-  const body      = req.body; // raw Buffer
+  const secret = process.env.RAZORPAY_WEBHOOK_SECRET || 'your_secret';
+  const signature = req.headers['x-razorpay-signature'];
+  const body = JSON.stringify(req.body);
 
-  // Verify signature
-  if (secret) {
-    const expected = crypto
-      .createHmac('sha256', secret)
-      .update(body)
-      .digest('hex');
+  const expectedSignature = crypto.createHmac('sha256', secret).update(body).digest('hex');
 
-    if (expected !== signature) {
-      console.warn('⚠️  Webhook signature mismatch');
-      return res.status(400).json({ error: 'Invalid signature' });
+  if (signature !== expectedSignature) return res.status(400).send('Invalid Signature');
+
+  if (req.body.event === 'payment.captured') {
+    const notes = req.body.payload.payment.entity.notes;
+    try {
+      if (notes.tutor_id) {
+        await admin.firestore().collection('users').doc(notes.tutor_id).update({
+          subscription_status: 'active',
+          subscription_tier: notes.plan_id || 'growth'
+        });
+      }
+    } catch (err) {
+      console.error('Webhook DB Error:', err);
     }
   }
+  res.send('ok');
+});
 
-  let payload;
-  try { payload = JSON.parse(body.toString()); }
-  catch { return res.status(400).json({ error: 'Invalid JSON' }); }
+// 4. File Upload Relay
+app.post('/api/upload', upload.single('file'), async (req, res) => {
+  const file = req.file;
+  const { uid, folder } = req.body;
 
-  const event = payload.event;
-  console.log(`📦 Razorpay Webhook: ${event}`);
+  if (!file || !firebaseApp) return res.status(400).send('Upload failed');
 
   try {
-    if (event === 'payment.captured') {
-      const payment  = payload.payload.payment.entity;
-      const tutorId  = payment.notes?.tutor_id;
-      const amountINR = payment.amount / 100;
-      const tier     = planToTier(amountINR);
+    const bucket = admin.storage().bucket();
+    const filename = `${folder || 'uploads'}/${uid}_${Date.now()}_${file.originalname}`;
+    const blob = bucket.file(filename);
 
-      await grantSubscription(tutorId, tier, {
-        last_payment_id:     payment.id,
-        last_payment_amount: amountINR,
-      });
-    }
-
-    if (event === 'subscription.activated' || event === 'subscription.charged') {
-      const sub      = payload.payload.subscription.entity;
-      const tutorId  = sub.notes?.tutor_id;
-      const tier     = planToTier((sub.plan_id && sub.current_end - sub.current_start) ? 2499 : 0);
-
-      await grantSubscription(tutorId, tier, {
-        razorpay_subscription_id: sub.id,
-      });
-    }
-
-    if (event === 'subscription.cancelled' || event === 'subscription.expired') {
-      const sub     = payload.payload.subscription.entity;
-      const tutorId = sub.notes?.tutor_id;
-      if (firebaseReady && tutorId) {
-        await admin.firestore().collection('users').doc(tutorId).update({
-          is_subscribed:       false,
-          subscription_status: 'inactive',
-        });
-        await admin.database().ref(`tutors/${tutorId}`).update({
-          is_subscribed:       false,
-          subscription_status: 'inactive',
-        });
-        console.log(`⛔ Subscription revoked → tutor:${tutorId}`);
-      }
-    }
-
-    res.json({ received: true });
+    const stream = blob.createWriteStream({ metadata: { contentType: file.mimetype }, resumable: false });
+    stream.on('error', (err) => res.status(500).json({ error: err.message }));
+    stream.on('finish', async () => {
+      await blob.makePublic();
+      res.status(200).json({ url: `https://storage.googleapis.com/${bucket.name}/${blob.name}` });
+    });
+    stream.end(file.buffer);
   } catch (err) {
-    console.error('Webhook handler error:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).send(err.message);
   }
 });
 
-// ── Start ─────────────────────────────────────────────────────────────────────
-const PORT = process.env.PORT || 4000;
+// ── START SERVER ────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
-  console.log(`\n🚀 Antigravity Payment Server running on http://localhost:${PORT}`);
-  console.log(`   Razorpay: ${razorpayReady ? '✅ Configured' : '⚠️  Demo mode (add keys to .env)'}`);
-  console.log(`   Firebase: ${firebaseReady ? '✅ Connected'  : '⚠️  Not connected (add serviceAccountKey.json)'}`);
-  console.log(`   Health:   http://localhost:${PORT}/api/health\n`);
+  console.log(`🚀 Monolithic Server running on port ${PORT}`);
+  console.log(`📡 Health Check: http://localhost:${PORT}/api/health`);
 });
