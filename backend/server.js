@@ -56,7 +56,12 @@ app.use(express.json());
 
 /** Health & Vercel Verification */
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', firebase: firebaseReady, vercel: true });
+  res.json({ 
+    status: 'ok', 
+    firebase: firebaseReady, 
+    razorpay: !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET),
+    vercel: true 
+  });
 });
 
 /** 
