@@ -5,6 +5,12 @@ import multer from 'multer';
 import crypto from 'crypto';
 import admin from 'firebase-admin';
 import Razorpay from 'razorpay';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -19,14 +25,25 @@ app.use(express.json());
 const initFirebase = () => {
   if (admin.apps.length > 0) return admin.apps[0];
 
+  let serviceAccount;
+  const keyPath = process.env.FIREBASE_KEY_PATH;
   const keyJson = process.env.FIREBASE_KEY_JSON;
-  if (!keyJson) {
-    console.error("❌ CRITICAL: FIREBASE_KEY_JSON missing in .env");
-    return null;
-  }
 
   try {
-    const serviceAccount = JSON.parse(keyJson.trim());
+    if (keyPath) {
+      // Read from file path
+      const absolutePath = path.isAbsolute(keyPath) 
+        ? keyPath 
+        : path.join(__dirname, keyPath);
+      serviceAccount = JSON.parse(fs.readFileSync(absolutePath, 'utf8'));
+    } else if (keyJson) {
+      // Fallback to environment variable string
+      serviceAccount = JSON.parse(keyJson.trim());
+    } else {
+      console.error("❌ CRITICAL: Neither FIREBASE_KEY_PATH nor FIREBASE_KEY_JSON found in .env");
+      return null;
+    }
+
     return admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
       databaseURL: process.env.FIREBASE_DATABASE_URL || "https://antigravity-tuition-os-default-rtdb.asia-southeast1.firebasedatabase.app",
