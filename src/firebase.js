@@ -21,7 +21,7 @@ const firebaseConfig = {
   apiKey:            "AIzaSyCzTijbLiM6kd-GuHGEbsPYr2U_Psw4pnc",
   authDomain:        "antigravity-tuition-os.firebaseapp.com",
   projectId:         "antigravity-tuition-os",
-  storageBucket:     "antigravity-tuition-os.firebasestorage.app",
+  storageBucket:     "ppr-education-bucket",
   messagingSenderId: "1021639170510",
   appId:             "1:1021639170510:web:9d6a803eb5226d5be0f39f",
   // ⚠️ If you see a databaseURL error, go to:
