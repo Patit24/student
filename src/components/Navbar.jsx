@@ -45,12 +45,9 @@ export default function Navbar() {
         {/* Logo */}
         <Link
           to={currentUser ? dashPath : '/'}
-          style={{ textDecoration: 'none', color: '#F0F4FF', display: 'flex', alignItems: 'center', gap: '0.6rem' }}
+          style={{ textDecoration: 'none', color: '#F0F4FF', display: 'flex', alignItems: 'center' }}
         >
-          <img src={logoImg} alt="PPREducation" style={{ height: '36px', width: 'auto' }} />
-          <span style={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.02em' }}>
-            PPREducation
-          </span>
+          <img src={logoImg} alt="PPREducation" style={{ height: '55px', width: 'auto', display: 'block' }} />
         </Link>
 
         {/* Right side */}

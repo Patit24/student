@@ -15,6 +15,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import TutorDiscovery from './pages/TutorDiscovery';
 import TutorProfile from './pages/TutorProfile';
 import ResumeBuilder from './pages/ResumeBuilder';
+import Footer from './components/Footer';
 import './index.css';
 
 function AppRoutes() {
@@ -76,6 +77,7 @@ function App() {
         <Router>
           <Navbar />
           <AppRoutes />
+          <Footer />
         </Router>
       </ToastProvider>
     </AppProvider>
