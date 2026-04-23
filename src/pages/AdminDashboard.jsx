@@ -31,8 +31,8 @@ export default function AdminDashboard() {
       const real = snap.docs.map(d => ({ 
         id: d.id, 
         ...d.data(),
-        // Only use fallback if NO txn_id exists at all in DB
-        txn_id: d.data().transaction_id || d.data().txn_id || (isMockMode ? `MOCK-TXN-${d.id}` : 'N/A')
+        // Correct field name from Pricing.jsx: payment_tx_id
+        txn_id: d.data().payment_tx_id || (isMockMode ? `MOCK-TXN-${d.id}` : 'N/A')
       }));
       
       if (real.length > 0 || !isMockMode) {
@@ -214,7 +214,7 @@ export default function AdminDashboard() {
                                 className="btn-approve"
                                 onClick={() => {
                                   setVerifyingTutor(tutor);
-                                  setSelectedPlan(tutor.requested_plan || 'pro');
+                                  setSelectedPlan(tutor.pending_plan || 'growth');
                                 }}
                               >
                                 Review
@@ -289,9 +289,9 @@ export default function AdminDashboard() {
                       onChange={(e) => setSelectedPlan(e.target.value)}
                       className="premium-select"
                     >
-                      <option value="growth">Growth Plan (Basic)</option>
-                      <option value="pro">Premium Plan (Recommended)</option>
-                      <option value="enterprise">Enterprise Plan (Ultimate)</option>
+                      <option value="starter">Basic Plan (Free)</option>
+                      <option value="growth">Growth Plan (Popular)</option>
+                      <option value="pro">Elite Plan (Best Value)</option>
                     </select>
                   </div>
                 </div>
