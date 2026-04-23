@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube, ArrowRight } from 'lucide-react';
+import * as Icons from 'lucide-react';
+const { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube, ArrowRight } = Icons;
 import logoImg from '../assets/logopng.png';
 import './Footer.css';
 
