@@ -326,7 +326,7 @@ export function AppProvider({ children }) {
       return;
     }
 
-    let unsubAuth, unsubProfile, unsubBatches, unsubStudents, unsubMaterials, unsubPurchases, unsubTutorList;
+    let unsubAuth, unsubProfile, unsubBatches, unsubStudents, unsubMaterials, unsubPurchases;
 
     unsubAuth = onAuthStateChanged(auth, async (user) => {
       // ── Bypass Check: If we already have a mock/bypass admin, don't let null auth kick them out ──
@@ -410,13 +410,6 @@ export function AppProvider({ children }) {
             );
           }
         }
-
-        // ── Teacher Lists Listener (Always sync after login) ──
-        const tutorQ = query(collection(db, 'users'), where('role', '==', 'tutor'));
-        unsubTutorList = onSnapshot(tutorQ, (snap) => {
-          const tutors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-          setMockTutors(tutors);
-        });
       } catch (err) {
         console.error('Auth sync error:', err);
         setLoading(false);
@@ -424,14 +417,24 @@ export function AppProvider({ children }) {
     });
 
     return () => {
-      unsubAuth();
+      if (unsubAuth) unsubAuth();
       if (unsubStudents) unsubStudents();
       if (unsubBatches)  unsubBatches();
       if (unsubProfile)  unsubProfile();
-      if (unsubTutorList) unsubTutorList();
       if (unsubMaterials) unsubMaterials();
       if (unsubPurchases) unsubPurchases();
     };
+  }, [isMockMode]);
+
+  // ── Global Tutor List Listener (Public) ──
+  useEffect(() => {
+    if (isMockMode) return;
+    const tutorQ = query(collection(db, 'users'), where('role', '==', 'tutor'));
+    const unsub = onSnapshot(tutorQ, (snap) => {
+      const tutors = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setMockTutors(tutors);
+    });
+    return () => unsub();
   }, [isMockMode]);
 
   // ── AUTH ACTIONS ──
