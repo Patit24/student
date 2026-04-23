@@ -4,7 +4,8 @@ import { useAppContext } from '../context/AuthContext';
 import { 
   Users, DollarSign, Activity, CheckCircle, XCircle, 
   Trash2, Package, LogOut, LayoutDashboard, Search,
-  TrendingUp, CreditCard, ShieldCheck
+  TrendingUp, CreditCard, ShieldCheck, ExternalLink,
+  Lock, ArrowRight, UserCheck
 } from 'lucide-react';
 import { subscribeGlobalAssets, deleteGlobalAsset } from '../db.service';
 import { useToast } from '../components/Toast';
@@ -20,14 +21,18 @@ export default function AdminDashboard() {
   // KPIs & Tutors
   const [tutors, setTutors] = useState([]);
   
+  // Selection for Verification
+  const [verifyingTutor, setVerifyingTutor] = useState(null);
+  const [selectedPlan, setSelectedPlan] = useState('pro');
+
   useEffect(() => {
     const q = query(collection(db, 'users'), where('role', '==', 'tutor'));
     const unsub = onSnapshot(q, (snap) => {
       const real = snap.docs.map(d => ({ 
         id: d.id, 
         ...d.data(),
-        // Mock transaction ID if missing
-        txn_id: d.data().txn_id || `TXN-${Math.random().toString(36).substring(7).toUpperCase()}`
+        // Only use fallback if NO txn_id exists at all in DB
+        txn_id: d.data().transaction_id || d.data().txn_id || (isMockMode ? `MOCK-TXN-${d.id}` : 'N/A')
       }));
       
       if (real.length > 0 || !isMockMode) {
@@ -55,20 +60,19 @@ export default function AdminDashboard() {
     return acc;
   }, 0);
 
-  const toggleTutorStatus = async (id, currentStatus) => {
-    if (isMockMode) {
-      setTutors(prev => prev.map(t => t.id === id ? { ...t, subscription_status: currentStatus === 'active' ? 'inactive' : 'active' } : t));
-      toast.success('Mock: Tutor status updated');
-      return;
-    }
+  const approveTutor = async () => {
+    if (!verifyingTutor) return;
     try {
-      await updateDoc(doc(db, 'users', id), {
-        subscription_status: currentStatus === 'active' ? 'inactive' : 'active'
+      await updateDoc(doc(db, 'users', verifyingTutor.id), {
+        subscription_status: 'active',
+        subscription_tier: selectedPlan,
+        approved_at: new Date().toISOString()
       });
-      toast.success('Tutor status updated');
+      toast.success(`Plan ${selectedPlan.toUpperCase()} Activated for ${verifyingTutor.name}! 🚀`);
+      setVerifyingTutor(null);
     } catch (err) {
-      console.error("Update error:", err);
-      toast.error('Update failed: ' + err.message);
+      console.error("Approval error:", err);
+      toast.error('Activation failed: ' + err.message);
     }
   };
 
@@ -205,12 +209,23 @@ export default function AdminDashboard() {
                         </td>
                         <td style={{ textAlign: 'right' }}>
                           <div className="flex justify-end gap-3">
-                            {tutor.subscription_status !== 'active' && (
+                            {tutor.subscription_status !== 'active' ? (
                               <button 
                                 className="btn-approve"
-                                onClick={() => toggleTutorStatus(tutor.id, 'inactive')}
+                                onClick={() => {
+                                  setVerifyingTutor(tutor);
+                                  setSelectedPlan(tutor.requested_plan || 'pro');
+                                }}
                               >
-                                Approve
+                                Review
+                              </button>
+                            ) : (
+                              <button 
+                                className="btn-remove"
+                                style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', borderColor: 'rgba(34, 197, 94, 0.2)' }}
+                                onClick={() => setVerifyingTutor(tutor)}
+                              >
+                                Manage
                               </button>
                             )}
                             <button 
@@ -228,8 +243,73 @@ export default function AdminDashboard() {
               </div>
             </div>
           </main>
-
         </div>
+
+        {/* ── 4K MANUAL PAYMENT VERIFICATION CARD (MODAL) ── */}
+        {verifyingTutor && (
+          <div className="verification-overlay animate-fade-in">
+            <div className="glass-card verification-card animate-premium">
+              <button className="close-modal" onClick={() => setVerifyingTutor(null)}><XCircle /></button>
+              
+              <div className="verification-header">
+                <div className="header-badge">Manual Payment Verification</div>
+                <h2 className="cinematic-title">Verify & Approve</h2>
+              </div>
+
+              <div className="verification-body">
+                {/* Profile Snapshot */}
+                <div className="tutor-profile-snapshot">
+                  <div className="pfp-container">
+                    <img 
+                      src={verifyingTutor.profile_image || `https://ui-avatars.com/api/?name=${verifyingTutor.name}&background=f5c518&color=0a0e1a&bold=true`} 
+                      alt="Tutor" 
+                    />
+                  </div>
+                  <div className="tutor-info">
+                    <h3>{verifyingTutor.name}</h3>
+                    <p>{verifyingTutor.email}</p>
+                  </div>
+                </div>
+
+                {/* Glowing Transaction ID Section */}
+                <div className="txn-highlight-box">
+                  <span className="label">Verification Code</span>
+                  <div className="glowing-txn-id">
+                    Transaction ID: <span className="gold-text">{verifyingTutor.txn_id}</span>
+                  </div>
+                </div>
+
+                {/* Plan Selection */}
+                <div className="plan-selection-area">
+                  <label>Select Plan to Activate</label>
+                  <div className="plan-dropdown-container">
+                    <Package size={18} className="dropdown-icon" />
+                    <select 
+                      value={selectedPlan} 
+                      onChange={(e) => setSelectedPlan(e.target.value)}
+                      className="premium-select"
+                    >
+                      <option value="growth">Growth Plan (Basic)</option>
+                      <option value="pro">Premium Plan (Recommended)</option>
+                      <option value="enterprise">Enterprise Plan (Ultimate)</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="verification-footer">
+                <button 
+                  className="btn-verify-approve"
+                  onClick={approveTutor}
+                >
+                  <UserCheck size={20} /> Verify & Approve Plan
+                </button>
+                <p className="footer-disclaimer">By clicking verify, you confirm that the transaction ID matches your bank records.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
