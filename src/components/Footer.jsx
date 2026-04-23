@@ -1,11 +1,21 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import * as Icons from 'lucide-react';
-const { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube, ArrowRight } = Icons;
 import logoImg from '../assets/logopng.png';
 import './Footer.css';
 
 const Footer = () => {
+  // Safe Icon Picker
+  const getIcon = (name) => Icons[name] || Icons[`${name}Icon`] || Icons.HelpCircle || (() => null);
+
+  const MailIcon = getIcon('Mail');
+  const PhoneIcon = getIcon('Phone');
+  const MapPinIcon = getIcon('MapPin');
+  const FacebookIcon = getIcon('Facebook');
+  const TwitterIcon = getIcon('Twitter');
+  const InstagramIcon = getIcon('Instagram');
+  const YoutubeIcon = getIcon('Youtube');
+  const ArrowRightIcon = getIcon('ArrowRight');
   return (
     <footer className="footer-root">
       <div className="container">
@@ -18,10 +28,10 @@ const Footer = () => {
               Join PPREducation today and transform your educational journey.
             </p>
             <div className="social-links">
-              <a href="#" className="social-icon"><Facebook size={18} /></a>
-              <a href="#" className="social-icon"><Twitter size={18} /></a>
-              <a href="#" className="social-icon"><Instagram size={18} /></a>
-              <a href="#" className="social-icon"><Youtube size={18} /></a>
+              <a href="#" className="social-icon"><FacebookIcon size={18} /></a>
+              <a href="#" className="social-icon"><TwitterIcon size={18} /></a>
+              <a href="#" className="social-icon"><InstagramIcon size={18} /></a>
+              <a href="#" className="social-icon"><YoutubeIcon size={18} /></a>
             </div>
           </div>
 
@@ -29,11 +39,11 @@ const Footer = () => {
           <div className="footer-nav">
             <h4>Quick Links</h4>
             <ul>
-              <li><Link to="/"><ArrowRight size={14} /> Home</Link></li>
-              <li><Link to="/search"><ArrowRight size={14} /> Find Tutors</Link></li>
-              <li><Link to="/about"><ArrowRight size={14} /> About Us</Link></li>
-              <li><Link to="/resume-builder"><ArrowRight size={14} /> Resume Builder</Link></li>
-              <li><Link to="/pricing"><ArrowRight size={14} /> Pricing</Link></li>
+              <li><Link to="/"><ArrowRightIcon size={14} /> Home</Link></li>
+              <li><Link to="/search"><ArrowRightIcon size={14} /> Find Tutors</Link></li>
+              <li><Link to="/about"><ArrowRightIcon size={14} /> About Us</Link></li>
+              <li><Link to="/resume-builder"><ArrowRightIcon size={14} /> Resume Builder</Link></li>
+              <li><Link to="/pricing"><ArrowRightIcon size={14} /> Pricing</Link></li>
             </ul>
           </div>
 
@@ -41,15 +51,15 @@ const Footer = () => {
           <div className="footer-contact">
             <h4>Contact Us</h4>
             <div className="contact-item">
-              <Mail size={18} />
+              <MailIcon size={18} />
               <span>support@ppreducation.in</span>
             </div>
             <div className="contact-item">
-              <Phone size={18} />
+              <PhoneIcon size={18} />
               <span>+91 9014842370</span>
             </div>
             <div className="contact-item">
-              <MapPin size={18} />
+              <MapPinIcon size={18} />
               <span>Noida, Uttar Pradesh, India</span>
             </div>
           </div>
