@@ -14,6 +14,7 @@ import StudentDashboard from './pages/StudentDashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import TutorDiscovery from './pages/TutorDiscovery';
 import TutorProfile from './pages/TutorProfile';
+import ResumeBuilder from './pages/ResumeBuilder';
 import './index.css';
 
 function AppRoutes() {
@@ -35,6 +36,7 @@ function AppRoutes() {
       <Route path="/search" element={<TutorDiscovery />} />
       <Route path="/tutor/:id" element={<TutorProfile />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/resume-builder" element={<ResumeBuilder />} />
       {/* Removed Resume Builder */}
 
       {!currentUser ? (
