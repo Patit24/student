@@ -56,23 +56,35 @@ export default function AdminDashboard() {
   }, 0);
 
   const toggleTutorStatus = async (id, currentStatus) => {
+    if (isMockMode) {
+      setTutors(prev => prev.map(t => t.id === id ? { ...t, subscription_status: currentStatus === 'active' ? 'inactive' : 'active' } : t));
+      toast.success('Mock: Tutor status updated');
+      return;
+    }
     try {
       await updateDoc(doc(db, 'users', id), {
         subscription_status: currentStatus === 'active' ? 'inactive' : 'active'
       });
       toast.success('Tutor status updated');
     } catch (err) {
-      toast.error('Update failed');
+      console.error("Update error:", err);
+      toast.error('Update failed: ' + err.message);
     }
   };
 
   const removeTutor = async (id) => {
     if (window.confirm('Are you sure you want to remove this tutor permanentely?')) {
+      if (isMockMode) {
+        setTutors(prev => prev.filter(t => t.id !== id));
+        toast.success('Mock: Tutor removed');
+        return;
+      }
       try {
         await deleteDoc(doc(db, 'users', id));
         toast.success('Tutor removed from platform');
       } catch (err) {
-        toast.error('Removal failed');
+        console.error("Delete error:", err);
+        toast.error('Removal failed: ' + err.message);
       }
     }
   };
