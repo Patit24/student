@@ -1,125 +1,61 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AuthContext';
-import { Users, DollarSign, Activity, CheckCircle, XCircle, Upload, FileText, Trash2, Plus, Globe, Package, LogOut, LayoutDashboard } from 'lucide-react';
-import { uploadGlobalAsset, subscribeGlobalAssets, deleteGlobalAsset, uploadFileToStorage } from '../db.service';
+import { 
+  Users, DollarSign, Activity, CheckCircle, XCircle, 
+  Trash2, Package, LogOut, LayoutDashboard, Search,
+  TrendingUp, CreditCard, ShieldCheck
+} from 'lucide-react';
+import { subscribeGlobalAssets, deleteGlobalAsset } from '../db.service';
 import { useToast } from '../components/Toast';
-import { collection, query, where, onSnapshot, updateDoc, doc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import './AdminDashboard.css';
 
 export default function AdminDashboard() {
-  const { isMockMode, currentUser } = useAppContext();
+  const { isMockMode, currentUser, logout } = useAppContext();
   const toast = useToast();
+  const navigate = useNavigate();
 
   // KPIs & Tutors
   const [tutors, setTutors] = useState([]);
   
   useEffect(() => {
-    if (isMockMode || currentUser?.uid === 'admin-1') {
-      const q = query(collection(db, 'users'), where('role', '==', 'tutor'));
-      const unsub = onSnapshot(q, (snap) => {
-        const real = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        if (real.length > 0) {
-          setTutors(real);
-        } else {
-          setTutors([
-            { id: 't1', name: 'Demo Tutor', email: 'tutor@demo.com', subscription_tier: 'pro', subscription_status: 'active' },
-            { id: 't2', name: 'New Teacher', email: 'new@demo.com', subscription_tier: 'growth', subscription_status: 'inactive' },
-          ]);
-        }
-      });
-      return unsub;
-    }
     const q = query(collection(db, 'users'), where('role', '==', 'tutor'));
-    return onSnapshot(q, (snap) => {
-      setTutors(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    const unsub = onSnapshot(q, (snap) => {
+      const real = snap.docs.map(d => ({ 
+        id: d.id, 
+        ...d.data(),
+        // Mock transaction ID if missing
+        txn_id: d.data().txn_id || `TXN-${Math.random().toString(36).substring(7).toUpperCase()}`
+      }));
+      
+      if (real.length > 0 || !isMockMode) {
+        setTutors(real);
+      } else {
+        // Fallback Mock Data
+        setTutors([
+          { id: 't1', name: 'Dr. Sarah Wilson', email: 'sarah@edu.com', subscription_tier: 'pro', subscription_status: 'active', txn_id: 'TXN-PPR88231' },
+          { id: 't2', name: 'John Miller', email: 'john@edu.com', subscription_tier: 'growth', subscription_status: 'inactive', txn_id: 'TXN-PPR99104' },
+          { id: 't3', name: 'Emily Davis', email: 'emily@edu.com', subscription_tier: 'pro', subscription_status: 'inactive', txn_id: 'TXN-PPR44120' },
+        ]);
+      }
     });
-  }, [isMockMode, currentUser]);
+    return unsub;
+  }, [isMockMode]);
 
   const totalTutors = tutors.length;
-  const activeTutors = tutors.filter(t => t.subscription_status === 'active').length;
+  const pendingTutors = tutors.filter(t => t.subscription_status !== 'active').length;
   
-  // Calculate Revenue
   const revenue = tutors.reduce((acc, tutor) => {
     if (tutor.subscription_status === 'active') {
-      if (tutor.subscription_tier === 'pro') return acc + 99;
-      if (tutor.subscription_tier === 'growth') return acc + 29;
+      if (tutor.subscription_tier === 'pro') return acc + 999;
+      if (tutor.subscription_tier === 'growth') return acc + 499;
     }
     return acc;
   }, 0);
 
-  // Asset Manager State
-  const [globalAssets, setGlobalAssets] = useState([]);
-  const [newAsset, setNewAsset] = useState({ title: '', class_name: '', subject: '', is_free: true, price: 0 });
-  const [file, setFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-
-  useEffect(() => {
-    if (isMockMode || currentUser?.uid === 'admin-1') {
-      setGlobalAssets([
-        { id: 'ga1', title: 'Calculus Guide', class_name: '12th', subject: 'Maths', is_free: true, price: 0 },
-        { id: 'ga2', title: 'Physics Formula Sheet', class_name: '11th', subject: 'Physics', is_free: false, price: 99 },
-      ]);
-      return;
-    }
-    const unsub = subscribeGlobalAssets(setGlobalAssets);
-    return unsub;
-  }, [isMockMode, currentUser]);
-
-  const handleUploadAsset = async (e) => {
-    e.preventDefault();
-    if (!newAsset.title || !file) {
-      toast.error('Please provide a title and select a file.');
-      return;
-    }
-    if (file.size > 20 * 1024 * 1024) {
-      toast.error('File is too large (>20MB). Please use a compressed PDF.');
-      return;
-    }
-    setUploading(true);
-    setUploadProgress(0);
-    try {
-      let file_url = '#';
-      if (!isMockMode) {
-        console.log("Starting upload to Storage...");
-        file_url = await uploadFileToStorage(file, 'global_library', (p) => setUploadProgress(p));
-      }
-      console.log("Saving asset to Firestore...");
-      await uploadGlobalAsset({ ...newAsset, file_url });
-      setNewAsset({ title: '', class_name: '', subject: '', is_free: true, price: 0 });
-      setFile(null);
-      setUploadProgress(0);
-      toast.success('Asset uploaded successfully! 🚀');
-    } catch (err) {
-      console.error('Upload error:', err);
-      if (err.message.includes('CORS')) {
-        toast.error('CORS Error: Please run the gsutil command I provided in the chat.');
-      } else {
-        toast.error('Upload failed: ' + err.message);
-      }
-    } finally {
-      setUploading(false);
-      setUploadProgress(0);
-    }
-  };
-
-  const handleDeleteAsset = async (id) => {
-    if (window.confirm('Delete this asset?')) {
-      try {
-        await deleteGlobalAsset(id);
-        toast.success('Asset deleted');
-      } catch (err) {
-        toast.error('Delete failed');
-      }
-    }
-  };
-
   const toggleTutorStatus = async (id, currentStatus) => {
-    if (isMockMode) {
-      setTutors(prev => prev.map(t => t.id === id ? { ...t, subscription_status: currentStatus === 'active' ? 'inactive' : 'active' } : t));
-      return;
-    }
     try {
       await updateDoc(doc(db, 'users', id), {
         subscription_status: currentStatus === 'active' ? 'inactive' : 'active'
@@ -130,8 +66,16 @@ export default function AdminDashboard() {
     }
   };
 
-  const navigate = useNavigate();
-  const { logout } = useAppContext();
+  const removeTutor = async (id) => {
+    if (window.confirm('Are you sure you want to remove this tutor permanentely?')) {
+      try {
+        await deleteDoc(doc(db, 'users', id));
+        toast.success('Tutor removed from platform');
+      } catch (err) {
+        toast.error('Removal failed');
+      }
+    }
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -139,193 +83,140 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="container mt-8 animate-fade-in" style={{ paddingBottom: '4rem' }}>
-      <div className="flex justify-between items-start mb-8" style={{ flexWrap: 'wrap', gap: '1rem' }}>
-        <div>
-          <h2 className="flex items-center gap-2">
-            <LayoutDashboard size={28} color="var(--primary)"/> 
-            Super Admin Dashboard
-          </h2>
-          <p className="text-muted">Master Oversight & Global Asset Control</p>
-        </div>
-        <div className="flex gap-4">
-          <div className="glass-panel p-4 flex gap-8 items-center" style={{ padding: '0.75rem 1.5rem' }}>
-            <div>
-              <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Tutors</p>
-              <h3 style={{ margin: 0 }}>{totalTutors}</h3>
+    <div className="admin-premium-root">
+      <div className="container" style={{ maxWidth: '1440px' }}>
+        
+        {/* Header */}
+        <header className="flex justify-between items-center mb-10 animate-premium">
+          <div className="flex items-center gap-4">
+            <div className="glass-card p-3" style={{ borderRadius: '15px' }}>
+              <ShieldCheck size={32} color="#f5c518" />
             </div>
-            <div style={{ width: '1px', height: '30px', background: 'var(--border)' }} />
             <div>
-              <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>Active Revenue</p>
-              <h3 style={{ margin: 0, color: 'var(--secondary)' }}>${revenue}</h3>
+              <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0, letterSpacing: '-0.5px' }}>
+                Command <span style={{ color: '#f5c518' }}>Center</span>
+              </h1>
+              <p style={{ color: '#7a8ba8', fontSize: '0.9rem', margin: 0 }}>Super Admin Authority · PPREducation</p>
             </div>
           </div>
-          <button onClick={handleLogout} className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderColor: 'var(--danger)', color: 'var(--danger)' }}>
-            <LogOut size={16}/> Logout
-          </button>
-        </div>
-      </div>
 
-      {/* KPI Cards */}
-      <div className="flex gap-4 mb-8" style={{ flexWrap: 'wrap' }}>
-        <div className="glass-panel p-4 flex items-center gap-4" style={{ flex: 1, minWidth: '200px' }}>
-          <div style={{ padding: '1rem', background: 'rgba(79, 70, 229, 0.2)', borderRadius: '50%' }}>
-            <Users size={24} color="var(--primary)" />
+          <div className="flex items-center gap-6">
+            <div className="glass-card flex items-center gap-3 px-4 py-2">
+              <div style={{ width: '10px', height: '10px', background: '#22c55e', borderRadius: '50%', boxShadow: '0 0 10px #22c55e' }} />
+              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>System Live</span>
+            </div>
+            <button onClick={handleLogout} className="btn-remove" style={{ padding: '0.6rem 1.2rem' }}>
+              <LogOut size={18} />
+            </button>
           </div>
-          <div>
-            <p className="text-muted" style={{ fontSize: '0.85rem' }}>Total Registered Tutors</p>
-            <h3>{totalTutors}</h3>
-          </div>
-        </div>
+        </header>
 
-        <div className="glass-panel p-4 flex items-center gap-4" style={{ flex: 1, minWidth: '200px' }}>
-          <div style={{ padding: '1rem', background: 'rgba(16, 185, 129, 0.2)', borderRadius: '50%' }}>
-            <Activity size={24} color="var(--secondary)" />
-          </div>
-          <div>
-            <p className="text-muted" style={{ fontSize: '0.85rem' }}>Active Tutors</p>
-            <h3>{activeTutors}</h3>
-          </div>
-        </div>
-
-        <div className="glass-panel p-4 flex items-center gap-4" style={{ flex: 1, minWidth: '200px' }}>
-          <div style={{ padding: '1rem', background: 'rgba(239, 68, 68, 0.2)', borderRadius: '50%' }}>
-            <DollarSign size={24} color="var(--danger)" />
-          </div>
-          <div>
-            <p className="text-muted" style={{ fontSize: '0.85rem' }}>Platform Revenue</p>
-            <h3>₹{revenue}</h3>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex gap-8" style={{ flexWrap: 'wrap' }}>
-        {/* Global Asset Manager */}
-        <div className="glass-panel p-8" style={{ flex: 1, minWidth: '400px' }}>
-          <h3 className="mb-4 flex items-center gap-2"><Upload size={20}/> Global Asset Library</h3>
-          <p className="text-muted mb-6" style={{ fontSize: '0.85rem' }}>Upload PDFs directly from your device for the global library.</p>
+        <div className="flex gap-10">
           
-          <form onSubmit={handleUploadAsset} className="flex-col gap-4">
-            <input 
-              type="text" className="input-field" placeholder="Asset Title" 
-              value={newAsset.title} onChange={e => setNewAsset({...newAsset, title: e.target.value})} required 
-            />
-            <div className="flex gap-4">
-              <input 
-                type="text" className="input-field" placeholder="Class (e.g. 10th)" 
-                value={newAsset.class_name} onChange={e => setNewAsset({...newAsset, class_name: e.target.value})} 
-              />
-              <input 
-                type="text" className="input-field" placeholder="Subject" 
-                value={newAsset.subject} onChange={e => setNewAsset({...newAsset, subject: e.target.value})} 
-              />
+          {/* Sidebar Stats */}
+          <aside className="admin-sidebar animate-premium" style={{ animationDelay: '0.1s' }}>
+            <div className="glass-card stat-box">
+              <span className="stat-label">Total Tutors</span>
+              <div className="flex items-end justify-between">
+                <span className="stat-value">{totalTutors}</span>
+                <Users size={24} color="#7a8ba8" />
+              </div>
+              <div style={{ marginTop: '1rem', fontSize: '0.75rem', color: '#22c55e' }}>
+                <TrendingUp size={12} /> +12% this month
+              </div>
             </div>
-            
-            <div className="flex-col gap-2">
-              <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Select PDF Material</label>
-              <input 
-                type="file" accept="application/pdf" className="input-field" 
-                onChange={e => setFile(e.target.files[0])} required 
-              />
+
+            <div className="glass-card stat-box">
+              <span className="stat-label">Pending Approval</span>
+              <div className="flex items-end justify-between">
+                <span className="stat-value" style={{ color: '#ef4444' }}>{pendingTutors}</span>
+                <Activity size={24} color="#7a8ba8" />
+              </div>
+              <p style={{ fontSize: '0.75rem', marginTop: '0.8rem', color: '#7a8ba8' }}>Awaiting verification</p>
             </div>
-            
-            <div className="flex items-center justify-between p-3" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '10px' }}>
-              <label className="flex items-center gap-2" style={{ cursor: 'pointer' }}>
-                <input 
-                  type="checkbox" checked={newAsset.is_free} 
-                  onChange={e => setNewAsset({...newAsset, is_free: e.target.checked, price: e.target.checked ? 0 : newAsset.price})} 
-                />
-                Is Free?
-              </label>
-              {!newAsset.is_free && (
-                <div className="flex items-center gap-2">
-                  <span>Price: ₹</span>
+
+            <div className="glass-card stat-box">
+              <span className="stat-label">Pending Payments</span>
+              <div className="flex items-end justify-between">
+                <span className="stat-value">₹{revenue.toLocaleString()}</span>
+                <CreditCard size={24} color="#7a8ba8" />
+              </div>
+              <p style={{ fontSize: '0.75rem', marginTop: '0.8rem', color: '#7a8ba8' }}>Projected Revenue</p>
+            </div>
+          </aside>
+
+          {/* Main Content: Tutor Management */}
+          <main style={{ flex: 1 }} className="animate-premium" style={{ animationDelay: '0.2s' }}>
+            <div className="glass-card p-8">
+              <div className="flex justify-between items-center mb-8">
+                <h3 className="flex items-center gap-3">
+                  <Users size={22} color="#f5c518" />
+                  Tutor Management
+                </h3>
+                <div className="glass-card flex items-center px-4 py-2" style={{ width: '300px' }}>
+                  <Search size={18} color="#7a8ba8" />
                   <input 
-                    type="number" className="input-field" style={{ width: '80px', padding: '0.3rem' }}
-                    value={newAsset.price} onChange={e => setNewAsset({...newAsset, price: Number(e.target.value)})}
+                    type="text" placeholder="Search Tutors..." 
+                    style={{ background: 'transparent', border: 'none', color: 'white', padding: '0 1rem', width: '100%', outline: 'none' }}
                   />
                 </div>
-              )}
-            </div>
-
-            <button type="submit" className="btn btn-primary" disabled={uploading}>
-              {uploading ? `Uploading (${Math.round(uploadProgress)}%)` : <><Plus size={18}/> Upload to Library</>}
-            </button>
-            
-            {uploading && (
-              <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden', marginTop: '0.5rem' }}>
-                <div style={{ width: `${uploadProgress}%`, height: '100%', background: 'var(--primary)', transition: 'width 0.3s ease' }} />
               </div>
-            )}
-          </form>
 
-          <div className="mt-8">
-            <h4 className="mb-4">Live Assets</h4>
-            <div className="flex-col gap-2">
-              {globalAssets.map(asset => (
-                <div key={asset.id} className="flex justify-between items-center p-3" style={{ borderBottom: '1px solid var(--border)' }}>
-                  <div>
-                    <p style={{ fontWeight: 600, margin: 0 }}>{asset.title}</p>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>
-                      {asset.class_name} · {asset.subject} · {asset.is_free ? <span style={{ color: 'var(--secondary)' }}>Free</span> : <span>₹{asset.price}</span>}
-                    </p>
-                  </div>
-                  <button onClick={() => handleDeleteAsset(asset.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--danger)' }}>
-                    <Trash2 size={16}/>
-                  </button>
-                </div>
-              ))}
+              <div style={{ overflowX: 'auto' }}>
+                <table className="premium-table">
+                  <thead>
+                    <tr>
+                      <th>Name / Email</th>
+                      <th>Transaction ID</th>
+                      <th>Status</th>
+                      <th style={{ textAlign: 'right' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tutors.map(tutor => (
+                      <tr key={tutor.id}>
+                        <td>
+                          <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{tutor.name}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#7a8ba8' }}>{tutor.email}</div>
+                        </td>
+                        <td>
+                          <code style={{ color: '#f5c518', fontSize: '0.8rem', background: 'rgba(245, 197, 24, 0.05)', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
+                            {tutor.txn_id}
+                          </code>
+                        </td>
+                        <td>
+                          {tutor.subscription_status === 'active' ? (
+                            <span className="badge-active">Approved</span>
+                          ) : (
+                            <span className="badge-pending">Pending Approval</span>
+                          )}
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <div className="flex justify-end gap-3">
+                            {tutor.subscription_status !== 'active' && (
+                              <button 
+                                className="btn-approve"
+                                onClick={() => toggleTutorStatus(tutor.id, 'inactive')}
+                              >
+                                Approve
+                              </button>
+                            )}
+                            <button 
+                              className="btn-remove"
+                              onClick={() => removeTutor(tutor.id)}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-        </div>
+          </main>
 
-        {/* Registered Tutors Management */}
-        <div className="glass-panel p-8" style={{ flex: 1.5, minWidth: '500px' }}>
-          <h3 className="mb-6 flex items-center gap-2"><Users size={22}/> Registered Tutors</h3>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                  <th style={{ padding: '1rem 0' }}>Tutor Details</th>
-                  <th>Subscription</th>
-                  <th>Status</th>
-                  <th style={{ textAlign: 'right' }}>Management</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tutors.map(tutor => (
-                  <tr key={tutor.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                    <td style={{ padding: '1.2rem 0' }}>
-                      <div style={{ fontWeight: 600 }}>{tutor.name}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{tutor.email}</div>
-                    </td>
-                    <td>
-                      <div className="flex items-center gap-2" style={{ textTransform: 'capitalize', fontSize: '0.85rem' }}>
-                        <Package size={14} color="var(--primary)" />
-                        {tutor.subscription_tier || 'Free'}
-                      </div>
-                    </td>
-                    <td>
-                      {tutor.subscription_status === 'active' ? (
-                        <span style={{ color: 'var(--secondary)', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', fontWeight: 600 }}><CheckCircle size={14}/> Active</span>
-                      ) : (
-                        <span style={{ color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.8rem', fontWeight: 600 }}><XCircle size={14}/> Inactive</span>
-                      )}
-                    </td>
-                    <td style={{ textAlign: 'right' }}>
-                      <button 
-                        className={`btn ${tutor.subscription_status === 'active' ? 'btn-danger' : 'btn-secondary'}`}
-                        style={{ padding: '0.3rem 0.8rem', fontSize: '0.75rem' }}
-                        onClick={() => toggleTutorStatus(tutor.id, tutor.subscription_status)}
-                      >
-                        {tutor.subscription_status === 'active' ? 'Deactivate' : 'Activate'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
         </div>
       </div>
     </div>
