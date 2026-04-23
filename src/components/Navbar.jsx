@@ -44,11 +44,11 @@ export default function Navbar() {
         {/* Logo */}
         <Link
           to={currentUser ? dashPath : '/'}
-          style={{ textDecoration: 'none', color: '#F0F4FF', display: 'flex', alignItems: 'center', gap: '0.55rem' }}
+          style={{ textDecoration: 'none', color: '#F0F4FF', display: 'flex', alignItems: 'center', gap: '0.6rem' }}
         >
-          <BookOpen color="#F5C518" size={24} />
-          <span style={{ fontWeight: 800, fontSize: '1rem', letterSpacing: '-0.02em' }}>
-            Antigravity <span style={{ color: '#F5C518' }}>Tuition</span>
+          <img src="/assets/logo.png" alt="PPREducation" style={{ height: '32px', width: 'auto' }} onError={(e) => { e.target.onerror = null; e.target.src = 'https://ui-avatars.com/api/?name=PPR&background=F5C518&color=07090F'; }} />
+          <span style={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.02em' }}>
+            PPREducation
           </span>
         </Link>
 

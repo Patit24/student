@@ -69,7 +69,7 @@ export default function ForgotPassword() {
 
         <div className="mt-8 pt-6 text-center" style={{ borderTop: '1px solid var(--border)' }}>
           <p className="text-muted" style={{ fontSize: '0.8rem' }}>
-            Need help? Contact <a href="mailto:support@antigravity.edu" style={{ color: 'var(--primary)' }}>support@antigravity.edu</a>
+            Need help? Contact <a href="mailto:support@ppreducation.in" style={{ color: 'var(--primary)' }}>support@ppreducation.in</a>
           </p>
         </div>
       </div>

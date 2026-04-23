@@ -61,7 +61,7 @@ const EXPERTISE = [
 
 const PORTFOLIO = [
   {
-    name: 'Antigravity Tuition OS',
+    name: 'PPREducation',
     desc: 'AI-powered live streaming platform for tutors & students.',
     status: 'Live',
     color: '#22C55E',

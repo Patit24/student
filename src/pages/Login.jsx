@@ -77,7 +77,7 @@ export default function Login() {
         {/* Logo */}
         <div className="login-logo">
           <BookOpen size={28} color="#F5C518" />
-          <span>Antigravity <span style={{ color: '#F5C518' }}>Tuition</span></span>
+          <span>PPREducation</span>
         </div>
 
         <h2 className="login-title">Welcome Back</h2>

@@ -145,7 +145,7 @@ export default function Homepage() {
       if (asset.file_url !== '#') window.open(asset.file_url, '_blank');
     } else {
       const upiId = "yourname@upi";
-      const upiUrl = `upi://pay?pa=${upiId}&pn=Antigravity&am=${asset.price}&cu=INR&tn=Payment for ${asset.title}`;
+      const upiUrl = `upi://pay?pa=${upiId}&pn=PPREducation&am=${asset.price}&cu=INR&tn=Payment for ${asset.title}`;
       window.location.href = upiUrl;
       if (window.confirm(`Simulate payment of ₹${asset.price} for ${asset.title}?`)) {
         try {
@@ -403,7 +403,7 @@ export default function Homepage() {
         <div className="container">
           <div className="hp-section-head">
             <h2>Free Study <span className="hp-yellow">Library</span></h2>
-            <p>High-quality resources provided by Antigravity Admin for all guest users.</p>
+            <p>High-quality resources provided by PPREducation Admin for all guest users.</p>
           </div>
           
           <div style={{ 

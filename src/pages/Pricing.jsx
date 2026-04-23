@@ -5,7 +5,7 @@ import { Shield, Check, Zap, LogOut, X, CheckCircle, Smartphone, QrCode, Crown, 
 import { useToast } from '../components/Toast';
 
 const MY_UPI_ID = "9014842370@ybl";
-const MY_NAME   = "Antigravity Tuition";
+const MY_NAME   = "PPREducation";
 
 const PLANS = [
   {
@@ -139,7 +139,7 @@ export default function Pricing() {
       </div>
 
       <nav className="new-pr-nav">
-        <div className="logo">Antigravity <span>Tuition</span></div>
+        <div className="logo">PPREducation</div>
         <button onClick={handleLogout} className="logout-link"><LogOut size={16} /> Logout</button>
       </nav>
 
