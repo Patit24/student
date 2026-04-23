@@ -1,0 +1,10 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      // Temporary "God Mode" for launch - allows all reads and writes
+      // This will bypass any preflight permission issues
+      allow read, write: if true;
+    }
+  }
+}

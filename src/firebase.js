@@ -18,12 +18,12 @@ import { getDatabase, ref as rtdbRef, set, onValue, push } from 'firebase/databa
 // Project : antigravity-tuition-os
 // Account : patitroy29@gmail.com
 const firebaseConfig = {
-  apiKey:            "AIzaSyCzTijbLiM6kd-GuHGEbsPYr2U_Psw4pnc",
-  authDomain:        "antigravity-tuition-os.firebaseapp.com",
-  projectId:         "antigravity-tuition-os",
-  storageBucket:     "ppr-education-bucket",
+  apiKey: "AIzaSyCzTijbLiM6kd-GuHGEbsPYr2U_Psw4pnc",
+  authDomain: "antigravity-tuition-os.firebaseapp.com",
+  projectId: "antigravity-tuition-os",
+  storageBucket: "antigravity-tuition-os.firebasestorage.app",
   messagingSenderId: "1021639170510",
-  appId:             "1:1021639170510:web:9d6a803eb5226d5be0f39f",
+  appId: "1:1021639170510:web:9d6a803eb5226d5be0f39f",
   // ⚠️ If you see a databaseURL error, go to:
   // https://console.firebase.google.com/project/antigravity-tuition-os/database
   // → Click "Create Database" → pick a region → "Start in locked mode" → Enable
@@ -48,9 +48,9 @@ const firebaseConfig = {
 let app, auth, db, storage, rtdb;
 
 try {
-  app     = initializeApp(firebaseConfig);
-  auth    = getAuth(app);
-  db      = getFirestore(app);
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
   storage = getStorage(app);
   console.log("✅ Firebase core initialized (Auth + Firestore + Storage)");
 } catch (err) {
