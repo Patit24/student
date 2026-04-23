@@ -27,6 +27,13 @@ const PLAN_LIMITS = {
   pro:    { batches: Infinity, students: Infinity, pdf: true, recording: true },
 };
 
+const PLAN_LABELS = {
+  starter: 'BASIC',
+  free:    'BASIC',
+  growth:  'GROWTH',
+  pro:     'ELITE'
+};
+
 function ExamResultsPanel({ tutorId, myBatches, myStudents }) {
   const { mockExams, setMockExams, mockSubmissions, setMockSubmissions } = useAppContext();
   const [view, setView] = useState('list'); // 'list' | 'create' | 'smart-upload' | 'draft-review' | 'results'
@@ -570,7 +577,7 @@ export default function TutorDashboard() {
             Tutor Dashboard
             <span style={{ fontSize: '0.7rem', background: 'rgba(79,70,229,0.2)', color: 'var(--primary)', border: '1px solid var(--primary)', padding: '0.2rem 0.75rem', borderRadius: '1rem', verticalAlign: 'middle' }}>
               <Crown size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.3rem' }}/>
-              {tier.toUpperCase()} PLAN
+              {(PLAN_LABELS[tier] || tier).toUpperCase()} PLAN
             </span>
           </h2>
           <p className="text-muted mt-1">{myStudents.length} Students · {myBatches.length} Batches</p>
