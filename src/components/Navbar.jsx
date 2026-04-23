@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AuthContext';
 import { BookOpen, LogOut, Shield, Zap } from 'lucide-react';
+import logoImg from '../assets/logopng.png';
 
 export default function Navbar() {
   const { currentUser, logout, isMockMode } = useAppContext();
@@ -46,7 +47,7 @@ export default function Navbar() {
           to={currentUser ? dashPath : '/'}
           style={{ textDecoration: 'none', color: '#F0F4FF', display: 'flex', alignItems: 'center', gap: '0.6rem' }}
         >
-          <img src="/assets/logo.png" alt="PPREducation" style={{ height: '32px', width: 'auto' }} onError={(e) => { e.target.onerror = null; e.target.src = 'https://ui-avatars.com/api/?name=PPR&background=F5C518&color=07090F'; }} />
+          <img src={logoImg} alt="PPREducation" style={{ height: '36px', width: 'auto' }} />
           <span style={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: '-0.02em' }}>
             PPREducation
           </span>
