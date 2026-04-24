@@ -56,7 +56,10 @@ function AppRoutes() {
           <Route path="/tutor"   element={<TutorDashboard />} />
         </>
       ) : (
-        <Route path="/student" element={<StudentDashboard />} />
+        <>
+          <Route path="/student" element={<StudentDashboard />} />
+          <Route path="/join/:roomId" element={<StudentDashboard />} />
+        </>
       )}
 
       {/* Redirect Logic */}

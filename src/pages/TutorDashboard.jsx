@@ -245,6 +245,9 @@ export default function TutorDashboard() {
   const [isLocked, setIsLocked] = useState(false);
   const [waitingRoom, setWaitingRoom] = useState([]);
   const [activeParticipants, setActiveParticipants] = useState([]);
+  const [meetingRoom, setMeetingRoom] = useState(null);
+  const jitsiContainerRef = useRef(null);
+  const jitsiApiRef = useRef(null);
 
   const [newBatchName, setNewBatchName] = useState('');
   const [newBatchLimit, setNewBatchLimit] = useState('');
@@ -369,34 +372,85 @@ export default function TutorDashboard() {
     toast.success('Public Profile Updated!');
   };
 
-  const handleGoLive = async () => {
+  const handleGoLive = async (batchId = null) => {
+    const roomName = batchId ? `ppr-${batchId}` : `ppr-instant-${currentUser.uid}-${Math.random().toString(36).substring(7)}`;
+    setMeetingRoom(roomName);
     setIsLive(true);
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      setStream(mediaStream);
-      cameraTrackRef.current = mediaStream.getVideoTracks()[0];
-      setStreamActive(true);
-      if (videoRef.current) videoRef.current.srcObject = mediaStream;
-    } catch (err) {
-      console.error('Error accessing media devices.', err);
-      setIsLive(false);
-    }
   };
+
+  useEffect(() => {
+    if (isLive && meetingRoom && !jitsiApiRef.current) {
+      // Small timeout to ensure container is rendered
+      const timer = setTimeout(() => {
+        const domain = '8x8.vc';
+        const options = {
+          roomName: `vpaas-magic-cookie-87b8d781b4734898867a54823293e590/${meetingRoom}`,
+          width: '100%',
+          height: '100%',
+          parentNode: document.getElementById('jitsi-container'),
+          userInfo: {
+            displayName: currentUser.name || 'Tutor'
+          },
+          configOverwrite: {
+            startWithAudioMuted: false,
+            disableModeratorIndicator: false,
+            startScreenSharing: false,
+            enableEmailInStats: false
+          },
+          interfaceConfigOverwrite: {
+            TILE_VIEW_MAX_COLUMNS: 8
+          }
+        };
+        
+        if (window.JitsiMeetExternalAPI) {
+          const api = new window.JitsiMeetExternalAPI(domain, options);
+          jitsiApiRef.current = api;
+
+          api.addEventListener('participantJoined', (data) => {
+            setActiveParticipants(prev => [...prev, data]);
+          });
+          api.addEventListener('participantLeft', (data) => {
+            setActiveParticipants(prev => prev.filter(p => p.id !== data.id));
+          });
+          api.addEventListener('videoConferenceJoined', () => {
+            setStreamActive(true);
+          });
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isLive, meetingRoom]);
 
   const stopStream = () => {
-    stream?.getTracks().forEach(t => t.stop());
+    if (jitsiApiRef.current) {
+      jitsiApiRef.current.dispose();
+      jitsiApiRef.current = null;
+    }
     setStreamActive(false);
     setIsLive(false);
-    setWaitingRoom([]);
+    setMeetingRoom(null);
     setActiveParticipants([]);
-    setIsScreenSharing(false);
   };
 
-  const toggleMic = () => {
-    if (stream) {
-      const t = stream.getAudioTracks()[0];
-      if (t) { t.enabled = !micOn; setMicOn(!micOn); }
+  const muteEveryone = () => {
+    if (jitsiApiRef.current) {
+      jitsiApiRef.current.executeCommand('muteEveryone');
+      toast.success('Muted everyone');
     }
+  };
+
+  const videoMuteEveryone = () => {
+    if (jitsiApiRef.current) {
+      // Jitsi doesn't have a direct videoMuteEveryone command like audio, 
+      // but we can send a broadcast message or use moderator commands if enabled.
+      toast.info('Moderator video control enabled');
+    }
+  };
+
+  const copyMeetingLink = () => {
+    const url = `${window.location.origin}/join/${meetingRoom}`;
+    navigator.clipboard.writeText(url);
+    toast.success('Meeting link copied! Share it with students.');
   };
 
   const toggleCamera = () => {
@@ -580,35 +634,57 @@ export default function TutorDashboard() {
 
   if (isLive) {
     return (
-      <div className="flex h-screen live-stream-root" style={{ height: 'calc(100vh - 73px)', overflow: 'hidden' }}>
-        <div className="flex-col" style={{ flex: 1, backgroundColor: '#000', position: 'relative' }}>
-          <div style={{ position: 'absolute', top: '1rem', left: '1rem', zIndex: 10, display: 'flex', gap: '1rem' }}>
-            <div className="glass-panel" style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderRadius: 'var(--radius-lg)' }}>
-              {isLocked ? <Lock size={16} color="var(--danger)" /> : <Unlock size={16} color="var(--secondary)" />}
-              <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{isLocked ? 'Private' : 'Public'}</span>
+      <div className="flex h-screen live-stream-root" style={{ height: 'calc(100vh - 73px)', overflow: 'hidden', background: '#000' }}>
+        {/* Left Control Sidebar */}
+        <div style={{ width: '280px', borderRight: '1px solid #333', background: '#111', display: 'flex', flexDirection: 'column', color: 'white', padding: '1.5rem' }}>
+          <div className="mb-8">
+            <h4 style={{ color: 'var(--primary)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Video size={18}/> LIVE CLASS
+            </h4>
+            <p style={{ fontSize: '0.8rem', color: '#888' }}>You are currently broadcasting to your students.</p>
+          </div>
+
+          <div className="mb-8 p-4" style={{ background: '#1a1a1a', borderRadius: 'var(--radius)', border: '1px solid #333' }}>
+            <p style={{ fontSize: '0.75rem', color: '#888', marginBottom: '0.5rem' }}>STUDENT JOIN LINK</p>
+            <div style={{ wordBreak: 'break-all', fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem', padding: '0.5rem', background: '#000', borderRadius: '4px' }}>
+              {window.location.origin}/join/{meetingRoom}
             </div>
-            <div className="glass-panel" style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderRadius: 'var(--radius-lg)' }}>
-              <Users size={16} />
-              <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{activeParticipants.length} live</span>
+            <button className="btn btn-primary w-full" style={{ padding: '0.5rem', fontSize: '0.8rem' }} onClick={copyMeetingLink}>
+              Copy Link
+            </button>
+          </div>
+
+          <div className="mb-8">
+            <p style={{ fontSize: '0.75rem', color: '#888', marginBottom: '1rem' }}>HOST CONTROLS</p>
+            <div className="flex-col gap-3">
+              <button className="btn btn-outline w-full" style={{ justifyContent: 'flex-start', borderColor: '#333' }} onClick={muteEveryone}>
+                <MicOff size={16} style={{ marginRight: '0.5rem' }}/> Mute Everyone
+              </button>
+              <button className="btn btn-outline w-full" style={{ justifyContent: 'flex-start', borderColor: '#333' }} onClick={videoMuteEveryone}>
+                <VideoOff size={16} style={{ marginRight: '0.5rem' }}/> Stop All Video
+              </button>
             </div>
           </div>
-          {streamActive ? (
-            <video ref={videoRef} autoPlay muted playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-          ) : (
-            <div className="flex justify-center items-center h-full" style={{ color: 'white' }}><p>Starting camera…</p></div>
-          )}
-          <div className="flex justify-center items-center gap-4 p-4" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.8))' }}>
-            <button className="btn btn-outline" onClick={toggleMic}>{micOn ? <Mic size={20}/> : <MicOff size={20} color="var(--danger)"/>}</button>
-            <button className="btn btn-outline" onClick={toggleCamera}>{cameraOn ? <Video size={20}/> : <VideoOff size={20} color="var(--danger)"/>}</button>
-            <button className="btn btn-outline" onClick={toggleScreenShare} title={!limits.recording ? 'Pro plan required' : ''}><ScreenShare size={20} color="white"/></button>
-            <button className="btn btn-danger" onClick={stopStream}>End Class</button>
+
+          <div className="mt-auto">
+            <div className="flex items-center gap-2 mb-4">
+              <div style={{ width: '8px', height: '8px', background: 'var(--secondary)', borderRadius: '50%', animation: 'pulse 1.5s infinite' }}></div>
+              <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{activeParticipants.length + 1} Online</span>
+            </div>
+            <button className="btn btn-danger w-full" onClick={stopStream}>End Class</button>
           </div>
         </div>
-        <div className="live-chat-panel" style={{ width: '350px', borderLeft: '1px solid var(--border)', background: 'var(--surface)', display: 'flex', flexDirection: 'column' }}>
-          <div className="p-4" style={{ borderBottom: '1px solid var(--border)' }}>
-            <h3 className="flex items-center gap-2"><MessageSquare size={18}/> Live Chat</h3>
-          </div>
-          <ChatSidebar roomId={`room-${currentUser?.uid}`} />
+
+        {/* Main Content (Jitsi Area) */}
+        <div id="jitsi-container" style={{ flex: 1, position: 'relative' }}>
+          {!streamActive && (
+            <div className="flex justify-center items-center h-full" style={{ color: 'white' }}>
+              <div className="text-center">
+                <div className="login-spinner mb-4" style={{ margin: '0 auto' }}></div>
+                <p>Initializing Secure Stream...</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );

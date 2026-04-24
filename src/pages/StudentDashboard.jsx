@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAppContext } from '../context/AuthContext';
 import { Play, Download, MessageSquare, FileText, Shield, Clock, Calendar as CalendarIcon, CheckCircle, ShieldAlert, CheckSquare, CreditCard, AlertTriangle, LogOut, Phone, Users, Video, Search, Package, Eye, EyeOff, Lock } from 'lucide-react';
 import ChatSidebar from '../components/ChatSidebar';
@@ -136,9 +136,12 @@ export default function StudentDashboard() {
   const currentTutor = mockTutors?.find(t => t.id === selectedEnrollment?.tutor_id);
   const currentBatch = mockBatches?.find(b => b.id === selectedEnrollment?.batch_id);
   
-  // Specific payment check for selected batch
   const autoRestrictionOn = currentTutor?.auto_restriction_enabled ?? true;
   const isOverdue = selectedEnrollment?.payment_status === 'overdue' && autoRestrictionOn;
+
+  const { roomId } = useParams();
+  const jitsiApiRef = useRef(null);
+  const [activeParticipants, setActiveParticipants] = useState([]);
 
   // OTP States
   const [otp, setOtp] = useState('');
@@ -196,21 +199,59 @@ export default function StudentDashboard() {
   const videoRef = useRef(null);
   const [stream, setStream] = useState(null);
 
-  const startStream = async () => {
-    setInClass(true);
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      setStream(mediaStream);
-      if (videoRef.current) videoRef.current.srcObject = mediaStream;
-    } catch (err) {
-      console.error('Error joining stream.', err);
+  const startStream = async (targetRoom = null) => {
+    if (isOverdue) {
+      toast.error('⚠️ Access restricted due to payment.');
+      return;
     }
+    const finalRoom = targetRoom || roomId || `ppr-${selectedEnrollment?.batch_id}`;
+    if (!finalRoom) {
+      toast.error('No active session found.');
+      return;
+    }
+
+    setInClass(true);
+    // Small timeout to ensure container is rendered
+    setTimeout(() => {
+      const domain = '8x8.vc';
+      const options = {
+        roomName: `vpaas-magic-cookie-87b8d781b4734898867a54823293e590/${finalRoom}`,
+        width: '100%',
+        height: '100%',
+        parentNode: document.getElementById('student-jitsi-container'),
+        userInfo: {
+          displayName: currentUser.name || 'Student'
+        },
+        configOverwrite: {
+          startWithAudioMuted: true,
+          startWithVideoMuted: true,
+        }
+      };
+
+      if (window.JitsiMeetExternalAPI) {
+        const api = new window.JitsiMeetExternalAPI(domain, options);
+        jitsiApiRef.current = api;
+        api.addEventListener('videoConferenceJoined', () => setJoinState('approved'));
+        api.addEventListener('participantJoined', (data) => setActiveParticipants(prev => [...prev, data]));
+        api.addEventListener('participantLeft', (data) => setActiveParticipants(prev => prev.filter(p => p.id !== data.id)));
+      }
+    }, 500);
   };
 
+  useEffect(() => {
+    if (roomId && currentUser?.is_verified !== false && currentUser?.needs_password_reset !== true) {
+      startStream(roomId);
+    }
+  }, [roomId, currentUser]);
+
   const handleLeaveClass = () => {
-    stream?.getTracks().forEach(t => t.stop());
+    if (jitsiApiRef.current) {
+      jitsiApiRef.current.dispose();
+      jitsiApiRef.current = null;
+    }
     setInClass(false);
     setJoinState('idle');
+    setActiveParticipants([]);
   };
 
   const formatCountdown = (t) => {
@@ -419,16 +460,36 @@ export default function StudentDashboard() {
   // ── VIEW: ENROLLED STUDENT CLASSROOM ──
   if (inClass) {
     return (
-      <div className="flex" style={{ height: 'calc(100vh - 73px)', overflow: 'hidden' }}>
-        <div style={{ flex: 1, backgroundColor: '#000', position: 'relative' }}>
-          <video ref={videoRef} autoPlay playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-          <div className="flex justify-center items-center gap-4 p-4" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.8))' }}>
-            <button className="btn btn-outline" style={{ background: 'var(--surface)', borderColor: 'transparent', borderRadius: '12px' }} onClick={handleLeaveClass}>Leave Class</button>
+      <div className="flex" style={{ height: 'calc(100vh - 73px)', overflow: 'hidden', background: '#000' }}>
+        <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column' }}>
+          {/* Top Info Bar */}
+          <div style={{ position: 'absolute', top: '1rem', left: '1rem', zIndex: 10, display: 'flex', gap: '1rem' }}>
+            <div className="glass-panel" style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderRadius: 'var(--radius-lg)', background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div style={{ width: '8px', height: '8px', background: '#EF4444', borderRadius: '50%', animation: 'pulse 1.5s infinite' }}></div>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>LIVE</span>
+            </div>
+            <div className="glass-panel" style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderRadius: 'var(--radius-lg)', background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <Users size={16} color="var(--primary)"/>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>{activeParticipants.length + 1} Online</span>
+            </div>
           </div>
-        </div>
-        <div className="hide-on-mobile" style={{ width: '350px', borderLeft: '1px solid var(--border)', background: 'var(--surface)', display: 'flex', flexDirection: 'column' }}>
-          <div className="p-4" style={{ borderBottom: '1px solid var(--border)' }}><h3 className="flex items-center gap-2"><MessageSquare size={18}/> Live Chat</h3></div>
-          <ChatSidebar roomId={`room-${selectedEnrollment?.batch_id}`} />
+
+          {/* Jitsi Container */}
+          <div id="student-jitsi-container" style={{ flex: 1 }}>
+            {joinState !== 'approved' && (
+              <div className="flex justify-center items-center h-full" style={{ color: 'white' }}>
+                <div className="text-center">
+                  <div className="login-spinner mb-4" style={{ margin: '0 auto' }}></div>
+                  <p>Joining Live Classroom...</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Bottom Control Bar */}
+          <div className="flex justify-center items-center p-4" style={{ background: 'linear-gradient(transparent, rgba(0,0,0,0.8))', position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10 }}>
+            <button className="btn btn-danger" style={{ padding: '0.75rem 2rem', borderRadius: '12px' }} onClick={handleLeaveClass}>Leave Classroom</button>
+          </div>
         </div>
       </div>
     );
