@@ -270,13 +270,24 @@ export function AppProvider({ children }) {
       return;
     }
     if (!confirmationResult) throw new Error('No OTP sent yet');
+    
+    // confirm() signs the user in via Phone Auth
     const userCredential = await confirmationResult.confirm(code);
+    const verifiedUid = userCredential.user.uid;
     
-    // Once verified, we ensure the profile is marked verified in Firestore
-    const userRef = doc(db, 'users', userCredential.user.uid);
-    await updateDoc(userRef, { is_verified: true });
+    // We update the profile in Firestore. We use the NEW uid if confirm() changed it,
+    // but we also check if the old profile needs to be migrated/updated.
+    const userRef = doc(db, 'users', verifiedUid);
+    const docSnap = await getDoc(userRef);
     
-    // Update local state
+    if (docSnap.exists()) {
+      await updateDoc(userRef, { is_verified: true });
+    } else if (currentUser?.uid) {
+      // Fallback: If we were logged in with a virtual email, update that document too
+      await updateDoc(doc(db, 'users', currentUser.uid), { is_verified: true });
+    }
+    
+    // Force local state update so UI reacts instantly
     setCurrentUser(prev => ({ ...prev, is_verified: true }));
     return userCredential.user;
   }
