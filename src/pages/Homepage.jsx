@@ -419,12 +419,121 @@ export default function Homepage() {
         </div>
       </section>
 
-      {/* ── PUBLIC LIBRARY (Common Man Benefit) ── */}
-      <section className="hp-section" style={{ background: 'rgba(255,255,255,0.02)', padding: '5rem 2rem' }}>
+      {/* ── CENTRAL BRAND PORTAL (ZERO GRAVITY) ── */}
+      <section className="hp-section" style={{ position: 'relative', overflow: 'hidden', minHeight: '600px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <img 
+          src="/assets/ppr_hub.png" 
+          alt="PPR Hub" 
+          style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover', zIndex: -1, filter: 'brightness(0.6)' }} 
+        />
+        <div className="container" style={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
+          <div className="hp-badge" style={{ margin: '0 auto 2rem' }}>
+            <span>THE FUTURE OF LEARNING</span>
+          </div>
+          <h2 style={{ fontSize: '3.5rem', fontWeight: 900, marginBottom: '2rem', letterSpacing: '-2px' }}>
+            PPR <span className="hp-yellow">Education</span>
+          </h2>
+          <div className="flex justify-center gap-8" style={{ flexWrap: 'wrap' }}>
+            <div className="glass-card p-8 animate-float" style={{ width: '280px', background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(30px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px' }}>
+              <MonitorPlay size={40} color="#F5C518" className="mb-4" />
+              <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Mock Exams</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Weekly full-length test series with AI analytics.</p>
+            </div>
+            <div className="glass-card p-8 animate-float" style={{ width: '280px', background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(30px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px', animationDelay: '0.5s' }}>
+              <BookOpen size={40} color="#F5C518" className="mb-4" />
+              <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>Study Materials</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Curated notes and last-minute suggestions.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── NEET ASPIRANT HUB ── */}
+      <section className="hp-section" style={{ background: '#050a1a', position: 'relative', padding: '6rem 2rem' }}>
+        <img 
+          src="/assets/neet_hub.png" 
+          alt="NEET Lab" 
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.3, zIndex: 0 }} 
+        />
+        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
+          <div className="hp-section-head" style={{ textAlign: 'left' }}>
+            <h2 style={{ color: '#00d2ff', textShadow: '0 0 20px rgba(0,210,255,0.3)' }}>NEET <span style={{ color: '#fff' }}>Aspirant Hub</span></h2>
+            <p style={{ maxWidth: '600px' }}>Comprehensive resources for medical aspirants. Weekly mock tests, 3D biological diagrams, and expert suggestions.</p>
+          </div>
+
+          <div className="grid gap-8 mt-12" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
+            {globalAssets.filter(a => a.category === 'neet').map(asset => (
+              <div key={asset.id} className="glass-panel p-6" style={{ borderRadius: '20px', borderLeft: '4px solid #00d2ff', background: 'rgba(0,210,255,0.02)' }}>
+                <div className="flex justify-between items-start mb-4">
+                  <div style={{ background: 'rgba(0,210,255,0.1)', padding: '0.6rem', borderRadius: '12px' }}>
+                    {asset.material_type === 'mock' ? <CheckSquare color="#00d2ff" /> : <FileText color="#00d2ff" />}
+                  </div>
+                  <span style={{ fontSize: '0.7rem', color: '#00d2ff', fontWeight: 800 }}>{asset.material_type?.toUpperCase()}</span>
+                </div>
+                <h4 style={{ fontSize: '1.2rem', marginBottom: '0.5rem' }}>{asset.title}</h4>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>{asset.name}</p>
+                <button 
+                  onClick={() => handleAssetAction(asset)}
+                  className="hp-btn-primary" 
+                  style={{ width: '100%', background: 'linear-gradient(to right, #00d2ff, #3a7bd5)', border: 'none', padding: '0.8rem' }}
+                >
+                  {currentUser ? 'Download Access' : 'Sign Up for Access'}
+                </button>
+              </div>
+            ))}
+            {globalAssets.filter(a => a.category === 'neet').length === 0 && (
+              <p className="text-muted">NEET resources are being uploaded by Admin...</p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ── JEE ASPIRANT HUB ── */}
+      <section className="hp-section" style={{ background: '#1a1505', position: 'relative', padding: '6rem 2rem' }}>
+        <img 
+          src="/assets/jee_hub.png" 
+          alt="JEE Workspace" 
+          style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.3, zIndex: 0 }} 
+        />
+        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
+          <div className="hp-section-head" style={{ textAlign: 'right' }}>
+            <h2 style={{ color: '#F5C518', textShadow: '0 0 20px rgba(245,197,24,0.3)' }}>JEE <span style={{ color: '#fff' }}>Engineering Hub</span></h2>
+            <p style={{ maxWidth: '600px', marginLeft: 'auto' }}>Master the core concepts of Physics, Math, and Chemistry. High-frequency problems and weekly rank-booster exams.</p>
+          </div>
+
+          <div className="grid gap-8 mt-12" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
+            {globalAssets.filter(a => a.category === 'jee').map(asset => (
+              <div key={asset.id} className="glass-panel p-6" style={{ borderRadius: '20px', borderRight: '4px solid #F5C518', background: 'rgba(245,197,24,0.02)' }}>
+                <div className="flex justify-between items-start mb-4">
+                  <span style={{ fontSize: '0.7rem', color: '#F5C518', fontWeight: 800 }}>{asset.material_type?.toUpperCase()}</span>
+                  <div style={{ background: 'rgba(245,197,24,0.1)', padding: '0.6rem', borderRadius: '12px' }}>
+                    {asset.material_type === 'mock' ? <Zap color="#F5C518" /> : <MonitorPlay color="#F5C518" />}
+                  </div>
+                </div>
+                <h4 style={{ fontSize: '1.2rem', marginBottom: '0.5rem', textAlign: 'right' }}>{asset.title}</h4>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.5rem', textAlign: 'right' }}>{asset.name}</p>
+                <button 
+                  onClick={() => handleAssetAction(asset)}
+                  className="hp-btn-primary" 
+                  style={{ width: '100%', background: 'linear-gradient(to right, #F5C518, #d4a017)', border: 'none', padding: '0.8rem', color: '#000', fontWeight: 800 }}
+                >
+                  {currentUser ? 'Download Access' : 'Sign Up for Access'}
+                </button>
+              </div>
+            ))}
+            {globalAssets.filter(a => a.category === 'jee').length === 0 && (
+              <p className="text-muted" style={{ textAlign: 'right', width: '100%' }}>JEE engineering materials arriving soon...</p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ── PUBLIC LIBRARY (General) ── */}
+      <section className="hp-section" style={{ background: 'rgba(255,255,255,0.01)', padding: '5rem 2rem' }}>
         <div className="container">
           <div className="hp-section-head">
-            <h2>Free Study <span className="hp-yellow">Library</span></h2>
-            <p>High-quality resources provided by PPREducation Admin for all guest users.</p>
+            <h2>General <span className="hp-yellow">Library</span></h2>
+            <p>Essential resources for all students.</p>
           </div>
           
           <div style={{ 
@@ -433,7 +542,7 @@ export default function Homepage() {
             gap: '1.5rem', 
             marginTop: '3rem' 
           }}>
-            {globalAssets.map((asset) => {
+            {globalAssets.filter(a => !a.category || a.category === 'general').map((asset) => {
               return (
                 <div key={asset.id} className="hp-bento-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden' }}>
                   <div style={{ 
@@ -452,18 +561,14 @@ export default function Homepage() {
                     <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                       <CheckCircle size={12} color="#10B981" /> {asset.name}
                     </p>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                      {asset.subject || 'General Resource'} · {(asset.size / 1024 / 1024).toFixed(1)} MB
-                    </p>
                   </div>
                   <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Unlimited Access</span>
                     <button 
                       onClick={() => handleAssetAction(asset)}
                       className="hp-btn-primary" 
-                      style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', borderRadius: '8px', border: 'none' }}
+                      style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', borderRadius: '8px', border: 'none', width: '100%' }}
                     >
-                      {currentUser ? 'Download Now' : 'Sign Up to Download'}
+                      {currentUser ? 'Download' : 'Sign Up'}
                     </button>
                   </div>
                 </div>

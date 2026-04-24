@@ -85,6 +85,8 @@ export default function AdminDashboard() {
   };
 
   const [assetTitle, setAssetTitle] = useState('');
+  const [assetCategory, setAssetCategory] = useState('general'); // general, neet, jee
+  const [assetType, setAssetType] = useState('material'); // material, mock, suggestion
 
   const handleGlobalFileUpload = async (e) => {
     const file = e.target.files[0];
@@ -101,17 +103,20 @@ export default function AdminDashboard() {
       const url = await uploadFileToStorage(file, 'admin_global', (pct) => setUploadProgress(pct));
       await uploadGlobalAsset({
         title: assetTitle,
+        category: assetCategory,
+        material_type: assetType,
         name: file.name,
         size: file.size,
         url: url,
         type: file.type,
         uploader: 'Super Admin',
-        status: 'published', // Ensure it shows on homepage
+        status: 'published',
         is_free: true,
-        price: 0
+        price: 0,
+        created_at: new Date().toISOString()
       });
-      toast.success('Material published successfully! 📚');
-      setAssetTitle(''); // Reset
+      toast.success(`${assetCategory.toUpperCase()} ${assetType} published! 🚀`);
+      setAssetTitle('');
     } catch (err) {
       toast.error('Upload failed: ' + err.message);
     } finally {
@@ -303,7 +308,37 @@ export default function AdminDashboard() {
                     />
                   </div>
 
-                  <label className="stat-label" style={{ fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>2. Select the file to publish</label>
+                  <div className="flex gap-6 mb-6" style={{ flexWrap: 'wrap' }}>
+                    <div className="flex-1" style={{ minWidth: '200px' }}>
+                      <label className="stat-label" style={{ fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>2. Category</label>
+                      <select 
+                        className="premium-input"
+                        value={assetCategory}
+                        onChange={(e) => setAssetCategory(e.target.value)}
+                        style={{ width: '100%', padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+                      >
+                        <option value="general">General (Lead Magnets)</option>
+                        <option value="neet">NEET Aspirants</option>
+                        <option value="jee">JEE Aspirants</option>
+                      </select>
+                    </div>
+
+                    <div className="flex-1" style={{ minWidth: '200px' }}>
+                      <label className="stat-label" style={{ fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>3. Content Type</label>
+                      <select 
+                        className="premium-input"
+                        value={assetType}
+                        onChange={(e) => setAssetType(e.target.value)}
+                        style={{ width: '100%', padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+                      >
+                        <option value="material">Study Material</option>
+                        <option value="mock">Weekly Mock Exam</option>
+                        <option value="suggestion">Last-Min Suggestion</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <label className="stat-label" style={{ fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>4. Select the file to publish</label>
                   <input 
                     type="file" 
                     id="global-file-upload" 
