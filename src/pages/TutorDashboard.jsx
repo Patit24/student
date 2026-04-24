@@ -683,11 +683,12 @@ export default function TutorDashboard() {
       </div>
 
       {/* ── Smart Go Live Bar ── */}
-      <div className="glass-panel p-2 mb-16 flex items-center gap-3 animate-slide-up" style={{ 
+      <div className="glass-panel p-2 flex items-center gap-3 animate-slide-up" style={{ 
         borderRadius: '20px', 
         border: '1px solid rgba(255,255,255,0.1)',
         background: 'rgba(255,255,255,0.02)',
         marginTop: '2rem',
+        marginBottom: '4rem',
         boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
       }}>
         <div style={{ flex: 1, position: 'relative' }}>
