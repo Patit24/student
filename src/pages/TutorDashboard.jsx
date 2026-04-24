@@ -246,7 +246,7 @@ export default function TutorDashboard() {
   const [waitingRoom, setWaitingRoom] = useState([]);
   const [activeParticipants, setActiveParticipants] = useState([]);
   const [meetingRoom, setMeetingRoom] = useState(null);
-  const jitsiApiRef = useRef(null);
+  const [googleMeetLink, setGoogleMeetLink] = useState('');
 
   const [newBatchName, setNewBatchName] = useState('');
   const [newBatchLimit, setNewBatchLimit] = useState('');
@@ -373,89 +373,36 @@ export default function TutorDashboard() {
 
   const handleGoLive = async (batchId = null) => {
     const cleanBatchId = (typeof batchId === 'string') ? batchId : null;
-    const roomName = cleanBatchId ? `ppr-batch-${cleanBatchId}` : `ppr-instant-${currentUser.uid}-${Math.random().toString(36).substring(7)}`;
     
+    if (!googleMeetLink || !googleMeetLink.includes('meet.google.com')) {
+      toast.error('Please enter a valid Google Meet link first.');
+      return;
+    }
+
     // Update session status in mock data (simulating notification)
     if (cleanBatchId) {
       setMockSessions(prev => prev.map(s => 
-        s.batch_id === cleanBatchId ? { ...s, is_live: true, room_id: roomName } : s
+        s.batch_id === cleanBatchId ? { ...s, is_live: true, room_id: googleMeetLink } : s
       ));
-      toast.info(`🔔 Notification sent to students of batch: ${myBatches.find(b => b.id === cleanBatchId)?.name}`);
+      toast.success(`🚀 Google Meet link broadcasted to batch students!`);
     }
 
-    setMeetingRoom(roomName);
+    setMeetingRoom(googleMeetLink);
     setIsLive(true);
   };
 
-  useEffect(() => {
-    if (isLive && meetingRoom && !jitsiApiRef.current) {
-      const timer = setTimeout(() => {
-        const domain = 'meet.jit.si';
-        const options = {
-          roomName: meetingRoom,
-          width: '100%',
-          height: '100%',
-          parentNode: document.getElementById('jitsi-container'),
-          userInfo: { displayName: currentUser.name || 'Tutor' },
-          configOverwrite: {
-            startWithAudioMuted: false,
-            prejoinPageEnabled: false,
-            disableThirdPartyRequests: true,
-            enableWelcomePage: false,
-            enableNoAudioDetection: true,
-            enableNoisyMicDetection: true,
-            // Premium Branding Removal
-            hideConferenceTimer: false,
-            hideConferenceSubject: true,
-            hideParticipantsStats: false,
-            hideLobbyButton: false,
-            // Clean UI
-            toolbarButtons: ['microphone', 'camera', 'desktop', 'fullscreen', 'hangup', 'profile', 'chat', 'settings', 'raisehand', 'videoquality', 'filmstrip', 'tileview', 'mute-everyone', 'security'],
-          },
-          interfaceConfigOverwrite: {
-            SHOW_JITSI_WATERMARK: false,
-            SHOW_WATERMARK_FOR_GUESTS: false,
-            SHOW_BRAND_WATERMARK: false,
-            BRAND_WATERMARK_LINK: '',
-            DEFAULT_BACKGROUND: '#0a0e1a',
-            GENERATE_ROOMNAMES_ON_WELCOME_PAGE: false,
-            DISPLAY_WELCOME_PAGE_CONTENT: false,
-            MOBILE_APP_PROMO: false
-          }
-        };
-        
-        if (window.JitsiMeetExternalAPI) {
-          const api = new window.JitsiMeetExternalAPI(domain, options);
-          jitsiApiRef.current = api;
-          api.addEventListener('videoConferenceJoined', () => setStreamActive(true));
-          api.addEventListener('participantJoined', (data) => setActiveParticipants(prev => [...prev, data]));
-          api.addEventListener('participantLeft', (data) => setActiveParticipants(prev => prev.filter(p => p.id !== data.id)));
-        }
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [isLive, meetingRoom]);
-
   const stopStream = () => {
-    if (jitsiApiRef.current) {
-      jitsiApiRef.current.dispose();
-      jitsiApiRef.current = null;
-    }
     setStreamActive(false);
     setIsLive(false);
     setMeetingRoom(null);
     setActiveParticipants([]);
+    // Clear live status
+    setMockSessions(prev => prev.map(s => ({ ...s, is_live: false })));
   };
 
-  const muteEveryone = () => {
-    if (jitsiApiRef.current) {
-      jitsiApiRef.current.executeCommand('muteEveryone');
-      toast.success('Muted everyone');
-    }
-  };
-
-  const videoMuteEveryone = () => {
-    toast.info('Moderator video control enabled');
+  const copyMeetingLink = () => {
+    navigator.clipboard.writeText(googleMeetLink);
+    toast.success('Google Meet link copied!');
   };
 
   const copyMeetingLink = () => {
@@ -686,16 +633,26 @@ export default function TutorDashboard() {
           </div>
         </div>
 
-        {/* Main Content (Private Meeting Engine) */}
-        <div id="jitsi-container" style={{ flex: 1, position: 'relative', background: '#000' }}>
-          {!streamActive && (
-            <div className="flex justify-center items-center h-full" style={{ color: 'white' }}>
-              <div className="text-center">
-                <div className="login-spinner mb-4" style={{ margin: '0 auto' }}></div>
-                <p>Initializing Secure Engine...</p>
+        {/* Main Content (Google Meet Control Area) */}
+        <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#0a0e1a' }}>
+          <div className="glass-panel p-10 text-center" style={{ maxWidth: '600px', border: '1px solid var(--primary)' }}>
+            <div className="flex justify-center mb-6">
+              <div className="pulse-red" style={{ width: '80px', height: '80px', background: 'rgba(79,70,229,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Video size={40} color="var(--primary)"/>
               </div>
             </div>
-          )}
+            <h2 className="mb-4">Class is Live! 🔴</h2>
+            <p className="text-muted mb-8">You are currently broadcasting your Google Meet session to your students. Keep this tab open to manage the session.</p>
+            
+            <div className="flex-col gap-4">
+              <a href={googleMeetLink} target="_blank" rel="noopener noreferrer" className="btn btn-primary w-full" style={{ padding: '1rem' }}>
+                Open My Google Meet
+              </a>
+              <button onClick={stopStream} className="btn btn-outline w-full" style={{ padding: '1rem' }}>
+                End Global Session
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -724,7 +681,15 @@ export default function TutorDashboard() {
           </h2>
           <p className="text-muted mt-1">{myStudents.length} Students · {myBatches.length} Batches</p>
         </div>
-        <div className="dash-header-actions">
+        <div className="dash-header-actions flex gap-3">
+          <input 
+            type="text" 
+            placeholder="Paste Google Meet Link..." 
+            className="input-field" 
+            style={{ minWidth: '300px', fontSize: '0.85rem' }}
+            value={googleMeetLink}
+            onChange={(e) => setGoogleMeetLink(e.target.value)}
+          />
           <button className="btn btn-secondary" onClick={() => isSubscribed ? handleGoLive() : navigate('/pricing')}>
             <Video size={16}/> Go Live
           </button>

@@ -140,7 +140,6 @@ export default function StudentDashboard() {
   const isOverdue = selectedEnrollment?.payment_status === 'overdue' && autoRestrictionOn;
 
   const { roomId } = useParams();
-  const jitsiApiRef = useRef(null);
   const [activeParticipants, setActiveParticipants] = useState([]);
 
   // OTP States
@@ -197,9 +196,6 @@ export default function StudentDashboard() {
     }
   };
 
-  const videoRef = useRef(null);
-  const [stream, setStream] = useState(null);
-
   const startStream = async (targetRoom = null) => {
     if (isOverdue) {
       toast.error('⚠️ Access restricted due to payment.');
@@ -207,73 +203,32 @@ export default function StudentDashboard() {
     }
     
     const cleanTargetRoom = (typeof targetRoom === 'string') ? targetRoom : null;
-    const finalRoom = cleanTargetRoom || roomId || `ppr-${selectedEnrollment?.batch_id}`;
+    const finalRoom = cleanTargetRoom || roomId || liveSession?.room_id || `ppr-batch-${selectedEnrollment?.batch_id}`;
     
     if (!finalRoom || typeof finalRoom !== 'string') {
       toast.error('No active session found.');
       return;
     }
 
-    setInClass(true);
-    
-    // Small timeout to ensure container is rendered
-    setTimeout(() => {
-      const domain = 'meet.jit.si';
-      const options = {
-        roomName: finalRoom,
-        width: '100%',
-        height: '100%',
-        parentNode: document.getElementById('student-jitsi-container'),
-        userInfo: { displayName: currentUser.name || 'Student' },
-        configOverwrite: {
-          startWithAudioMuted: true,
-          startWithVideoMuted: true,
-          prejoinPageEnabled: false,
-          disableThirdPartyRequests: true,
-          // Premium Branding Removal
-          hideConferenceTimer: false,
-          hideConferenceSubject: true,
-          toolbarButtons: ['microphone', 'camera', 'fullscreen', 'hangup', 'chat', 'settings', 'raisehand', 'videoquality', 'filmstrip', 'tileview'],
-        },
-        interfaceConfigOverwrite: {
-          SHOW_JITSI_WATERMARK: false,
-          SHOW_WATERMARK_FOR_GUESTS: false,
-          SHOW_BRAND_WATERMARK: false,
-          DEFAULT_BACKGROUND: '#0a0e1a',
-          MOBILE_APP_PROMO: false
-        }
-      };
+    if (finalRoom.includes('meet.google.com')) {
+      window.open(finalRoom, '_blank');
+      return;
+    }
 
-      if (window.JitsiMeetExternalAPI) {
-        const api = new window.JitsiMeetExternalAPI(domain, options);
-        jitsiApiRef.current = api;
-        api.addEventListener('videoConferenceJoined', () => setJoinState('approved'));
-        api.addEventListener('participantJoined', (data) => setActiveParticipants(prev => [...prev, data]));
-        api.addEventListener('participantLeft', (data) => setActiveParticipants(prev => prev.filter(p => p.id !== data.id)));
-      }
-    }, 500);
+    setInClass(true);
+    setMeetingRoom(finalRoom);
   };
 
-  useEffect(() => {
-    if (roomId && currentUser?.is_verified !== false && currentUser?.needs_password_reset !== true) {
-      startStream(roomId);
-    }
-  }, [roomId, currentUser]);
-
   const handleLeaveClass = () => {
-    if (jitsiApiRef.current) {
-      jitsiApiRef.current.dispose();
-      jitsiApiRef.current = null;
-    }
     setInClass(false);
     setJoinState('idle');
     setActiveParticipants([]);
     setMeetingRoom(null);
-    // Also reset live status in mock to clear banner if wanted
     setMockSessions(prev => prev.map(s => ({ ...s, is_live: false })));
   };
 
   const formatCountdown = (t) => {
+    const now = new Date().getTime();
     const diff = new Date(t).getTime() - now;
     if (diff <= 0) return 'Live Now';
     const h = Math.floor(diff / 3600000);
@@ -493,17 +448,27 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          {/* Private Meeting Container */}
-          <div id="student-jitsi-container" style={{ flex: 1 }}>
-            {joinState !== 'approved' && (
-              <div className="flex justify-center items-center h-full" style={{ color: 'white' }}>
-                <div className="text-center">
-                  <div className="login-spinner mb-4" style={{ margin: '0 auto' }}></div>
-                  <p>Entering Secure Engine...</p>
-                </div>
+        {/* Google Meet Redirect Container */}
+        <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#0a0e1a' }}>
+          <div className="glass-panel p-10 text-center" style={{ maxWidth: '600px', border: '1px solid var(--primary)' }}>
+            <div className="flex justify-center mb-6">
+              <div className="pulse-red" style={{ width: '80px', height: '80px', background: 'rgba(79,70,229,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Video size={40} color="var(--primary)"/>
               </div>
-            )}
+            </div>
+            <h2 className="mb-4">Class is Live! 🔴</h2>
+            <p className="text-muted mb-8">Your tutor is hosting the class on Google Meet. Click below to join the session.</p>
+            
+            <div className="flex-col gap-4">
+              <a href={meetingRoom} target="_blank" rel="noopener noreferrer" className="btn btn-primary w-full" style={{ padding: '1rem' }}>
+                Enter Google Meet Class
+              </a>
+              <button onClick={handleLeaveClass} className="btn btn-outline w-full" style={{ padding: '1rem' }}>
+                Exit Dashboard View
+              </button>
+            </div>
           </div>
+        </div>
 
           {/* Bottom Control Bar */}
           <div className="flex justify-center items-center p-4" style={{ background: 'linear-gradient(transparent, rgba(0,0,0,0.8))', position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10 }}>
