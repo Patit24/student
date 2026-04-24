@@ -405,12 +405,6 @@ export default function TutorDashboard() {
     toast.success('Google Meet link copied!');
   };
 
-  const copyMeetingLink = () => {
-    const url = `${window.location.origin}/join/${meetingRoom}`;
-    navigator.clipboard.writeText(url);
-    toast.success('Meeting link copied! Share it with students.');
-  };
-
   const toggleCamera = () => {
     if (stream && !isScreenSharing) {
       const t = stream.getVideoTracks()[0];

@@ -349,7 +349,7 @@ export default function StudentDashboard() {
           </div>
 
           {/* Admin Study Materials (Right Side) */}
-          <div style={{ flex: 1, minWidth: '100%' }} className="animate-slide-up" style={{ animationDelay: '0.4s' }}>
+          <div className="animate-slide-up" style={{ flex: 1, minWidth: '100%', animationDelay: '0.4s' }}>
             <div className="flex items-center gap-3 mb-8">
               <div style={{ background: 'rgba(245,197,24,0.1)', padding: '0.6rem', borderRadius: '12px' }}>
                 <Package size={24} color="#F5C518"/>
