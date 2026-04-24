@@ -184,8 +184,6 @@ export default function Homepage() {
 
   return (
     <div className="hp-root">
-      <Navbar />
-
       {/* ── HERO ── */}
       <section className="hp-hero" ref={heroRef}>
         <div className={`hp-hero-content ${heroVis ? 'hp-reveal-left' : 'hp-hidden-left'}`}>
@@ -342,123 +340,6 @@ export default function Homepage() {
             </div>
           </div>
         </div>
-      </section>
-
-      {/* ── SPECIALIZED PATH EXPLORER ── */}
-      <section className="hp-section" style={{ padding: '8rem 0', background: '#ffffff' }}>
-        <div className="container">
-          <div style={{ textAlign: 'center', marginBottom: '5rem' }}>
-            <div className="hp-badge" style={{ margin: '0 auto 1.5rem', background: 'rgba(245,197,24,0.1)', color: '#F5C518' }}><span>8K SPECIALIZED PATHS</span></div>
-            <h2 style={{ fontSize: '3.5rem', fontWeight: 900, color: '#1a1a1a' }}>Choose Your <span style={{ color: '#F5C518' }}>Aspirant Hub</span></h2>
-            <p style={{ color: '#666', maxWidth: '600px', margin: '0 auto', fontSize: '1.1rem' }}>Permanent, resource-rich sanctuaries tailored for India's toughest exams.</p>
-          </div>
-
-          <div className="grid gap-12" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))' }}>
-            
-            {/* NEET MEDICAL PATH CARD */}
-            <div className="path-card-neet animate-premium" style={{ 
-              background: '#FFFFF0', // Ivory
-              border: '1px solid rgba(245,197,24,0.3)',
-              borderRadius: '32px',
-              padding: '3.5rem',
-              position: 'relative',
-              overflow: 'hidden',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.05)',
-              display: 'flex',
-              flexDirection: 'column',
-              minHeight: '500px'
-            }}>
-              {/* DNA Watermark */}
-              <div style={{ 
-                position: 'absolute', top: '-10%', right: '-10%', opacity: 0.05, 
-                fontSize: '15rem', color: '#F5C518', pointerEvents: 'none', transform: 'rotate(-15deg)' 
-              }}>🧬</div>
-              
-              <div className="hp-badge" style={{ background: '#F5C518', color: '#000', marginLeft: 0, width: 'fit-content', fontWeight: 800 }}>
-                MEDICAL ASPIRANT
-              </div>
-              
-              <h3 style={{ fontSize: '2.5rem', color: '#333', marginTop: '2rem', marginBottom: '1rem' }}>NEET Sanctuary</h3>
-              <p style={{ color: '#555', fontSize: '1.1rem', lineHeight: 1.6, flex: 1 }}>
-                Master biology and chemistry with our specialized bio-focused mock tests and curated last-minute suggestions.
-              </p>
-              
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '3rem' }}>
-                <button 
-                  onClick={() => navigate('/signup')} 
-                  className="glass-glow-btn"
-                  style={{ 
-                    flex: 1, padding: '1.2rem', borderRadius: '16px', background: 'rgba(245,197,24,0.1)', 
-                    border: '1px solid #F5C518', color: '#333', fontWeight: 700, fontSize: '1rem' 
-                  }}
-                >
-                  Enter Hub
-                </button>
-                <button 
-                  className="glass-glow-btn"
-                  style={{ 
-                    flex: 1, padding: '1.2rem', borderRadius: '16px', background: 'white', 
-                    border: '1px solid #ddd', color: '#333', fontWeight: 700, fontSize: '1rem' 
-                  }}
-                >
-                  View Mocks
-                </button>
-              </div>
-            </div>
-
-            {/* JEE ENGINEERING PATH CARD */}
-            <div className="path-card-jee animate-premium" style={{ 
-              background: '#FFFFFF', // Bright White
-              border: '1px solid rgba(245,197,24,0.3)',
-              borderRadius: '32px',
-              padding: '3.5rem',
-              position: 'relative',
-              overflow: 'hidden',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.05)',
-              display: 'flex',
-              flexDirection: 'column',
-              minHeight: '500px'
-            }}>
-              {/* Technical Grid Watermark */}
-              <div style={{ 
-                position: 'absolute', inset: 0, opacity: 0.03, 
-                backgroundImage: 'radial-gradient(#F5C518 0.5px, transparent 0.5px)', backgroundSize: '20px 20px',
-                pointerEvents: 'none'
-              }} />
-              
-              <div className="hp-badge" style={{ background: '#F5C518', color: '#000', marginLeft: 0, width: 'fit-content', fontWeight: 800 }}>
-                ENGINEERING ASPIRANT
-              </div>
-              
-              <h3 style={{ fontSize: '2.5rem', color: '#333', marginTop: '2rem', marginBottom: '1rem' }}>JEE Command</h3>
-              <p style={{ color: '#555', fontSize: '1.1rem', lineHeight: 1.6, flex: 1 }}>
-                Precision tools for physics, math, and chemistry. Weekly engineering mocks designed by top-tier JEE faculty.
-              </p>
-              
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '3rem' }}>
-                <button 
-                  onClick={() => navigate('/signup')} 
-                  className="glass-glow-btn"
-                  style={{ 
-                    flex: 1, padding: '1.2rem', borderRadius: '16px', background: 'rgba(245,197,24,0.1)', 
-                    border: '1px solid #F5C518', color: '#333', fontWeight: 700, fontSize: '1rem' 
-                  }}
-                >
-                  Enter Hub
-                </button>
-                <button 
-                  className="glass-glow-btn"
-                  style={{ 
-                    flex: 1, padding: '1.2rem', borderRadius: '16px', background: 'white', 
-                    border: '1px solid #ddd', color: '#333', fontWeight: 700, fontSize: '1rem' 
-                  }}
-                >
-                  View Mocks
-                </button>
-              </div>
-            </div>
-
-          </div>
         </div>
       </section>
 
@@ -483,6 +364,7 @@ export default function Homepage() {
           </div>
         </div>
       </section>
+
       {/* ── FINAL CTA ── */}
       <section className="hp-final-cta">
         <div className="hp-final-inner">
@@ -497,8 +379,6 @@ export default function Homepage() {
           </div>
         </div>
       </section>
-
-      <Footer />
     </div>
   );
 }
