@@ -7,6 +7,7 @@ import PaymentBanner from '../components/PaymentBanner';
 import TestCenter from '../components/TestCenter';
 import FeeProgressBar from '../components/FeeProgressBar';
 import StudentMaterialsPanel from '../components/StudentMaterialsPanel';
+import { subscribeGlobalAssets } from '../db.service';
 
 export default function StudentDashboard() {
   const { 
