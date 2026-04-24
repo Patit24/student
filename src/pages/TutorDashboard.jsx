@@ -373,7 +373,16 @@ export default function TutorDashboard() {
 
   const handleGoLive = async (batchId = null) => {
     const cleanBatchId = (typeof batchId === 'string') ? batchId : null;
-    const roomName = cleanBatchId ? `ppr-${cleanBatchId}` : `ppr-instant-${currentUser.uid}-${Math.random().toString(36).substring(7)}`;
+    const roomName = cleanBatchId ? `ppr-batch-${cleanBatchId}` : `ppr-instant-${currentUser.uid}-${Math.random().toString(36).substring(7)}`;
+    
+    // Update session status in mock data (simulating notification)
+    if (cleanBatchId) {
+      setMockSessions(prev => prev.map(s => 
+        s.batch_id === cleanBatchId ? { ...s, is_live: true, room_id: roomName } : s
+      ));
+      toast.info(`🔔 Notification sent to students of batch: ${myBatches.find(b => b.id === cleanBatchId)?.name}`);
+    }
+
     setMeetingRoom(roomName);
     setIsLive(true);
   };
