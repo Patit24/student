@@ -203,8 +203,12 @@ export default function StudentDashboard() {
       toast.error('⚠️ Access restricted due to payment.');
       return;
     }
-    const finalRoom = targetRoom || roomId || `ppr-${selectedEnrollment?.batch_id}`;
-    if (!finalRoom) {
+    
+    // Ensure targetRoom is a string and not a browser event object
+    const cleanTargetRoom = (typeof targetRoom === 'string') ? targetRoom : null;
+    
+    const finalRoom = cleanTargetRoom || roomId || `ppr-${selectedEnrollment?.batch_id}`;
+    if (!finalRoom || typeof finalRoom !== 'string') {
       toast.error('No active session found.');
       return;
     }
@@ -620,7 +624,7 @@ export default function StudentDashboard() {
                          className={`btn ${isReady ? 'btn-primary' : 'btn-outline'}`} 
                          style={{ padding: '0.5rem 1rem', borderRadius: '12px', fontSize: '0.8rem' }}
                          disabled={!isReady || isOverdue} 
-                         onClick={handleJoinClass}
+                         onClick={() => handleJoinClass()}
                        >
                          {isOverdue ? <Lock size={14}/> : isReady ? 'Join' : 'Waiting'}
                        </button>

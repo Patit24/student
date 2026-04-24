@@ -371,8 +371,11 @@ export default function TutorDashboard() {
   };
 
   const handleGoLive = async (batchId = null) => {
+    // Ensure batchId is a string and not a browser event object
+    const cleanBatchId = (typeof batchId === 'string') ? batchId : null;
+    
     // Generate a unique room ID for Huddle01
-    const roomName = batchId ? `ppr-${batchId}` : `ppr-instant-${currentUser.uid}-${Math.random().toString(36).substring(7)}`;
+    const roomName = cleanBatchId ? `ppr-${cleanBatchId}` : `ppr-instant-${currentUser.uid}-${Math.random().toString(36).substring(7)}`;
     setMeetingRoom(roomName);
     setIsLive(true);
     setStreamActive(true);
@@ -657,7 +660,7 @@ export default function TutorDashboard() {
           <p className="text-muted mt-1">{myStudents.length} Students · {myBatches.length} Batches</p>
         </div>
         <div className="dash-header-actions">
-          <button className="btn btn-secondary" onClick={isSubscribed ? handleGoLive : () => navigate('/pricing')}>
+          <button className="btn btn-secondary" onClick={() => isSubscribed ? handleGoLive() : navigate('/pricing')}>
             <Video size={16}/> Go Live
           </button>
         </div>
