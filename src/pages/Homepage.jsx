@@ -183,15 +183,173 @@ export default function Homepage() {
   };
 
   return (
-    <div className="hp-wrapper">
+    <div className="hp-root">
       <Navbar />
-      
-      {/* ── HERO SECTION ── */}
-      <section className="hp-hero" ref={heroRef} style={{ opacity: heroVis ? 1 : 0, transform: heroVis ? 'translateY(0)' : 'translateY(30px)', transition: 'all 0.8s ease-out' }}>
+
+      {/* ── HERO ── */}
+      <section className="hp-hero" ref={heroRef}>
+        <div className={`hp-hero-content ${heroVis ? 'hp-reveal-left' : 'hp-hidden-left'}`}>
+          <div className="hp-badge">
+            <span className="hp-live-dot" />
+            <span>Live Classes Running Now</span>
+          </div>
+          <h1 className="hp-headline">
+            Your Global<br />
+            <span className="hp-yellow">Coaching Center,</span><br />
+            Simplified.
+          </h1>
+          <p className="hp-sub">
+            One platform for unlimited tutors. Live streaming, AI‑powered exams,
+            and automated fee management — all in one place.
+          </p>
+          <div className="hp-cta-row">
+            <Link to="/signup?role=tutor" id="cta-tutor" className="hp-btn-primary">
+              <Zap size={18} /> Get Started as a Tutor
+            </Link>
+            <Link to="/search" id="cta-search" className="hp-btn-outline" style={{ background: 'rgba(255,255,255,0.05)' }}>
+              <Search size={18} /> Find Tutors Near You
+            </Link>
+          </div>
+
+          <div className="hp-trust-row">
+            {['500+ Tutors', '12K+ Students', '4.9★ Rating'].map(t => (
+              <span key={t} className="hp-trust-pill">{t}</span>
+            ))}
+          </div>
+        </div>
+
+        <div className={`hp-hero-right ${heroVis ? 'hp-reveal-right' : 'hp-hidden-right'}`}>
+          <div className="hp-dashboard-float">
+            <div className="hp-dash-header">
+              <BookOpen size={20} color="var(--hp-yellow)" />
+              <span>Live Dashboard</span>
+              <span className="hp-live-badge">LIVE</span>
+            </div>
+            <div className="hp-live-list">
+              {LIVE_CLASSES.map((c, i) => (
+                <div key={i} className="hp-live-item" style={{ animationDelay: `${i * 0.1}s` }}>
+                  <div className="hp-live-dot-sm" />
+                  <div className="hp-live-info">
+                    <strong>{c.subject}</strong>
+                    <span>{c.tutor} · {c.level}</span>
+                  </div>
+                  <div className="hp-viewer-badge">
+                    <MonitorPlay size={12} /> {c.viewers}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="hp-dash-footer">
+              <Play size={14} /> Streaming at 1080p · Low latency
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── STATS ── */}
+      <section className="hp-stats-bar" ref={statsRef}>
+        {[
+          { n: '500+', l: 'Active Tutors' },
+          { n: '12,000+', l: 'Students Enrolled' },
+          { n: '98%', l: 'Uptime SLA' },
+          { n: '50+', l: 'Subjects Covered' },
+        ].map(({ n, l }, i) => (
+          <div key={i} className={`hp-stat ${statsVis ? 'hp-reveal-up' : 'hp-hidden-up'}`} style={{ animationDelay: `${i * 0.15}s` }}>
+            <span className="hp-stat-n">{n}</span>
+            <span className="hp-stat-l">{l}</span>
+          </div>
+        ))}
+      </section>
+
+      {/* ── HOW IT WORKS BENTO ── */}
+      <section className="hp-section" ref={bentoRef}>
+        <div className={`hp-section-head ${bentoVis ? 'hp-reveal-up' : 'hp-hidden-up'}`}>
+          <h2>How It <span className="hp-yellow">Works</span></h2>
+          <p>Three intelligent systems working together seamlessly</p>
+        </div>
+        <div className="hp-bento">
+          <div className={`hp-bento-card hp-bento-lg ${bentoVis ? 'hp-reveal-left' : 'hp-hidden-left'}`} style={{ animationDelay: '0.1s' }}>
+            <div className="hp-card-icon-row">
+              <Shield size={22} color="var(--hp-yellow)" />
+              <span className="hp-card-num">01</span>
+            </div>
+            <h3>Secure Verification</h3>
+            <p>Every tutor and student is verified via phone OTP before accessing the platform.</p>
+            <OTPAnimation />
+          </div>
+          <div className={`hp-bento-card ${bentoVis ? 'hp-reveal-up' : 'hp-hidden-up'}`} style={{ animationDelay: '0.25s' }}>
+            <div className="hp-card-icon-row">
+              <Brain size={22} color="var(--hp-yellow)" />
+              <span className="hp-card-num">02</span>
+            </div>
+            <h3>AI Exam Engine</h3>
+            <p>Upload any PDF or Excel sheet. Our AI instantly generates a full MCQ exam.</p>
+            <ExamAnimation />
+          </div>
+          <div className={`hp-bento-card ${bentoVis ? 'hp-reveal-right' : 'hp-hidden-right'}`} style={{ animationDelay: '0.4s' }}>
+            <div className="hp-card-icon-row">
+              <Lock size={22} color="var(--hp-yellow)" />
+              <span className="hp-card-num">03</span>
+            </div>
+            <h3>Fee Guard System</h3>
+            <p>Students are automatically blocked from classes the moment fees are overdue.</p>
+            <FeeAnimation />
+          </div>
+        </div>
+      </section>
+
+      {/* ── LIVE DEMO ── */}
+      <section className="hp-section hp-demo-section" ref={demoRef}>
+        <div className={`hp-section-head ${demoVis ? 'hp-reveal-up' : 'hp-hidden-up'}`}>
+          <h2>See It <span className="hp-yellow">Live</span></h2>
+          <p>A real classroom experience — right in your browser</p>
+        </div>
+        <div className={`hp-demo-wrap ${demoVis ? 'hp-reveal-up' : 'hp-hidden-up'}`} style={{ animationDelay: '0.2s' }}>
+          <div className="hp-video-player">
+            <div className="hp-video-screen">
+              <div className="hp-video-overlay">
+                <div className="hp-play-btn"><Play size={32} /></div>
+                <div className="hp-video-label">Live: JEE Advanced Mathematics</div>
+              </div>
+              <div className="hp-screen-share-bar">
+                <span className="hp-ss-toggle">🖥 Screen Share: ON</span>
+                <span className="hp-rec-dot" />
+                <span>REC 00:42:17</span>
+              </div>
+            </div>
+            <div className="hp-video-controls">
+              <span>▶ 128 watching</span>
+              <span className="hp-quality">HD 1080p</span>
+              <span>⚡ 0.3s latency</span>
+            </div>
+          </div>
+          <div className="hp-chat-sidebar">
+            <div className="hp-chat-header">
+              <span>Live Chat</span>
+              <span className="hp-online-dot" />
+            </div>
+            <div className="hp-chat-msgs">
+              {[
+                { u: 'Riya', m: '∫(x²+2x)dx = x³/3 + x²', t: '14:22' },
+                { u: 'Arjun', m: 'Can you explain F=ma again?', t: '14:23' },
+                { u: 'Priya', m: 'E=mc² is mind-blowing 🚀', t: '14:23' },
+              ].map((msg, i) => (
+                <div key={i} className="hp-chat-msg">
+                  <span className="hp-chat-user">{msg.u}</span>
+                  <span className="hp-chat-text">{msg.m}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── SEPARATOR HUB ── */}
+      <section className="hp-section" style={{ padding: '4rem 0', background: 'var(--bg-dark)', textAlign: 'center' }}>
         <div className="container">
-          <div className="hp-badge"><span>PPR EDUCATION ECOSYSTEM</span></div>
-          <h1>Empowering <span className="hp-yellow">Aspirants</span><br/>With Specialized Hubs</h1>
-          <p>Access dedicated resources for NEET and JEE. Mock exams, curated materials, and expert suggestions tailored for your success.</p>
+          <div className="hp-badge" style={{ margin: '0 auto 1.5rem' }}><span>SPECIALIZED ASPIRANT ECOSYSTEM</span></div>
+          <h2 style={{ fontSize: '3rem', fontWeight: 900 }}>Dedicated <span className="hp-yellow">Study Hubs</span></h2>
+          <p className="text-muted" style={{ maxWidth: '700px', margin: '0 auto' }}>Choose your path. We've built permanent, resource-rich sanctuaries for both Medical and Engineering aspirants.</p>
         </div>
       </section>
 
