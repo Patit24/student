@@ -10,6 +10,8 @@ import StudentMaterialsPanel from '../components/StudentMaterialsPanel';
 import { subscribeGlobalAssets } from '../db.service';
 
 export default function StudentDashboard() {
+  const { 
+    currentUser, verifyOTP, sendOTP, mockSessions, mockExams, 
     mockSubmissions, mockStudents, mockBatches, mockTutors, 
     logout 
   } = useAppContext();
