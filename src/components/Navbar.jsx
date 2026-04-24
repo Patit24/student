@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AuthContext';
-import { BookOpen, LogOut, Shield, Zap } from 'lucide-react';
+import { BookOpen, LogOut, Shield, Zap, Menu, X } from 'lucide-react';
 import logoImg from '../assets/logopng.png';
 
 export default function Navbar() {
   const { currentUser, logout, isMockMode } = useAppContext();
   const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   async function handleLogout() {
     try {
@@ -50,65 +51,70 @@ export default function Navbar() {
           <img src={logoImg} alt="PPREducation" style={{ height: '55px', width: 'auto', display: 'block' }} />
         </Link>
 
-        {/* Right side */}
-        <div className="flex items-center gap-4">
-          {isMockMode && (
-            <span style={{ fontSize: '0.72rem', padding: '0.2rem 0.5rem', background: '#EF4444', borderRadius: '4px', fontWeight: 700 }}>
-              MOCK MODE
-            </span>
-          )}
-
-          {currentUser?.role === 'super_admin' && (
-            <span className="flex items-center gap-1" style={{ fontSize: '0.82rem', color: '#F5C518' }}>
-              <Shield size={13} /> Super Admin
-            </span>
-          )}
-
+        {/* Desktop Nav */}
+        <div className="hide-on-mobile flex items-center gap-6">
           {currentUser ? (
             <>
               <span style={{ color: '#7A8BA8', fontSize: '0.88rem' }}>
                 {currentUser.name}
-                {currentUser.role !== 'super_admin' && (
-                  <span style={{ marginLeft: '0.35rem', fontSize: '0.7rem', textTransform: 'uppercase', opacity: 0.6 }}>
-                    ({currentUser.subscription_tier || currentUser.role})
-                  </span>
-                )}
+                <span style={{ marginLeft: '0.35rem', fontSize: '0.7rem', textTransform: 'uppercase', opacity: 0.6 }}>
+                  ({currentUser.subscription_tier || currentUser.role})
+                </span>
               </span>
-              <button
-                onClick={handleLogout}
-                className="btn btn-outline"
-                style={{ padding: '0.4rem 0.9rem', fontSize: '0.85rem' }}
-              >
+              <button onClick={handleLogout} className="btn btn-outline" style={{ padding: '0.4rem 0.9rem', fontSize: '0.85rem' }}>
                 <LogOut size={15} /> Logout
               </button>
             </>
           ) : (
             <>
-              <Link to="/"      style={navLink} id="nav-home">Home</Link>
-              <Link to="/search" style={navLink} id="nav-search">Find Tutors</Link>
-              <Link to="/about" style={navLink} id="nav-about">About</Link>
-              <Link to="/login" className="btn btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }} id="nav-login">
-                Log In
-              </Link>
-              <Link
-                to="/signup"
-                id="nav-signup"
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '0.4rem',
-                  background: '#F5C518', color: '#07090F',
-                  fontWeight: 700, fontSize: '0.85rem',
-                  padding: '0.45rem 1.1rem', borderRadius: '8px',
-                  textDecoration: 'none',
-                  boxShadow: '0 4px 16px rgba(245,197,24,0.3)',
-                  transition: 'all 0.2s ease',
-                }}
-              >
+              <Link to="/" style={navLink}>Home</Link>
+              <Link to="/search" style={navLink}>Find Tutors</Link>
+              <Link to="/about" style={navLink}>About</Link>
+              <Link to="/login" className="btn btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>Log In</Link>
+              <Link to="/signup" className="hp-btn-primary" style={{ padding: '0.45rem 1.1rem', fontSize: '0.85rem' }}>
                 <Zap size={13} /> Get Started
               </Link>
             </>
           )}
         </div>
+
+        {/* Mobile Toggle */}
+        <button 
+          className="show-on-mobile" 
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}
+        >
+          {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
+        </button>
       </div>
+
+      {/* Mobile Drawer */}
+      {isMenuOpen && (
+        <div className="show-on-mobile animate-fade-in" style={{
+          position: 'absolute', top: '100%', left: 0, right: 0,
+          background: '#070B18', padding: '2rem',
+          borderBottom: '1px solid rgba(255,255,255,0.07)',
+          display: 'flex', flexDirection: 'column', gap: '1.5rem',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
+        }}>
+          <Link to="/" onClick={() => setIsMenuOpen(false)} style={navLink}>Home</Link>
+          <Link to="/search" onClick={() => setIsMenuOpen(false)} style={navLink}>Find Tutors</Link>
+          <Link to="/about" onClick={() => setIsMenuOpen(false)} style={navLink}>About</Link>
+          <hr style={{ borderColor: 'rgba(255,255,255,0.05)' }} />
+          {currentUser ? (
+            <button onClick={handleLogout} className="btn btn-outline" style={{ justifyContent: 'center' }}>
+              <LogOut size={18} /> Logout
+            </button>
+          ) : (
+            <>
+              <Link to="/login" onClick={() => setIsMenuOpen(false)} className="btn btn-outline" style={{ justifyContent: 'center' }}>Log In</Link>
+              <Link to="/signup" onClick={() => setIsMenuOpen(false)} className="hp-btn-primary" style={{ justifyContent: 'center' }}>
+                <Zap size={18} /> Get Started
+              </Link>
+            </>
+          )}
+        </div>
+      )}
     </nav>
   );
 }

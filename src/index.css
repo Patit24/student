@@ -186,114 +186,66 @@ html, body, #root {
   max-width: 100vw;
 }
 
-/* Tabs row — scrollable on mobile */
-.tabs-row {
-  display: flex;
-  gap: 0.4rem;
+/* Responsive Container */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1.25rem;
+  }
+  
+/* Mobile Visibility Utilities */
+@media (min-width: 769px) {
+  .show-on-mobile { display: none !important; }
+}
+@media (max-width: 768px) {
+  .hide-on-mobile { display: none !important; }
+  .show-on-mobile { display: block !important; }
+}
+
+/* Typography scale-down */
+ h1 { font-size: 1.85rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.2rem; }
+  
+  /* Global spacing adjustment */
+  .p-8 { padding: 1.5rem !important; }
+  .p-10 { padding: 1.5rem !important; }
+  
+  /* Card stacks on mobile */
+  .flex.gap-8, .flex.gap-10 {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+}
+
+/* Table Responsiveness — Wrap tables in a div with .overflow-x-auto */
+.table-responsive {
+  width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  padding-bottom: 2px;
-  flex-wrap: nowrap;
-}
-.tabs-row::-webkit-scrollbar { display: none; }
-
-/* Dashboard header stacks on mobile */
-.dash-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
-}
-.dash-header-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  align-items: center;
+  border-radius: 12px;
 }
 
-@media (max-width: 768px) {
-  /* Container */
-  .container {
-    padding: 0 1rem;
-  }
-
-  /* Typography scale-down */
-  h1 { font-size: 1.75rem; }
-  h2 { font-size: 1.4rem; }
-  h3 { font-size: 1.1rem; }
-
-  /* Buttons smaller on mobile */
-  .btn {
-    padding: 0.55rem 0.9rem;
-    font-size: 0.85rem;
-  }
-
-  /* Glass panel padding */
-  .glass-panel.p-8 { padding: 1.25rem; }
-  .p-8 { padding: 1.25rem; }
-
-  /* Flex rows collapse */
-  .flex.gap-8 {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  /* Tab buttons — compact on mobile */
-  .tabs-row .btn {
-    padding: 0.45rem 0.75rem;
-    font-size: 0.78rem;
-    white-space: nowrap;
-  }
-
-  /* Tables — make cells wrap better */
-  table { font-size: 0.8rem; }
-  th, td { padding: 0.5rem 0.25rem !important; }
-
-  /* Dashboard card panels — full width */
-  .glass-panel[style*="minWidth"] {
-    min-width: 0 !important;
-    width: 100% !important;
-  }
-
-  /* Live class chat — collapse below video on mobile */
-  .live-chat-panel {
-    width: 100% !important;
-    height: 280px;
-    border-left: none !important;
-    border-top: 1px solid var(--border);
-  }
-  .live-stream-root {
+/* Mobile Card Transform Utility */
+@media (max-width: 640px) {
+  .mobile-stack {
     flex-direction: column !important;
-    height: auto !important;
+    gap: 1rem !important;
   }
-
-  /* Student dashboard grid */
-  .student-grid {
-    flex-direction: column !important;
+  
+  .hide-on-mobile {
+    display: none !important;
   }
 }
 
 @media (max-width: 480px) {
   .container {
-    padding: 0 0.75rem;
+    padding: 0 1rem;
   }
-
-  h1 { font-size: 1.4rem; }
-  h2 { font-size: 1.2rem; }
-  h3 { font-size: 1rem; }
-
+  
+  h1 { font-size: 1.6rem; }
   .btn {
-    padding: 0.5rem 0.7rem;
-    font-size: 0.8rem;
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
   }
-
-  /* Plan badge text very small */
-  .plan-badge { font-size: 0.65rem !important; }
-
-  /* Hide text on icon+text tab buttons, show only icon */
-  .tab-text { display: none; }
 }
 

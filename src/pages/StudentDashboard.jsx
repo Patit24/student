@@ -153,17 +153,17 @@ export default function StudentDashboard() {
   if (isGlobalStudent) {
     return (
       <div className="container mt-8 animate-fade-in">
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex justify-between items-center mb-8 mobile-stack">
           <div>
-            <h1 style={{ fontSize: '2.5rem', fontWeight: 800, letterSpacing: '-1px' }}>Discover Your <span style={{ color: '#F5C518' }}>Ideal Tutor</span></h1>
-            <p className="text-muted" style={{ fontSize: '1.1rem' }}>Explore verified teachers or browse our free study materials library.</p>
+            <h1 style={{ fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', fontWeight: 800, letterSpacing: '-1px' }}>Discover Your <span style={{ color: '#F5C518' }}>Ideal Tutor</span></h1>
+            <p className="text-muted" style={{ fontSize: '1.05rem' }}>Explore verified teachers or browse our free study materials library.</p>
           </div>
           <button onClick={() => logout()} className="btn btn-outline" style={{ borderRadius: '12px' }}><LogOut size={16}/> Logout</button>
         </div>
 
-        <div className="flex gap-8" style={{ flexWrap: 'wrap' }}>
+        <div className="flex gap-8 mobile-stack">
           {/* Tutor Directory */}
-          <div style={{ flex: 2, minWidth: '400px' }}>
+          <div style={{ flex: 2, minWidth: '100%' }}>
             <h3 className="mb-6 flex items-center gap-2"><Users size={22} color="#F5C518"/> Verified Tutors</h3>
             <div className="flex-col gap-4">
               {mockTutors.filter(t => t.subscription_status === 'active' || t.is_verified).map(tutor => (
@@ -191,7 +191,7 @@ export default function StudentDashboard() {
           </div>
 
           {/* Admin Study Materials */}
-          <div style={{ flex: 1, minWidth: '300px' }}>
+          <div style={{ flex: 1, minWidth: '100%' }}>
             <h3 className="mb-6 flex items-center gap-2"><Package size={22} color="#F5C518"/> Global Library</h3>
             <div className="glass-panel p-6" style={{ borderRadius: '24px', background: 'rgba(10, 14, 26, 0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)' }}>
               <p className="text-muted mb-6" style={{ fontSize: '0.9rem' }}>High-quality resources provided by PPREducation Admin.</p>
@@ -234,7 +234,7 @@ export default function StudentDashboard() {
             <button className="btn btn-outline" style={{ background: 'var(--surface)', borderColor: 'transparent' }} onClick={handleLeaveClass}>Leave Class</button>
           </div>
         </div>
-        <div style={{ width: '350px', borderLeft: '1px solid var(--border)', background: 'var(--surface)', display: 'flex', flexDirection: 'column' }}>
+        <div className="hide-on-mobile" style={{ width: '350px', borderLeft: '1px solid var(--border)', background: 'var(--surface)', display: 'flex', flexDirection: 'column' }}>
           <div className="p-4" style={{ borderBottom: '1px solid var(--border)' }}><h3 className="flex items-center gap-2"><MessageSquare size={18}/> Live Chat</h3></div>
           <ChatSidebar roomId={`room-${selectedEnrollment?.batch_id}`} />
         </div>
@@ -316,28 +316,28 @@ export default function StudentDashboard() {
         </div>
       )}
 
-      <div className="flex justify-between items-center mb-8" style={{ flexWrap: 'wrap', gap: '1rem' }}>
+      <div className="flex justify-between items-center mb-8 mobile-stack" style={{ gap: '1.5rem' }}>
         <div>
-          <h2>Student Classroom</h2>
+          <h2 style={{ fontSize: 'clamp(1.5rem, 5vw, 2.2rem)' }}>Student Classroom</h2>
           <p className="text-muted mt-1">
             Learning with <strong style={{ color: '#F0F4FF' }}>{currentTutor?.name || 'your teacher'}</strong>
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 mobile-stack w-full" style={{ justifyContent: 'flex-start' }}>
           {mockSessions.find(s => s.batch_id === selectedEnrollment?.batch_id && s.status === 'live') && (
-            <button className="btn btn-primary animate-pulse" style={{ background: '#EF4444', border: 'none' }} onClick={handleJoinClass}>
+            <button className="btn btn-primary animate-pulse w-full" style={{ background: '#EF4444', border: 'none', padding: '1rem' }} onClick={handleJoinClass}>
               <Video size={18}/> Join Live Class
             </button>
           )}
-          <button onClick={() => logout()} className="btn btn-outline" style={{ fontSize: '0.8rem' }}>
+          <button onClick={() => logout()} className="btn btn-outline w-full" style={{ fontSize: '0.9rem', padding: '1rem' }}>
             <LogOut size={14}/> Logout
           </button>
         </div>
       </div>
 
-      <div className="flex gap-8" style={{ flexWrap: 'wrap' }}>
+      <div className="flex gap-8 mobile-stack">
         {/* Schedule */}
-        <div className="glass-panel p-8" style={{ flex: 1, minWidth: '350px' }}>
+        <div className="glass-panel p-8" style={{ flex: 1, minWidth: '100%' }}>
           <h3 className="mb-4 flex items-center gap-2"><CalendarIcon size={20}/> Schedule</h3>
           {mySessions.length === 0 && <p className="text-muted">No classes scheduled by this teacher.</p>}
           <div className="flex-col gap-4">
@@ -365,7 +365,7 @@ export default function StudentDashboard() {
         </div>
 
         {/* Materials */}
-        <div style={{ flex: 1, minWidth: '300px' }} className="flex-col gap-6">
+        <div style={{ flex: 1, minWidth: '100%' }} className="flex-col gap-6">
           <div className="glass-panel p-8">
             <h3 className="mb-4 flex items-center gap-2"><FileText size={20}/> Batch Materials</h3>
             <StudentMaterialsPanel

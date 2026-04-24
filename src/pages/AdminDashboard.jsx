@@ -167,31 +167,31 @@ export default function AdminDashboard() {
       <div className="container" style={{ maxWidth: '1440px' }}>
         
         {/* Header */}
-        <header className="flex justify-between items-center mb-10 animate-premium">
+        <header className="flex justify-between items-center mb-10 animate-premium mobile-stack" style={{ gap: '1.5rem' }}>
           <div className="flex items-center gap-4">
             <div className="glass-card p-3" style={{ borderRadius: '15px' }}>
               <ShieldCheck size={32} color="#f5c518" />
             </div>
             <div>
-              <h1 style={{ fontSize: '1.8rem', fontWeight: 800, margin: 0, letterSpacing: '-0.5px' }}>
+              <h1 style={{ fontSize: 'clamp(1.5rem, 5vw, 1.8rem)', fontWeight: 800, margin: 0, letterSpacing: '-0.5px' }}>
                 Command <span style={{ color: '#f5c518' }}>Center</span>
               </h1>
               <p style={{ color: '#7a8ba8', fontSize: '0.9rem', margin: 0 }}>Super Admin Authority · PPREducation</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="glass-card flex items-center gap-3 px-4 py-2">
+          <div className="flex items-center gap-6 w-full mobile-stack" style={{ justifyContent: 'flex-end' }}>
+            <div className="glass-card flex items-center gap-3 px-4 py-2 w-full" style={{ justifyContent: 'center' }}>
               <div style={{ width: '10px', height: '10px', background: '#22c55e', borderRadius: '50%', boxShadow: '0 0 10px #22c55e' }} />
               <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>System Live</span>
             </div>
-            <button onClick={handleLogout} className="btn-remove" style={{ padding: '0.6rem 1.2rem' }}>
-              <LogOut size={18} />
+            <button onClick={handleLogout} className="btn-remove w-full" style={{ padding: '0.8rem', display: 'flex', justifyContent: 'center' }}>
+              <LogOut size={18} /> Logout
             </button>
           </div>
         </header>
 
-        <div className="flex gap-10">
+        <div className="flex gap-10 mobile-stack">
           
           {/* Sidebar Stats */}
           <aside className="admin-sidebar animate-premium" style={{ animationDelay: '0.1s' }}>
@@ -241,12 +241,12 @@ export default function AdminDashboard() {
 
             {activeTab === 'tutors' ? (
               <div className="glass-card p-8">
-                <div className="flex justify-between items-center mb-8">
+                <div className="flex justify-between items-center mb-8 mobile-stack" style={{ gap: '1.5rem' }}>
                   <h3 className="flex items-center gap-3">
                     <Users size={22} color="#f5c518" />
-                    Tutor Management
+                    Tutors
                   </h3>
-                  <div className="glass-card flex items-center px-4 py-2" style={{ width: '300px' }}>
+                  <div className="glass-card flex items-center px-4 py-2 w-full" style={{ maxWidth: '400px' }}>
                     <Search size={18} color="#7a8ba8" />
                     <input 
                       type="text" placeholder="Search Tutors..." 
@@ -255,12 +255,12 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                <div style={{ overflowX: 'auto' }}>
+                <div className="table-responsive">
                   <table className="premium-table">
                     <thead>
                       <tr>
-                        <th>Name / Email</th>
-                        <th>Transaction ID</th>
+                        <th>Tutor</th>
+                        <th className="hide-on-mobile">Transaction</th>
                         <th>Status</th>
                         <th style={{ textAlign: 'right' }}>Actions</th>
                       </tr>
@@ -272,16 +272,16 @@ export default function AdminDashboard() {
                             <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{tutor.name}</div>
                             <div style={{ fontSize: '0.75rem', color: '#7a8ba8' }}>{tutor.email}</div>
                           </td>
-                          <td>
+                          <td className="hide-on-mobile">
                             <code style={{ color: '#f5c518', fontSize: '0.8rem', background: 'rgba(245, 197, 24, 0.05)', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
                               {tutor.txn_id}
                             </code>
                           </td>
                           <td>
                             {tutor.subscription_status === 'active' ? (
-                              <span className="badge-active">Approved</span>
+                              <span className="badge-active">Live</span>
                             ) : (
-                              <span className="badge-pending">Pending Approval</span>
+                              <span className="badge-pending">Review</span>
                             )}
                           </td>
                           <td style={{ textAlign: 'right' }}>
@@ -293,10 +293,7 @@ export default function AdminDashboard() {
                                   setSelectedPlan(tutor.pending_plan || 'growth');
                                 }}
                               >
-                                {tutor.subscription_status === 'active' ? 'Manage' : 'Review'}
-                              </button>
-                              <button className="btn-remove" onClick={() => removeTutor(tutor.id)}>
-                                <Trash2 size={16} />
+                                {tutor.subscription_status === 'active' ? 'Plan' : 'Verify'}
                               </button>
                             </div>
                           </td>
@@ -328,22 +325,22 @@ export default function AdminDashboard() {
                   </div>
                   
                   <div className="flex-col gap-4">
-                    <div className="flex gap-4">
+                    <div className="flex gap-4 mobile-stack">
                       <input 
                         type="text" 
-                        placeholder="Material Title (e.g. Biology Unit Test #1)" 
+                        placeholder="Material Title" 
                         className="premium-input flex-1"
                         id="neet-title"
                         style={{ padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(16,185,129,0.2)', color: 'white' }}
                       />
                       <select 
                         id="neet-type"
-                        className="premium-input"
+                        className="premium-input w-full"
                         style={{ padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(16,185,129,0.2)', color: 'white' }}
                       >
                         <option value="material">Study Material</option>
                         <option value="mock">Mock Exam</option>
-                        <option value="suggestion">Last-Min Suggestion</option>
+                        <option value="suggestion">Suggestion</option>
                       </select>
                     </div>
                     <div className="mt-4">
@@ -380,22 +377,22 @@ export default function AdminDashboard() {
                   </div>
                   
                   <div className="flex-col gap-4">
-                    <div className="flex gap-4">
+                    <div className="flex gap-4 mobile-stack">
                       <input 
                         type="text" 
-                        placeholder="Material Title (e.g. Physics Mock #4)" 
+                        placeholder="Material Title" 
                         className="premium-input flex-1"
                         id="jee-title"
                         style={{ padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(99,102,241,0.2)', color: 'white' }}
                       />
                       <select 
                         id="jee-type"
-                        className="premium-input"
+                        className="premium-input w-full"
                         style={{ padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(99,102,241,0.2)', color: 'white' }}
                       >
                         <option value="material">Study Material</option>
                         <option value="mock">Mock Exam</option>
-                        <option value="suggestion">Last-Min Suggestion</option>
+                        <option value="suggestion">Suggestion</option>
                       </select>
                     </div>
                     <div className="mt-4">
