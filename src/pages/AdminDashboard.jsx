@@ -184,7 +184,7 @@ export default function AdminDashboard() {
           </aside>
 
           {/* Main Content Area */}
-          <main style={{ flex: 1 }} className="animate-premium" style={{ animationDelay: '0.2s' }}>
+          <main className="animate-premium" style={{ flex: 1, animationDelay: '0.2s' }}>
             
             {/* Tab Navigation */}
             <div className="tab-nav mb-6">
