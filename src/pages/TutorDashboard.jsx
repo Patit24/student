@@ -246,8 +246,6 @@ export default function TutorDashboard() {
   const [waitingRoom, setWaitingRoom] = useState([]);
   const [activeParticipants, setActiveParticipants] = useState([]);
   const [meetingRoom, setMeetingRoom] = useState(null);
-  const jitsiContainerRef = useRef(null);
-  const jitsiApiRef = useRef(null);
 
   const [newBatchName, setNewBatchName] = useState('');
   const [newBatchLimit, setNewBatchLimit] = useState('');
@@ -373,60 +371,14 @@ export default function TutorDashboard() {
   };
 
   const handleGoLive = async (batchId = null) => {
+    // Generate a unique room ID for Huddle01
     const roomName = batchId ? `ppr-${batchId}` : `ppr-instant-${currentUser.uid}-${Math.random().toString(36).substring(7)}`;
     setMeetingRoom(roomName);
     setIsLive(true);
+    setStreamActive(true);
   };
 
-  useEffect(() => {
-    if (isLive && meetingRoom && !jitsiApiRef.current) {
-      // Small timeout to ensure container is rendered
-      const timer = setTimeout(() => {
-        const domain = 'meet.jit.si';
-        const options = {
-          roomName: meetingRoom,
-          width: '100%',
-          height: '100%',
-          parentNode: document.getElementById('jitsi-container'),
-          userInfo: {
-            displayName: currentUser.name || 'Tutor'
-          },
-          configOverwrite: {
-            startWithAudioMuted: false,
-            disableModeratorIndicator: false,
-            startScreenSharing: false,
-            enableEmailInStats: false,
-            prejoinPageEnabled: false // Skip the Jitsi pre-join screen
-          },
-          interfaceConfigOverwrite: {
-            TILE_VIEW_MAX_COLUMNS: 8
-          }
-        };
-        
-        if (window.JitsiMeetExternalAPI) {
-          const api = new window.JitsiMeetExternalAPI(domain, options);
-          jitsiApiRef.current = api;
-
-          api.addEventListener('participantJoined', (data) => {
-            setActiveParticipants(prev => [...prev, data]);
-          });
-          api.addEventListener('participantLeft', (data) => {
-            setActiveParticipants(prev => prev.filter(p => p.id !== data.id));
-          });
-          api.addEventListener('videoConferenceJoined', () => {
-            setStreamActive(true);
-          });
-        }
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [isLive, meetingRoom]);
-
   const stopStream = () => {
-    if (jitsiApiRef.current) {
-      jitsiApiRef.current.dispose();
-      jitsiApiRef.current = null;
-    }
     setStreamActive(false);
     setIsLive(false);
     setMeetingRoom(null);
@@ -434,18 +386,11 @@ export default function TutorDashboard() {
   };
 
   const muteEveryone = () => {
-    if (jitsiApiRef.current) {
-      jitsiApiRef.current.executeCommand('muteEveryone');
-      toast.success('Muted everyone');
-    }
+    toast.info('Moderator controls available in Huddle01 menu');
   };
 
   const videoMuteEveryone = () => {
-    if (jitsiApiRef.current) {
-      // Jitsi doesn't have a direct videoMuteEveryone command like audio, 
-      // but we can send a broadcast message or use moderator commands if enabled.
-      toast.info('Moderator video control enabled');
-    }
+    toast.info('Moderator controls available in Huddle01 menu');
   };
 
   const copyMeetingLink = () => {
@@ -676,16 +621,13 @@ export default function TutorDashboard() {
           </div>
         </div>
 
-        {/* Main Content (Jitsi Area) */}
-        <div id="jitsi-container" style={{ flex: 1, position: 'relative' }}>
-          {!streamActive && (
-            <div className="flex justify-center items-center h-full" style={{ color: 'white' }}>
-              <div className="text-center">
-                <div className="login-spinner mb-4" style={{ margin: '0 auto' }}></div>
-                <p>Initializing Secure Stream...</p>
-              </div>
-            </div>
-          )}
+        {/* Main Content (Huddle01 Area) */}
+        <div style={{ flex: 1, position: 'relative', background: '#000' }}>
+          <iframe
+            src={`https://embed.huddle01.com/${meetingRoom}`}
+            style={{ width: '100%', height: '100%', border: 'none' }}
+            allow="camera; microphone; display-capture; fullscreen"
+          ></iframe>
         </div>
       </div>
     );

@@ -140,7 +140,6 @@ export default function StudentDashboard() {
   const isOverdue = selectedEnrollment?.payment_status === 'overdue' && autoRestrictionOn;
 
   const { roomId } = useParams();
-  const jitsiApiRef = useRef(null);
   const [activeParticipants, setActiveParticipants] = useState([]);
 
   // OTP States
@@ -211,32 +210,8 @@ export default function StudentDashboard() {
     }
 
     setInClass(true);
-    // Small timeout to ensure container is rendered
-    setTimeout(() => {
-      const domain = 'meet.jit.si';
-      const options = {
-        roomName: finalRoom,
-        width: '100%',
-        height: '100%',
-        parentNode: document.getElementById('student-jitsi-container'),
-        userInfo: {
-          displayName: currentUser.name || 'Student'
-        },
-        configOverwrite: {
-          startWithAudioMuted: true,
-          startWithVideoMuted: true,
-          prejoinPageEnabled: false // Skip the Jitsi pre-join screen
-        }
-      };
-
-      if (window.JitsiMeetExternalAPI) {
-        const api = new window.JitsiMeetExternalAPI(domain, options);
-        jitsiApiRef.current = api;
-        api.addEventListener('videoConferenceJoined', () => setJoinState('approved'));
-        api.addEventListener('participantJoined', (data) => setActiveParticipants(prev => [...prev, data]));
-        api.addEventListener('participantLeft', (data) => setActiveParticipants(prev => prev.filter(p => p.id !== data.id)));
-      }
-    }, 500);
+    setJoinState('approved');
+    setMeetingRoom(finalRoom);
   };
 
   useEffect(() => {
@@ -246,13 +221,10 @@ export default function StudentDashboard() {
   }, [roomId, currentUser]);
 
   const handleLeaveClass = () => {
-    if (jitsiApiRef.current) {
-      jitsiApiRef.current.dispose();
-      jitsiApiRef.current = null;
-    }
     setInClass(false);
     setJoinState('idle');
     setActiveParticipants([]);
+    setMeetingRoom(null);
   };
 
   const formatCountdown = (t) => {
@@ -475,16 +447,13 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          {/* Jitsi Container */}
-          <div id="student-jitsi-container" style={{ flex: 1 }}>
-            {joinState !== 'approved' && (
-              <div className="flex justify-center items-center h-full" style={{ color: 'white' }}>
-                <div className="text-center">
-                  <div className="login-spinner mb-4" style={{ margin: '0 auto' }}></div>
-                  <p>Joining Live Classroom...</p>
-                </div>
-              </div>
-            )}
+          {/* Huddle01 Container */}
+          <div style={{ flex: 1 }}>
+            <iframe
+              src={`https://embed.huddle01.com/${meetingRoom}`}
+              style={{ width: '100%', height: '100%', border: 'none' }}
+              allow="camera; microphone; display-capture; fullscreen"
+            ></iframe>
           </div>
 
           {/* Bottom Control Bar */}
