@@ -245,8 +245,9 @@ export default function TutorDashboard() {
   const [isLocked, setIsLocked] = useState(false);
   const [waitingRoom, setWaitingRoom] = useState([]);
   const [googleMeetLink, setGoogleMeetLink] = useState('');
-  const [showGoLiveModal, setShowGoLiveModal] = useState(false);
   const [selectedBatchForLive, setSelectedBatchForLive] = useState('');
+  const [liveStartTime, setLiveStartTime] = useState('');
+  const [showGoLiveModal, setShowGoLiveModal] = useState(false);
 
   const [newBatchName, setNewBatchName] = useState('');
   const [newBatchLimit, setNewBatchLimit] = useState('');
@@ -654,23 +655,59 @@ export default function TutorDashboard() {
   );
 
   return (
-    <div className="container mt-4 animate-fade-in" style={{ paddingBottom: '2rem' }}>
-      <div className="dash-header">
+    <div className="container mt-6 animate-fade-in" style={{ paddingLeft: '2rem', paddingRight: '2rem', paddingBottom: '6rem' }}>
+      
+      {/* ── Dashboard Header ── */}
+      <div className="flex justify-between items-center mb-10 mobile-stack">
         <div>
-          <h2 style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
-            Tutor Dashboard
-            <span style={{ fontSize: '0.7rem', background: 'rgba(79,70,229,0.2)', color: 'var(--primary)', border: '1px solid var(--primary)', padding: '0.2rem 0.75rem', borderRadius: '1rem', verticalAlign: 'middle' }}>
-              <Crown size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.3rem' }}/>
-              {(PLAN_LABELS[tier] || tier).toUpperCase()} PLAN
-            </span>
-          </h2>
+          <h1 style={{ fontSize: 'clamp(1.8rem, 5vw, 2.8rem)', fontWeight: 900, letterSpacing: '-1.5px', marginBottom: '0.5rem' }}>
+            Tutor <span className="text-gradient">Dashboard</span> <span className="plan-badge">{tier.toUpperCase()} PLAN</span>
+          </h1>
           <p className="text-muted mt-1">{myStudents.length} Students · {myBatches.length} Batches</p>
         </div>
-        <div className="dash-header-actions">
-          <button className="btn btn-secondary" onClick={() => isSubscribed ? setShowGoLiveModal(true) : navigate('/pricing')}>
-            <Video size={16}/> Start Live Class
-          </button>
+      </div>
+
+      {/* ── Smart Go Live Bar ── */}
+      <div className="glass-panel p-2 mb-10 flex items-center gap-3 animate-slide-up" style={{ 
+        borderRadius: '20px', 
+        border: '1px solid rgba(255,255,255,0.1)',
+        background: 'rgba(255,255,255,0.02)'
+      }}>
+        <div style={{ flex: 1, position: 'relative' }}>
+          <input 
+            type="text" 
+            placeholder="Paste Google Meet Link..." 
+            className="input-field" 
+            style={{ width: '100%', border: 'none', background: 'transparent', padding: '1rem' }}
+            value={googleMeetLink}
+            onChange={(e) => setGoogleMeetLink(e.target.value)}
+          />
         </div>
+        <div style={{ width: '1px', height: '30px', background: 'rgba(255,255,255,0.1)' }} />
+        <select 
+          className="input-field" 
+          style={{ border: 'none', background: 'transparent', width: '200px' }}
+          value={selectedBatchForLive}
+          onChange={(e) => setSelectedBatchForLive(e.target.value)}
+        >
+          <option value="">Select Batch...</option>
+          {myBatches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+        </select>
+        <div style={{ width: '1px', height: '30px', background: 'rgba(255,255,255,0.1)' }} />
+        <input 
+          type="datetime-local" 
+          className="input-field" 
+          style={{ border: 'none', background: 'transparent', width: '200px', fontSize: '0.8rem' }}
+          value={liveStartTime}
+          onChange={(e) => setLiveStartTime(e.target.value)}
+        />
+        <button 
+          className="btn btn-secondary" 
+          style={{ padding: '1rem 2rem', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+          onClick={() => isSubscribed ? handleGoLive() : navigate('/pricing')}
+        >
+          <Video size={18}/> Go Live
+        </button>
       </div>
 
       {/* Start Live Session Modal */}

@@ -157,6 +157,14 @@ export default function StudentDashboard() {
   // My data filtered by selected enrollment
   const mySessions = mockSessions.filter(s => s.batch_id === selectedEnrollment?.batch_id);
   const liveSession = mySessions.find(s => s.is_live);
+  // Find upcoming scheduled session for today
+  const upcomingSession = mySessions.find(s => {
+    if (!s.start_time) return false;
+    const start = new Date(s.start_time).getTime();
+    const now = new Date().getTime();
+    return start > now && (start - now) < 3600000; // Within next hour
+  });
+
   const myExams = mockExams.filter(e => e.batchId === selectedEnrollment?.batch_id);
   const mySubmissions = mockSubmissions.filter(s => s.student_id === currentUser?.uid);
 
@@ -507,9 +515,9 @@ export default function StudentDashboard() {
       </div>
       
       {/* Live Class Notification Banner */}
-      {liveSession && !inClass && (
+      {(liveSession || upcomingSession) && !inClass && (
         <div className="animate-bounce-subtle" style={{ 
-          background: 'linear-gradient(90deg, #ef4444 0%, #4f46e5 100%)', 
+          background: liveSession ? 'linear-gradient(90deg, #ef4444 0%, #4f46e5 100%)' : 'linear-gradient(90deg, #4f46e5 0%, #06b6d4 100%)', 
           padding: '1.2rem', 
           textAlign: 'center', 
           color: 'white', 
@@ -519,32 +527,39 @@ export default function StudentDashboard() {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          boxShadow: '0 15px 35px rgba(239, 68, 68, 0.3)',
+          boxShadow: liveSession ? '0 15px 35px rgba(239, 68, 68, 0.3)' : '0 15px 35px rgba(79, 70, 229, 0.2)',
           border: '1px solid rgba(255,255,255,0.2)',
           position: 'relative',
           overflow: 'hidden'
         }}>
           <div className="flex items-center gap-4">
-            <div className="pulse-red" style={{ width: '16px', height: '16px', background: '#fff', borderRadius: '50%' }}></div>
+            <div className={liveSession ? "pulse-red" : "pulse-blue"} style={{ width: '16px', height: '16px', background: '#fff', borderRadius: '50%' }}></div>
             <div style={{ textAlign: 'left' }}>
-              <span style={{ fontSize: '1.2rem', display: 'block' }}>🔴 LIVE NOW: Sir class starting!</span>
-              <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>Join immediately to avoid missing anything.</span>
+              <span style={{ fontSize: '1.2rem', display: 'block' }}>
+                {liveSession ? '🔴 LIVE NOW: Sir class starting!' : `🕒 Upcoming: Class Starting In ${formatCountdown(upcomingSession.start_time)}`}
+              </span>
+              <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>
+                {liveSession ? 'Join immediately to avoid missing anything.' : 'Get your materials ready!'}
+              </span>
             </div>
           </div>
           <button 
-            onClick={() => startStream(liveSession.room_id || `ppr-batch-${liveSession.batch_id}`)}
+            disabled={!liveSession}
+            onClick={() => startStream(liveSession?.room_id || `ppr-batch-${liveSession?.batch_id}`)}
             className="btn hover-scale"
             style={{ 
-              background: 'white', 
-              color: '#ef4444', 
+              background: liveSession ? 'white' : 'rgba(255,255,255,0.1)', 
+              color: liveSession ? '#ef4444' : 'white', 
               padding: '0.8rem 2rem', 
               borderRadius: '16px', 
               fontWeight: 900, 
-              border: 'none',
-              boxShadow: '0 8px 15px rgba(0,0,0,0.1)'
+              border: liveSession ? 'none' : '1px solid rgba(255,255,255,0.3)',
+              boxShadow: liveSession ? '0 8px 15px rgba(0,0,0,0.1)' : 'none',
+              cursor: liveSession ? 'pointer' : 'not-allowed',
+              opacity: liveSession ? 1 : 0.7
             }}
           >
-            JOIN FAST
+            {liveSession ? 'JOIN FAST' : 'WAITING...'}
           </button>
         </div>
       )}
@@ -779,9 +794,18 @@ export default function StudentDashboard() {
           box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
           animation: pulse-red-anim 2s infinite;
         }
+        .pulse-blue {
+          box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+          animation: pulse-blue-anim 2s infinite;
+        }
         @keyframes pulse-red-anim {
           0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
           70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
+          100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+        }
+        @keyframes pulse-blue-anim {
+          0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+          70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(79, 70, 229, 0); }
           100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
         }
         .animate-bounce-subtle {
