@@ -11,7 +11,7 @@ import { subscribeGlobalAssets } from '../db.service';
 
 export default function StudentDashboard() {
   const { 
-    currentUser, verifyOTP, mockSessions, mockExams, 
+    currentUser, verifyOTP, sendOTP, mockSessions, mockExams, 
     mockSubmissions, mockStudents, mockBatches, mockTutors, 
     logout 
   } = useAppContext();
@@ -73,11 +73,6 @@ export default function StudentDashboard() {
   const myExams = mockExams.filter(e => e.batchId === selectedEnrollment?.batch_id);
   const mySubmissions = mockSubmissions.filter(s => s.student_id === currentUser?.uid);
 
-  const { 
-    currentUser, verifyOTP, sendOTP, mockSessions, mockExams, 
-    mockSubmissions, mockStudents, mockBatches, mockTutors, 
-    logout 
-  } = useAppContext();
 
   useEffect(() => {
     // Auto-trigger OTP if not verified
