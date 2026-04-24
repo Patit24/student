@@ -8,6 +8,8 @@ import {
 import { useAppContext } from '../context/AuthContext';
 import { subscribeGlobalAssets, markAssetPurchased } from '../db.service';
 import { useToast } from '../components/Toast';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import './Homepage.css';
 
 /* ── Scroll-reveal hook ── */
