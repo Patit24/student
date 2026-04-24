@@ -606,17 +606,6 @@ export default function TutorDashboard() {
             </button>
           </div>
 
-          <div className="mb-8">
-            <p style={{ fontSize: '0.75rem', color: '#888', marginBottom: '1rem' }}>HOST CONTROLS</p>
-            <div className="flex-col gap-3">
-              <button className="btn btn-outline w-full" style={{ justifyContent: 'flex-start', borderColor: '#333' }} onClick={muteEveryone}>
-                <MicOff size={16} style={{ marginRight: '0.5rem' }}/> Mute Everyone
-              </button>
-              <button className="btn btn-outline w-full" style={{ justifyContent: 'flex-start', borderColor: '#333' }} onClick={videoMuteEveryone}>
-                <VideoOff size={16} style={{ marginRight: '0.5rem' }}/> Stop All Video
-              </button>
-            </div>
-          </div>
 
           <div className="mt-auto">
             <div className="flex items-center gap-2 mb-4">
