@@ -244,9 +244,9 @@ export default function TutorDashboard() {
   const [isScreenSharing, setIsScreenSharing] = useState(false);
   const [isLocked, setIsLocked] = useState(false);
   const [waitingRoom, setWaitingRoom] = useState([]);
-  const [activeParticipants, setActiveParticipants] = useState([]);
-  const [meetingRoom, setMeetingRoom] = useState(null);
   const [googleMeetLink, setGoogleMeetLink] = useState('');
+  const [showGoLiveModal, setShowGoLiveModal] = useState(false);
+  const [selectedBatchForLive, setSelectedBatchForLive] = useState('');
 
   const [newBatchName, setNewBatchName] = useState('');
   const [newBatchLimit, setNewBatchLimit] = useState('');
@@ -371,24 +371,26 @@ export default function TutorDashboard() {
     toast.success('Public Profile Updated!');
   };
 
-  const handleGoLive = async (batchId = null) => {
-    const cleanBatchId = (typeof batchId === 'string') ? batchId : null;
+  const handleGoLive = async () => {
+    if (!selectedBatchForLive) {
+      toast.error('Please select a batch first.');
+      return;
+    }
     
     if (!googleMeetLink || !googleMeetLink.includes('meet.google.com')) {
-      toast.error('Please enter a valid Google Meet link first.');
+      toast.error('Please enter a valid Google Meet link.');
       return;
     }
 
     // Update session status in mock data (simulating notification)
-    if (cleanBatchId) {
-      setMockSessions(prev => prev.map(s => 
-        s.batch_id === cleanBatchId ? { ...s, is_live: true, room_id: googleMeetLink } : s
-      ));
-      toast.success(`🚀 Google Meet link broadcasted to batch students!`);
-    }
-
+    setMockSessions(prev => prev.map(s => 
+      s.batch_id === selectedBatchForLive ? { ...s, is_live: true, room_id: googleMeetLink } : s
+    ));
+    
+    toast.success(`🚀 Link broadcasted to ${myBatches.find(b => b.id === selectedBatchForLive)?.name}!`);
     setMeetingRoom(googleMeetLink);
     setIsLive(true);
+    setShowGoLiveModal(false);
   };
 
   const stopStream = () => {
@@ -664,20 +666,64 @@ export default function TutorDashboard() {
           </h2>
           <p className="text-muted mt-1">{myStudents.length} Students · {myBatches.length} Batches</p>
         </div>
-        <div className="dash-header-actions flex gap-3">
-          <input 
-            type="text" 
-            placeholder="Paste Google Meet Link..." 
-            className="input-field" 
-            style={{ minWidth: '300px', fontSize: '0.85rem' }}
-            value={googleMeetLink}
-            onChange={(e) => setGoogleMeetLink(e.target.value)}
-          />
-          <button className="btn btn-secondary" onClick={() => isSubscribed ? handleGoLive() : navigate('/pricing')}>
-            <Video size={16}/> Go Live
+        <div className="dash-header-actions">
+          <button className="btn btn-secondary" onClick={() => isSubscribed ? setShowGoLiveModal(true) : navigate('/pricing')}>
+            <Video size={16}/> Start Live Class
           </button>
         </div>
       </div>
+
+      {/* Start Live Session Modal */}
+      {showGoLiveModal && (
+        <div className="modal-overlay animate-fade-in" style={{ 
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+          background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)',
+          zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center'
+        }}>
+          <div className="glass-panel p-10 animate-slide-up" style={{ maxWidth: '500px', width: '90%', border: '1px solid var(--primary)' }}>
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="m-0">Go Live 🔴</h2>
+              <button onClick={() => setShowGoLiveModal(false)} className="btn-link" style={{ color: '#888' }}><X size={24}/></button>
+            </div>
+            
+            <p className="text-muted mb-8">Select which batch should receive your Google Meet link to join the class.</p>
+            
+            <div className="flex-col gap-6">
+              <div>
+                <label style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 800, display: 'block', marginBottom: '0.5rem' }}>SELECT TARGET BATCH</label>
+                <select 
+                  className="input-field w-full" 
+                  value={selectedBatchForLive} 
+                  onChange={(e) => setSelectedBatchForLive(e.target.value)}
+                  style={{ background: 'rgba(255,255,255,0.02)' }}
+                >
+                  <option value="">Choose a batch...</option>
+                  {myBatches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 800, display: 'block', marginBottom: '0.5rem' }}>GOOGLE MEET LINK</label>
+                <input 
+                  type="text" 
+                  className="input-field w-full" 
+                  placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                  value={googleMeetLink}
+                  onChange={(e) => setGoogleMeetLink(e.target.value)}
+                />
+              </div>
+
+              <button 
+                onClick={handleGoLive}
+                className="btn btn-primary w-full" 
+                style={{ padding: '1rem', marginTop: '1rem', fontWeight: 800 }}
+              >
+                BROADCAST & START CLASS
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="tabs-row mb-6 custom-scrollbar" style={{ display: 'flex', gap: '0.8rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
         <Tab id="students"   label="Students"   icon={Users} />
