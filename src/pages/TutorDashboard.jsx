@@ -330,7 +330,11 @@ export default function TutorDashboard() {
     // Auto-trigger OTP if not verified
     if (currentUser && currentUser.is_verified === false && currentUser.phone) {
       sendOTP(currentUser.phone, 'recaptcha-tutor-container')
-        .catch(err => console.error('Auto-OTP failed:', err));
+        .then(() => toast.success('Verification code sent! 📱'))
+        .catch(err => {
+          console.error('Auto-OTP failed:', err);
+          toast.error('SMS Error: ' + (err.message.includes('auth/operation-not-allowed') ? 'Enable Phone Auth in Firebase' : err.message));
+        });
     }
   }, [currentUser]);
 

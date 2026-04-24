@@ -10,11 +10,10 @@ import StudentMaterialsPanel from '../components/StudentMaterialsPanel';
 import { subscribeGlobalAssets } from '../db.service';
 
 export default function StudentDashboard() {
-  const { 
-    currentUser, verifyOTP, sendOTP, mockSessions, mockExams, 
     mockSubmissions, mockStudents, mockBatches, mockTutors, 
     logout 
   } = useAppContext();
+  const toast = useToast();
   const navigate = useNavigate();
 
   const [globalAssets, setGlobalAssets] = useState([]);
@@ -78,7 +77,11 @@ export default function StudentDashboard() {
     // Auto-trigger OTP if not verified
     if (currentUser && currentUser.is_verified === false && currentUser.phone) {
       sendOTP(currentUser.phone, 'recaptcha-container')
-        .catch(err => console.error('Auto-OTP failed:', err));
+        .then(() => toast.success('Verification code sent to your phone! 📱'))
+        .catch(err => {
+          console.error('Auto-OTP failed:', err);
+          toast.error('Failed to send SMS: ' + (err.message.includes('auth/operation-not-allowed') ? 'Enable Phone Auth in Firebase Console' : err.message));
+        });
     }
   }, [currentUser]);
 
