@@ -627,9 +627,9 @@ export default function TutorDashboard() {
         {/* Main Content (Huddle01 Area) */}
         <div style={{ flex: 1, position: 'relative', background: '#000' }}>
           <iframe
-            src={`https://embed.huddle01.com/${meetingRoom}`}
+            src={`https://iframe.huddle01.com/${meetingRoom}`}
             style={{ width: '100%', height: '100%', border: 'none' }}
-            allow="camera; microphone; display-capture; fullscreen"
+            allow="camera; microphone; display-capture; autoplay; fullscreen; speaker"
           ></iframe>
         </div>
       </div>

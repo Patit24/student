@@ -454,9 +454,9 @@ export default function StudentDashboard() {
           {/* Huddle01 Container */}
           <div style={{ flex: 1 }}>
             <iframe
-              src={`https://embed.huddle01.com/${meetingRoom}`}
+              src={`https://iframe.huddle01.com/${meetingRoom}`}
               style={{ width: '100%', height: '100%', border: 'none' }}
-              allow="camera; microphone; display-capture; fullscreen"
+              allow="camera; microphone; display-capture; autoplay; fullscreen; speaker"
             ></iframe>
           </div>
 
