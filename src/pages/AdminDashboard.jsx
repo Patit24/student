@@ -294,79 +294,75 @@ export default function AdminDashboard() {
                   </h3>
                 </div>
 
-                {/* Premium Upload Zone */}
-                <div className="global-upload-zone mb-10">
-                  <div className="flex-col gap-4 mb-6">
-                    <label className="stat-label" style={{ fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>1. Give your material a catchy title</label>
-                    <input 
-                      type="text" 
-                      placeholder="e.g. Class 12 Physics Formula Sheet..." 
-                      className="premium-input"
-                      value={assetTitle}
-                      onChange={(e) => setAssetTitle(e.target.value)}
-                      style={{ width: '100%', padding: '1rem', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
-                    />
+                <div className="glass-card p-10" style={{ borderRadius: '24px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ marginBottom: '2.5rem' }}>
+                    <h3 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Publish <span className="hp-yellow">New Material</span></h3>
+                    <p className="text-muted">Target your audience with specialized NEET/JEE resources.</p>
                   </div>
 
-                  <div className="flex gap-6 mb-6" style={{ flexWrap: 'wrap' }}>
-                    <div className="flex-1" style={{ minWidth: '200px' }}>
-                      <label className="stat-label" style={{ fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>2. Category</label>
-                      <select 
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                    <div>
+                      <label className="stat-label" style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.8rem', display: 'block' }}>1. Resource Title</label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. Physics Mock Exam #1" 
                         className="premium-input"
-                        value={assetCategory}
-                        onChange={(e) => setAssetCategory(e.target.value)}
-                        style={{ width: '100%', padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
-                      >
-                        <option value="general">General (Lead Magnets)</option>
-                        <option value="neet">NEET Aspirants</option>
-                        <option value="jee">JEE Aspirants</option>
-                      </select>
+                        value={assetTitle}
+                        onChange={(e) => setAssetTitle(e.target.value)}
+                        style={{ width: '100%', padding: '1.2rem', borderRadius: '14px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+                      />
                     </div>
 
-                    <div className="flex-1" style={{ minWidth: '200px' }}>
-                      <label className="stat-label" style={{ fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>3. Content Type</label>
-                      <select 
-                        className="premium-input"
-                        value={assetType}
-                        onChange={(e) => setAssetType(e.target.value)}
-                        style={{ width: '100%', padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
-                      >
-                        <option value="material">Study Material</option>
-                        <option value="mock">Weekly Mock Exam</option>
-                        <option value="suggestion">Last-Min Suggestion</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <label className="stat-label" style={{ fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>4. Select the file to publish</label>
-                  <input 
-                    type="file" 
-                    id="global-file-upload" 
-                    hidden 
-                    onChange={handleGlobalFileUpload}
-                    disabled={isUploading}
-                  />
-                  <label htmlFor="global-file-upload" className={`upload-box ${isUploading ? 'uploading' : ''}`}>
-                    {isUploading ? (
-                      <div className="upload-progress-container">
-                        <div className="glow-spinner" />
-                        <span className="progress-text">{uploadProgress}% Uploading...</span>
-                        <div className="progress-bar-bg">
-                          <div className="progress-bar-fill" style={{ width: `${uploadProgress}%` }} />
-                        </div>
+                    <div className="grid gap-6" style={{ gridTemplateColumns: '1fr 1fr' }}>
+                      <div>
+                        <label className="stat-label" style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.8rem', display: 'block' }}>2. Category</label>
+                        <select 
+                          className="premium-input"
+                          value={assetCategory}
+                          onChange={(e) => setAssetCategory(e.target.value)}
+                          style={{ width: '100%', padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+                        >
+                          <option value="general">General (Lead Magnets)</option>
+                          <option value="neet">NEET Aspirants</option>
+                          <option value="jee">JEE Aspirants</option>
+                        </select>
                       </div>
-                    ) : (
-                      <>
-                        <div className="upload-icon-pulse">
-                          <Package size={48} color="#f5c518" />
+
+                      <div>
+                        <label className="stat-label" style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.8rem', display: 'block' }}>3. Content Type</label>
+                        <select 
+                          className="premium-input"
+                          value={assetType}
+                          onChange={(e) => setAssetType(e.target.value)}
+                          style={{ width: '100%', padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+                        >
+                          <option value="material">Study Material</option>
+                          <option value="mock">Weekly Mock Exam</option>
+                          <option value="suggestion">Last-Min Suggestion</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div style={{ padding: '2.5rem', borderRadius: '20px', border: '2px dashed rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.01)', textAlign: 'center' }}>
+                      <input 
+                        type="file" 
+                        id="global-file-upload" 
+                        onChange={handleGlobalFileUpload}
+                        style={{ display: 'none' }}
+                      />
+                      <label htmlFor="global-file-upload" style={{ cursor: 'pointer' }}>
+                        <div className="flex-col items-center gap-4">
+                          <div style={{ background: 'rgba(245,197,24,0.1)', padding: '1rem', borderRadius: '50%', color: '#F5C518' }}>
+                            {isUploading ? <Loader2 className="animate-spin" size={32} /> : <Upload size={32} />}
+                          </div>
+                          <div>
+                            <p style={{ fontWeight: 700, marginBottom: '0.2rem' }}>{isUploading ? `Uploading ${uploadProgress}%` : 'Click to Upload Material'}</p>
+                            <p className="text-muted" style={{ fontSize: '0.8rem' }}>PDF, ZIP, or DOC (Max 50MB)</p>
+                          </div>
                         </div>
-                        <div className="upload-text">
-                          <h4>Upload New Material</h4>
-                          <p>Click or drag file to distribute to all students</p>
-                        </div>
-                      </>
-                    )}
-                  </label>
+                      </label>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Materials Grid */}
