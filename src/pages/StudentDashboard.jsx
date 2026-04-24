@@ -172,36 +172,72 @@ export default function StudentDashboard() {
   // ── VIEW: GLOBAL STUDENT (Tutor Directory + Admin Library) ──
   if (isGlobalStudent) {
     return (
-      <div className="container mt-8 animate-fade-in">
-        <div className="flex justify-between items-center mb-8 mobile-stack">
+      <div className="container mt-8 animate-fade-in" style={{ paddingBottom: '4rem' }}>
+        
+        {/* Header Section */}
+        <div className="flex justify-between items-end mb-12 mobile-stack animate-slide-up" style={{ animationDelay: '0.1s' }}>
           <div>
-            <h1 style={{ fontSize: 'clamp(1.8rem, 5vw, 2.5rem)', fontWeight: 800, letterSpacing: '-1px' }}>Discover Your <span style={{ color: '#F5C518' }}>Ideal Tutor</span></h1>
-            <p className="text-muted" style={{ fontSize: '1.05rem' }}>Explore verified teachers or browse our free study materials library.</p>
+            <h1 style={{ fontSize: 'clamp(2rem, 6vw, 3.5rem)', fontWeight: 900, letterSpacing: '-2px', lineHeight: 1.1 }}>
+              Discover Your <span className="text-gradient">Ideal Tutor</span>
+            </h1>
+            <p className="text-muted mt-2" style={{ fontSize: '1.1rem', maxWidth: '600px' }}>
+              Explore our network of verified expert educators and premium study resources.
+            </p>
           </div>
-          <button onClick={() => logout()} className="btn btn-outline" style={{ borderRadius: '12px' }}><LogOut size={16}/> Logout</button>
+          <button onClick={() => logout()} className="btn btn-outline mobile-full" style={{ borderRadius: '14px', padding: '0.8rem 1.5rem', background: 'rgba(255,255,255,0.02)' }}>
+            <LogOut size={16}/> Logout Account
+          </button>
         </div>
 
-        <div className="flex gap-8 mobile-stack">
-          {/* Tutor Directory */}
+        <div className="flex gap-10 mobile-stack">
+          {/* Tutor Directory (Left Side) */}
           <div style={{ flex: 2, minWidth: '100%' }}>
-            <h3 className="mb-6 flex items-center gap-2"><Users size={22} color="#F5C518"/> Verified Tutors</h3>
-            <div className="flex-col gap-4">
-              {mockTutors.filter(t => t.subscription_status === 'active' || t.is_verified).map(tutor => (
-                <div key={tutor.id} className="glass-panel p-6 flex justify-between items-center" style={{ borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <div className="flex gap-4 items-center">
-                    <div style={{ width: '60px', height: '60px', borderRadius: '15px', background: 'rgba(255,255,255,0.05)', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
-                      <img src={tutor.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(tutor.name)}&background=random`} alt={tutor.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <div className="flex items-center gap-3 mb-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+              <div style={{ background: 'rgba(245,197,24,0.1)', padding: '0.6rem', borderRadius: '12px' }}>
+                <Users size={24} color="#F5C518"/>
+              </div>
+              <h3 style={{ margin: 0, fontWeight: 800 }}>Verified Expert Educators</h3>
+            </div>
+            
+            <div className="flex-col gap-6">
+              {mockTutors.filter(t => t.subscription_status === 'active' || t.is_verified).map((tutor, idx) => (
+                <div 
+                  key={tutor.id} 
+                  className="glass-panel p-6 flex justify-between items-center hover-scale animate-slide-up" 
+                  style={{ 
+                    borderRadius: '24px', 
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    background: 'linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
+                    animationDelay: `${0.3 + (idx * 0.1)}s`
+                  }}
+                >
+                  <div className="flex gap-6 items-center">
+                    <div style={{ position: 'relative' }}>
+                      <div className="avatar-glow" />
+                      <img 
+                        src={tutor.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(tutor.name)}&background=random&color=fff&size=128`} 
+                        alt={tutor.name} 
+                        style={{ width: '80px', height: '80px', borderRadius: '22px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', position: 'relative', zIndex: 1 }} 
+                      />
                     </div>
                     <div>
-                      <h4 style={{ margin: 0, fontSize: '1.1rem' }}>{tutor.name}</h4>
-                      <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{tutor.subjects?.join(', ')}</p>
+                      <h4 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#fff' }}>{tutor.name}</h4>
+                      <div className="flex gap-2 mt-1">
+                        {tutor.subjects?.slice(0, 3).map(s => (
+                          <span key={s} style={{ fontSize: '0.7rem', padding: '0.2rem 0.6rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.6)' }}>{s}</span>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex gap-3">
-                    <a href={`tel:${tutor.phone || '0000000000'}`} className="btn btn-outline" style={{ padding: '0.6rem 1.2rem', borderRadius: '10px' }}>
-                      <Phone size={15}/> Contact
+                  <div className="flex gap-4 mobile-full">
+                    <a href={`tel:${tutor.phone || '0000000000'}`} className="btn btn-outline" style={{ borderRadius: '12px', padding: '0.7rem 1.2rem' }}>
+                      <Phone size={16}/> Contact
                     </a>
-                    <button onClick={() => navigate(`/tutor/${tutor.id}`)} className="btn btn-primary" style={{ padding: '0.6rem 1.2rem', borderRadius: '10px', boxShadow: '0 4px 15px rgba(245,197,24,0.2)' }}>
+                    <button 
+                      onClick={() => navigate(`/tutor/${tutor.id}`)} 
+                      className="btn btn-primary" 
+                      style={{ borderRadius: '12px', padding: '0.7rem 1.5rem', boxShadow: '0 8px 20px rgba(79,70,229,0.2)' }}
+                    >
                       View Profile
                     </button>
                   </div>
@@ -210,36 +246,85 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          {/* Admin Study Materials */}
-          <div style={{ flex: 1, minWidth: '100%' }}>
-            <h3 className="mb-6 flex items-center gap-2"><Package size={22} color="#F5C518"/> Global Library</h3>
-            <div className="glass-panel p-6" style={{ borderRadius: '24px', background: 'rgba(10, 14, 26, 0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)' }}>
-              <p className="text-muted mb-6" style={{ fontSize: '0.9rem' }}>High-quality resources provided by PPREducation Admin.</p>
+          {/* Admin Study Materials (Right Side) */}
+          <div style={{ flex: 1, minWidth: '100%' }} className="animate-slide-up" style={{ animationDelay: '0.4s' }}>
+            <div className="flex items-center gap-3 mb-8">
+              <div style={{ background: 'rgba(245,197,24,0.1)', padding: '0.6rem', borderRadius: '12px' }}>
+                <Package size={24} color="#F5C518"/>
+              </div>
+              <h3 style={{ margin: 0, fontWeight: 800 }}>Global Library</h3>
+            </div>
+
+            <div className="glass-panel p-8" style={{ borderRadius: '32px', background: 'linear-gradient(180deg, rgba(10, 14, 26, 0.8) 0%, rgba(10, 14, 26, 0.4) 100%)', border: '1px solid rgba(245,197,24,0.1)' }}>
+              <p className="text-muted mb-8" style={{ fontSize: '0.9rem', lineHeight: 1.5 }}>
+                High-quality learning resources curated by the <strong style={{ color: '#F5C518' }}>PPREducation</strong> team.
+              </p>
+              
               <div className="flex-col gap-4">
-                {globalAssets.map(asset => (
-                  <div key={asset.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.05)', transition: 'transform 0.2s ease' }} className="hover-scale">
-                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(245,197,24,0.1)', display: 'flex', alignItems: 'center', justifyObject: 'center', justifyContent: 'center' }}>
-                      <FileText size={20} color="#F5C518" />
+                {globalAssets.map((asset, idx) => (
+                  <div 
+                    key={asset.id} 
+                    className="asset-card animate-slide-up" 
+                    style={{ 
+                      display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.2rem', 
+                      background: 'rgba(255,255,255,0.02)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)',
+                      animationDelay: `${0.5 + (idx * 0.1)}s`
+                    }}
+                  >
+                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(245,197,24,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <FileText size={22} color="#F5C518" />
                     </div>
                     <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: '0.9rem', fontWeight: 700, margin: 0, color: '#F0F4FF' }}>{asset.name}</p>
-                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>{(asset.size / 1024 / 1024).toFixed(1)} MB • {asset.type?.split('/')[1]?.toUpperCase() || 'FILE'}</p>
+                      <p style={{ fontSize: '0.95rem', fontWeight: 800, margin: 0, color: '#fff' }}>{asset.name}</p>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>{(asset.size / 1024 / 1024).toFixed(1)} MB • PDF</p>
                     </div>
-                    <a href={asset.url} target="_blank" rel="noopener noreferrer" className="btn btn-outline" style={{ padding: '0.4rem', minWidth: 'auto', borderRadius: '8px' }}>
-                      <Download size={16}/>
+                    <a href={asset.url} target="_blank" rel="noopener noreferrer" className="btn btn-outline" style={{ padding: '0.5rem', minWidth: 'auto', borderRadius: '10px' }}>
+                      <Download size={18}/>
                     </a>
                   </div>
                 ))}
+                
                 {globalAssets.length === 0 && (
-                  <div className="text-center py-8">
+                  <div className="text-center py-10" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '20px', border: '1px dashed rgba(255,255,255,0.1)' }}>
                     <Package size={40} color="rgba(255,255,255,0.05)" style={{ marginBottom: '1rem' }} />
-                    <p className="text-muted" style={{ fontSize: '0.85rem' }}>No resources available yet.</p>
+                    <p className="text-muted" style={{ fontSize: '0.85rem' }}>No public resources available.</p>
                   </div>
                 )}
               </div>
             </div>
           </div>
         </div>
+
+        <style>{`
+          .avatar-glow {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%; height: 90%;
+            background: var(--primary);
+            filter: blur(20px);
+            opacity: 0.15;
+            border-radius: 22px;
+          }
+          .hover-scale {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          }
+          .hover-scale:hover {
+            transform: translateY(-8px) scale(1.01);
+            background: rgba(255,255,255,0.07) !important;
+            border-color: rgba(255,255,255,0.15) !important;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+          }
+          .asset-card:hover {
+            background: rgba(255,255,255,0.05) !important;
+            transform: translateX(5px);
+            transition: all 0.3s ease;
+          }
+          @media (max-width: 768px) {
+            .mobile-stack { flex-direction: column; }
+            .mobile-full { width: 100%; margin-top: 1rem; justify-content: center; }
+          }
+        `}</style>
       </div>
     );
   }
