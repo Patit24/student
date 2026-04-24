@@ -1,21 +1,24 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import * as Icons from 'lucide-react';
+import { 
+  Mail, Phone, MapPin, Users, 
+  Send, Camera, Play, 
+  ArrowRight, Share2, 
+  HelpCircle 
+} from 'lucide-react';
 import logoImg from '../assets/logopng.png';
 import './Footer.css';
 
 const Footer = () => {
-  // Safe Icon Picker
-  const getIcon = (name) => Icons[name] || Icons[`${name}Icon`] || Icons.HelpCircle || (() => null);
-
-  const MailIcon = getIcon('Mail');
-  const PhoneIcon = getIcon('Phone');
-  const MapPinIcon = getIcon('MapPin');
-  const FacebookIcon = getIcon('Facebook');
-  const TwitterIcon = getIcon('Twitter');
-  const InstagramIcon = getIcon('Instagram');
-  const YoutubeIcon = getIcon('Youtube');
-  const ArrowRightIcon = getIcon('ArrowRight');
+  // Safe Fallbacks (Generic icons for brands to ensure build success)
+  const FacebookIcon = Users;
+  const TwitterIcon = Send;
+  const InstagramIcon = Camera;
+  const YoutubeIcon = Play;
+  const MailIcon = Mail;
+  const PhoneIcon = Phone;
+  const MapPinIcon = MapPin;
+  const ArrowRightIcon = ArrowRight;
   return (
     <footer className="footer-root">
       <div className="container">
