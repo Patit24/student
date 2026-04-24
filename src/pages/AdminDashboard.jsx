@@ -7,7 +7,7 @@ import {
   TrendingUp, CreditCard, ShieldCheck, ExternalLink,
   Lock, ArrowRight, UserCheck
 } from 'lucide-react';
-import { subscribeGlobalAssets, deleteGlobalAsset } from '../db.service';
+import { subscribeGlobalAssets, uploadGlobalAsset, deleteGlobalAsset, uploadFileToStorage } from '../db.service';
 import { useToast } from '../components/Toast';
 import { collection, query, where, onSnapshot, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
