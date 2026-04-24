@@ -28,6 +28,7 @@ export default function Navbar() {
     fontSize: '0.88rem',
     fontWeight: 500,
     transition: 'color 0.2s',
+    padding: '0.5rem 1.2rem',
   };
 
   return (

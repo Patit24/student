@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AuthContext';
-import { Shield, BookOpen, GraduationCap, Users, Zap, ChevronRight } from 'lucide-react';
+import { Shield, BookOpen, GraduationCap, Users, Zap, ChevronRight, Eye, EyeOff } from 'lucide-react';
 import './Login.css';
 
 
@@ -26,6 +26,7 @@ const ROLE_META = {
 export default function Login() {
   const [phone, setPhone]       = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
   const [detectedRole, setDetectedRole] = useState(null); // animate role badge
@@ -110,16 +111,30 @@ export default function Login() {
           </div>
           <div className="login-field">
             <label>Password</label>
-            <input
-              id="login-password"
-              type="password"
-              className="input-field"
-              required
-              autoComplete="current-password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="••••••••"
-            />
+            <div style={{ position: 'relative' }}>
+              <input
+                id="login-password"
+                type={showPassword ? "text" : "password"}
+                className="input-field"
+                required
+                autoComplete="current-password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="••••••••"
+                style={{ paddingRight: '45px' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', color: '#7A8BA8', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center'
+                }}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
           <button
             id="login-submit"

@@ -166,25 +166,26 @@ export function AppProvider({ children }) {
   // AUTH ACTIONS
   // ─────────────────────────────────────────────────────────────────────────
 
-  async function signup(phone, password, role, name) {
+  async function signup(phone, password, role, name, email = '') {
     if (isMockMode) {
       const newId = role === 'tutor' ? `tutor-${Date.now()}` : `student-${Date.now()}`;
       const user  = {
-        uid: newId, phone, role, name, is_verified: false,
+        uid: newId, phone, role, name, is_verified: false, email,
         subscription_status: role === 'tutor' ? 'inactive' : 'active',
         subscription_tier: null,
       };
       if (role === 'tutor') {
-        setMockTutors(prev => [...prev, { id: newId, phone, name, role, subscription_status: 'inactive', subscription_tier: null, branding_color: '#4F46E5' }]);
+        setMockTutors(prev => [...prev, { id: newId, phone, name, role, email, subscription_status: 'inactive', subscription_tier: null, branding_color: '#4F46E5' }]);
       }
       setMockUser(user);
       return user;
     }
-    // Convert phone to virtual email for Firebase Auth compatibility
-    const virtualEmail = `${phone.trim()}@ppreducation.in`;
-    const userCredential = await createUserWithEmailAndPassword(auth, virtualEmail, password);
+    // If real email is provided, use it. Otherwise, use virtual email from phone.
+    const finalEmail = email ? email.trim() : `${phone.trim()}@ppreducation.in`;
+    const userCredential = await createUserWithEmailAndPassword(auth, finalEmail, password);
     const profile = {
       phone: phone.trim(), 
+      email: email.trim(),
       role, 
       name, 
       is_verified: false,
@@ -197,28 +198,29 @@ export function AppProvider({ children }) {
     return merged;
   }
 
-  async function login(phone, password) {
-    if (isMockMode || (phone === 'admin' && password === 'MasterCS_2026!')) {
-      if (phone === 'admin') {
-        const adminUser = { uid: 'admin-1', phone, role: 'super_admin', name: 'Super Admin', subscription_status: 'active' };
+  async function login(id, password) {
+    if (isMockMode || (id === 'admin' && password === 'MasterCS_2026!')) {
+      if (id === 'admin') {
+        const adminUser = { uid: 'admin-1', phone: 'admin', role: 'super_admin', name: 'Super Admin', subscription_status: 'active' };
         setCurrentUser(adminUser);
         setLoading(false);
         return adminUser;
       }
-      const role = phone.length > 5 ? 'tutor' : 'student'; // Simple mock logic
+      const role = id.length > 5 ? 'tutor' : 'student'; // Simple mock logic
       let user;
-      const foundTutor = mockTutors.find(t => t.phone === phone);
-      const foundStudent = mockStudents.find(s => s.phone === phone);
+      const foundTutor = mockTutors.find(t => t.phone === id || t.email === id);
+      const foundStudent = mockStudents.find(s => s.phone === id);
       
       if (foundTutor) user = { uid: foundTutor.id, ...foundTutor };
       else if (foundStudent) user = { uid: foundStudent.id, ...foundStudent };
-      else user = { uid: 'mock-uid-' + phone, phone, role: 'student', name: 'Demo User', is_verified: false };
+      else user = { uid: 'mock-uid-' + id, phone: id, role: 'student', name: 'Demo User', is_verified: false };
 
       setMockUser(user);
       return user;
     }
-    const virtualEmail = `${phone.trim()}@ppreducation.in`;
-    const credential = await signInWithEmailAndPassword(auth, virtualEmail, password);
+    const isEmail = id.includes('@');
+    const finalEmail = isEmail ? id.trim() : `${id.trim()}@ppreducation.in`;
+    const credential = await signInWithEmailAndPassword(auth, finalEmail, password);
     const docSnap    = await getDoc(doc(db, 'users', credential.user.uid));
     const profile    = docSnap.exists() ? docSnap.data() : {};
     const merged     = { ...credential.user, uid: credential.user.uid, ...profile };

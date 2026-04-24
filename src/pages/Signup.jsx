@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAppContext } from '../context/AuthContext';
+import { Eye, EyeOff, Zap, User, Phone, Mail, Shield } from 'lucide-react';
 
 export default function Signup() {
   const [searchParams] = useSearchParams();
@@ -8,7 +9,9 @@ export default function Signup() {
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState(initialRole);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -42,7 +45,8 @@ export default function Signup() {
     try {
       setError('');
       setLoading(true);
-      await signup(phone, password, role, name);
+      // If tutor, we pass email too (the context signup will need to handle this)
+      await signup(phone, password, role, name, email);
       navigate(role === 'tutor' ? '/pricing' : '/student');
     } catch (err) {
       console.error('Signup error:', err);
@@ -91,15 +95,43 @@ export default function Signup() {
               onChange={e => setPhone(e.target.value)} 
             />
           </div>
+
+          {role === 'tutor' && (
+            <div className="input-group animate-fade-in">
+              <label className="input-label">Email Address (Optional)</label>
+              <input 
+                type="email" 
+                className="input-field" 
+                placeholder="tutor@example.com"
+                value={email} 
+                onChange={e => setEmail(e.target.value)} 
+              />
+            </div>
+          )}
+
           <div className="input-group">
             <label className="input-label">Password</label>
-            <input 
-              type="password" 
-              className="input-field" 
-              required 
-              value={password} 
-              onChange={e => setPassword(e.target.value)} 
-            />
+            <div style={{ position: 'relative' }}>
+              <input 
+                type={showPassword ? "text" : "password"} 
+                className="input-field" 
+                required 
+                value={password} 
+                onChange={e => setPassword(e.target.value)} 
+                style={{ paddingRight: '45px' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', color: '#7A8BA8', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center'
+                }}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
           <button disabled={loading} type="submit" className="btn btn-primary w-full mt-4">
             Sign Up
