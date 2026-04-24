@@ -59,13 +59,6 @@ export default function Login() {
     }
   }
 
-  const prefill = (role) => {
-    if (role === 'admin')   { setPhone('admin'); setPassword('MasterCS_2026!'); return; }
-    if (role === 'overdue') { setPhone('9000000001');      setPassword('password123'); return; }
-    if (role === 'tutor')   { setPhone('9876543210');      setPassword('password123'); return; }
-    setPhone('9876543210');
-    setPassword('password123');
-  };
 
   const meta = detectedRole ? ROLE_META[detectedRole] : null;
 
@@ -152,28 +145,6 @@ export default function Login() {
           Don't have an account? <Link to="/signup" id="login-goto-signup">Sign Up</Link>
         </p>
 
-        {/* Demo quick-fill */}
-        <div className="login-demo-section">
-          <p className="login-demo-label">⚡ Quick Demo Login</p>
-          <div className="login-demo-btns">
-            {[
-              { id: 'demo-tutor',    label: 'Tutor',          role: 'tutor',   color: '#F5C518' },
-              { id: 'demo-student',  label: 'Student ✓',      role: 'student', color: '#22C55E' },
-              { id: 'demo-overdue',  label: 'Overdue Student',role: 'overdue', color: '#EF4444' },
-              { id: 'demo-admin',    label: '🛡 Admin',        role: 'admin',   color: '#818CF8' },
-            ].map(({ id, label, role, color }) => (
-              <button
-                key={id}
-                id={id}
-                onClick={() => prefill(role)}
-                className="login-demo-btn"
-                style={{ borderColor: color, color }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );
