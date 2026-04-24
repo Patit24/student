@@ -213,9 +213,9 @@ export default function StudentDashboard() {
     setInClass(true);
     // Small timeout to ensure container is rendered
     setTimeout(() => {
-      const domain = '8x8.vc';
+      const domain = 'meet.jit.si';
       const options = {
-        roomName: `vpaas-magic-cookie-87b8d781b4734898867a54823293e590/${finalRoom}`,
+        roomName: finalRoom,
         width: '100%',
         height: '100%',
         parentNode: document.getElementById('student-jitsi-container'),
@@ -225,6 +225,7 @@ export default function StudentDashboard() {
         configOverwrite: {
           startWithAudioMuted: true,
           startWithVideoMuted: true,
+          prejoinPageEnabled: false // Skip the Jitsi pre-join screen
         }
       };
 

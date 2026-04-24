@@ -382,9 +382,9 @@ export default function TutorDashboard() {
     if (isLive && meetingRoom && !jitsiApiRef.current) {
       // Small timeout to ensure container is rendered
       const timer = setTimeout(() => {
-        const domain = '8x8.vc';
+        const domain = 'meet.jit.si';
         const options = {
-          roomName: `vpaas-magic-cookie-87b8d781b4734898867a54823293e590/${meetingRoom}`,
+          roomName: meetingRoom,
           width: '100%',
           height: '100%',
           parentNode: document.getElementById('jitsi-container'),
@@ -395,7 +395,8 @@ export default function TutorDashboard() {
             startWithAudioMuted: false,
             disableModeratorIndicator: false,
             startScreenSharing: false,
-            enableEmailInStats: false
+            enableEmailInStats: false,
+            prejoinPageEnabled: false // Skip the Jitsi pre-join screen
           },
           interfaceConfigOverwrite: {
             TILE_VIEW_MAX_COLUMNS: 8
