@@ -16,6 +16,12 @@ export default function StudentDashboard() {
   } = useAppContext();
   const navigate = useNavigate();
 
+  const [globalAssets, setGlobalAssets] = useState([]);
+
+  useEffect(() => {
+    return subscribeGlobalAssets(setGlobalAssets);
+  }, []);
+
   // ── Multi-Teacher Enrollment Logic ──
   // Get the live student record
   const studentRecord = mockStudents.find(s => s.id === currentUser?.uid) || currentUser;
@@ -148,33 +154,33 @@ export default function StudentDashboard() {
       <div className="container mt-8 animate-fade-in">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1>Discover Your <span style={{ color: '#F5C518' }}>Ideal Tutor</span></h1>
-            <p className="text-muted">Explore verified teachers or browse our free study materials library.</p>
+            <h1 style={{ fontSize: '2.5rem', fontWeight: 800, letterSpacing: '-1px' }}>Discover Your <span style={{ color: '#F5C518' }}>Ideal Tutor</span></h1>
+            <p className="text-muted" style={{ fontSize: '1.1rem' }}>Explore verified teachers or browse our free study materials library.</p>
           </div>
-          <button onClick={() => logout()} className="btn btn-outline"><LogOut size={16}/> Logout</button>
+          <button onClick={() => logout()} className="btn btn-outline" style={{ borderRadius: '12px' }}><LogOut size={16}/> Logout</button>
         </div>
 
         <div className="flex gap-8" style={{ flexWrap: 'wrap' }}>
           {/* Tutor Directory */}
           <div style={{ flex: 2, minWidth: '400px' }}>
-            <h3 className="mb-4">Verified Tutors</h3>
+            <h3 className="mb-6 flex items-center gap-2"><Users size={22} color="#F5C518"/> Verified Tutors</h3>
             <div className="flex-col gap-4">
               {mockTutors.filter(t => t.subscription_status === 'active' || t.is_verified).map(tutor => (
-                <div key={tutor.id} className="glass-panel p-6 flex justify-between items-center">
+                <div key={tutor.id} className="glass-panel p-6 flex justify-between items-center" style={{ borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <div className="flex gap-4 items-center">
-                    <div style={{ width: '50px', height: '50px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+                    <div style={{ width: '60px', height: '60px', borderRadius: '15px', background: 'rgba(255,255,255,0.05)', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
                       <img src={tutor.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(tutor.name)}&background=random`} alt={tutor.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                     <div>
-                      <h4 style={{ margin: 0 }}>{tutor.name}</h4>
-                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{tutor.subjects?.join(', ')}</p>
+                      <h4 style={{ margin: 0, fontSize: '1.1rem' }}>{tutor.name}</h4>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{tutor.subjects?.join(', ')}</p>
                     </div>
                   </div>
                   <div className="flex gap-3">
-                    <a href={`tel:${tutor.phone || '0000000000'}`} className="btn btn-outline" style={{ padding: '0.5rem 1rem' }}>
+                    <a href={`tel:${tutor.phone || '0000000000'}`} className="btn btn-outline" style={{ padding: '0.6rem 1.2rem', borderRadius: '10px' }}>
                       <Phone size={15}/> Contact
                     </a>
-                    <button onClick={() => navigate(`/tutor/${tutor.id}`)} className="btn btn-primary" style={{ padding: '0.5rem 1rem' }}>
+                    <button onClick={() => navigate(`/tutor/${tutor.id}`)} className="btn btn-primary" style={{ padding: '0.6rem 1.2rem', borderRadius: '10px', boxShadow: '0 4px 15px rgba(245,197,24,0.2)' }}>
                       View Profile
                     </button>
                   </div>
@@ -185,24 +191,30 @@ export default function StudentDashboard() {
 
           {/* Admin Study Materials */}
           <div style={{ flex: 1, minWidth: '300px' }}>
-            <h3 className="mb-4">Global Study Library</h3>
-            <div className="glass-panel p-6">
-              <p className="text-muted mb-4" style={{ fontSize: '0.85rem' }}>Free resources provided by Antigravity Admin.</p>
-              <div className="flex-col gap-3">
-                {[
-                  { id: 'g1', title: 'Calculus Fundamentals', type: 'PDF' },
-                  { id: 'g2', title: 'JEE 10-Year Papers', type: 'Archive' },
-                  { id: 'g3', title: 'English Grammar Rules', type: 'PDF' },
-                ].map(asset => (
-                  <div key={asset.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' }}>
-                    <FileText size={18} color="#F5C518" />
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: '0.85rem', fontWeight: 600, margin: 0 }}>{asset.title}</p>
-                      <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0 }}>{asset.type}</p>
+            <h3 className="mb-6 flex items-center gap-2"><Package size={22} color="#F5C518"/> Global Library</h3>
+            <div className="glass-panel p-6" style={{ borderRadius: '24px', background: 'rgba(10, 14, 26, 0.6)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.05)' }}>
+              <p className="text-muted mb-6" style={{ fontSize: '0.9rem' }}>High-quality resources provided by PPREducation Admin.</p>
+              <div className="flex-col gap-4">
+                {globalAssets.map(asset => (
+                  <div key={asset.id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.05)', transition: 'transform 0.2s ease' }} className="hover-scale">
+                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(245,197,24,0.1)', display: 'flex', alignItems: 'center', justifyObject: 'center', justifyContent: 'center' }}>
+                      <FileText size={20} color="#F5C518" />
                     </div>
-                    <button className="btn btn-outline" style={{ padding: '0.25rem 0.5rem' }} onClick={() => alert('Downloading...')}><Download size={12}/></button>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontSize: '0.9rem', fontWeight: 700, margin: 0, color: '#F0F4FF' }}>{asset.name}</p>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>{(asset.size / 1024 / 1024).toFixed(1)} MB • {asset.type?.split('/')[1]?.toUpperCase() || 'FILE'}</p>
+                    </div>
+                    <a href={asset.url} target="_blank" rel="noopener noreferrer" className="btn btn-outline" style={{ padding: '0.4rem', minWidth: 'auto', borderRadius: '8px' }}>
+                      <Download size={16}/>
+                    </a>
                   </div>
                 ))}
+                {globalAssets.length === 0 && (
+                  <div className="text-center py-8">
+                    <Package size={40} color="rgba(255,255,255,0.05)" style={{ marginBottom: '1rem' }} />
+                    <p className="text-muted" style={{ fontSize: '0.85rem' }}>No resources available yet.</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -352,12 +364,33 @@ export default function StudentDashboard() {
         </div>
 
         {/* Materials */}
-        <div className="glass-panel p-8" style={{ flex: 1, minWidth: '300px' }}>
-          <h3 className="mb-4 flex items-center gap-2"><FileText size={20}/> Batch Materials</h3>
-          <StudentMaterialsPanel
-            batchId={selectedEnrollment?.batch_id}
-            isLocked={isOverdue}
-          />
+        <div style={{ flex: 1, minWidth: '300px' }} className="flex-col gap-6">
+          <div className="glass-panel p-8">
+            <h3 className="mb-4 flex items-center gap-2"><FileText size={20}/> Batch Materials</h3>
+            <StudentMaterialsPanel
+              batchId={selectedEnrollment?.batch_id}
+              isLocked={isOverdue}
+            />
+          </div>
+
+          <div className="glass-panel p-8" style={{ border: '1px solid rgba(245,197,24,0.1)' }}>
+            <h3 className="mb-4 flex items-center gap-2"><Package size={20} color="#F5C518"/> Admin Library</h3>
+            <div className="flex-col gap-3">
+              {globalAssets.map(asset => (
+                <div key={asset.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <FileText size={18} color="#F5C518" />
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: '0.85rem', fontWeight: 600, margin: 0, color: '#F0F4FF' }}>{asset.name}</p>
+                    <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0 }}>{(asset.size / 1024 / 1024).toFixed(1)} MB</p>
+                  </div>
+                  <a href={asset.url} target="_blank" rel="noopener noreferrer" className="btn btn-outline" style={{ padding: '0.3rem', minWidth: 'auto', borderRadius: '6px' }}>
+                    <Download size={14}/>
+                  </a>
+                </div>
+              ))}
+              {globalAssets.length === 0 && <p className="text-muted" style={{ fontSize: '0.8rem' }}>No admin resources yet.</p>}
+            </div>
+          </div>
         </div>
       </div>
     </div>
