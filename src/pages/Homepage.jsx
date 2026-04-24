@@ -10,6 +10,8 @@ import { subscribeGlobalAssets, markAssetPurchased } from '../db.service';
 import { useToast } from '../components/Toast';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import neetWatermark from '../assets/neet_dna_watermark.png';
+import jeeWatermark from '../assets/jee_grid_watermark.png';
 import './Homepage.css';
 
 /* ── Scroll-reveal hook ── */
@@ -186,59 +188,61 @@ export default function Homepage() {
     <div className="hp-root">
       {/* ── HERO ── */}
       <section className="hp-hero" ref={heroRef}>
-        <div className={`hp-hero-content ${heroVis ? 'hp-reveal-left' : 'hp-hidden-left'}`}>
-          <div className="hp-badge">
-            <span className="hp-live-dot" />
-            <span>Live Classes Running Now</span>
-          </div>
-          <h1 className="hp-headline">
-            Your Global<br />
-            <span className="hp-yellow">Coaching Center,</span><br />
-            Simplified.
-          </h1>
-          <p className="hp-sub">
-            One platform for unlimited tutors. Live streaming, AI‑powered exams,
-            and automated fee management — all in one place.
-          </p>
-          <div className="hp-cta-row">
-            <Link to="/signup?role=tutor" id="cta-tutor" className="hp-btn-primary">
-              <Zap size={18} /> Get Started as a Tutor
-            </Link>
-            <Link to="/search" id="cta-search" className="hp-btn-outline" style={{ background: 'rgba(255,255,255,0.05)' }}>
-              <Search size={18} /> Find Tutors Near You
-            </Link>
-          </div>
-
-          <div className="hp-trust-row">
-            {['500+ Tutors', '12K+ Students', '4.9★ Rating'].map(t => (
-              <span key={t} className="hp-trust-pill">{t}</span>
-            ))}
-          </div>
-        </div>
-
-        <div className={`hp-hero-right ${heroVis ? 'hp-reveal-right' : 'hp-hidden-right'}`}>
-          <div className="hp-dashboard-float">
-            <div className="hp-dash-header">
-              <BookOpen size={20} color="var(--hp-yellow)" />
-              <span>Live Dashboard</span>
-              <span className="hp-live-badge">LIVE</span>
+        <div className="container hp-hero-inner">
+          <div className={`hp-hero-content ${heroVis ? 'hp-reveal-left' : 'hp-hidden-left'}`}>
+            <div className="hp-badge">
+              <span className="hp-live-dot" />
+              <span>Live Classes Running Now</span>
             </div>
-            <div className="hp-live-list">
-              {LIVE_CLASSES.map((c, i) => (
-                <div key={i} className="hp-live-item" style={{ animationDelay: `${i * 0.1}s` }}>
-                  <div className="hp-live-dot-sm" />
-                  <div className="hp-live-info">
-                    <strong>{c.subject}</strong>
-                    <span>{c.tutor} · {c.level}</span>
-                  </div>
-                  <div className="hp-viewer-badge">
-                    <MonitorPlay size={12} /> {c.viewers}
-                  </div>
-                </div>
+            <h1 className="hp-headline">
+              Your Global<br />
+              <span className="hp-yellow">Coaching Center,</span><br />
+              Simplified.
+            </h1>
+            <p className="hp-sub">
+              One platform for unlimited tutors. Live streaming, AI‑powered exams,
+              and automated fee management — all in one place.
+            </p>
+            <div className="hp-cta-row">
+              <Link to="/signup?role=tutor" id="cta-tutor" className="hp-btn-primary">
+                <Zap size={18} /> Get Started as a Tutor
+              </Link>
+              <Link to="/search" id="cta-search" className="hp-btn-outline" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                <Search size={18} /> Find Tutors Near You
+              </Link>
+            </div>
+
+            <div className="hp-trust-row">
+              {['500+ Tutors', '12K+ Students', '4.9★ Rating'].map(t => (
+                <span key={t} className="hp-trust-pill">{t}</span>
               ))}
             </div>
-            <div className="hp-dash-footer">
-              <Play size={14} /> Streaming at 1080p · Low latency
+          </div>
+
+          <div className={`hp-hero-right ${heroVis ? 'hp-reveal-right' : 'hp-hidden-right'}`}>
+            <div className="hp-dashboard-float">
+              <div className="hp-dash-header">
+                <BookOpen size={20} color="var(--hp-yellow)" />
+                <span>Live Dashboard</span>
+                <span className="hp-live-badge">LIVE</span>
+              </div>
+              <div className="hp-live-list">
+                {LIVE_CLASSES.map((c, i) => (
+                  <div key={i} className="hp-live-item" style={{ animationDelay: `${i * 0.1}s` }}>
+                    <div className="hp-live-dot-sm" />
+                    <div className="hp-live-info">
+                      <strong>{c.subject}</strong>
+                      <span>{c.tutor} · {c.level}</span>
+                    </div>
+                    <div className="hp-viewer-badge">
+                      <MonitorPlay size={12} /> {c.viewers}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="hp-dash-footer">
+                <Play size={14} /> Streaming at 1080p · Low latency
+              </div>
             </div>
           </div>
         </div>
@@ -257,6 +261,57 @@ export default function Homepage() {
             <span className="hp-stat-l">{l}</span>
           </div>
         ))}
+      </section>
+
+      {/* ── ASPIRANT PATHWAYS ── */}
+      <section className="hp-paths">
+        <div className="hp-path-grid">
+          {/* NEET CARD */}
+          <div className="hp-path-card neet animate-premium">
+            <img src={neetWatermark} className="hp-path-watermark" alt="DNA Watermark" />
+            <div className="hp-path-content">
+              <div className="hp-path-badge">Medical Aspirant</div>
+              <h2>NEET <span style={{ color: '#F5C518' }}>Aspirant</span></h2>
+              <p>Prepare for the most prestigious medical exams with curated study materials and weekly mock tests.</p>
+              
+              <div className="hp-path-features">
+                <div className="hp-path-feature"><CheckCircle size={18} /> Weekly Mock Exams <span className="coming-soon-tag">Coming Soon</span></div>
+                <div className="hp-path-feature"><CheckCircle size={18} /> Last Minute Suggestions <span className="coming-soon-tag">Coming Soon</span></div>
+                <div className="hp-path-feature"><CheckCircle size={18} /> Continuous Notes <span className="coming-soon-tag">Coming Soon</span></div>
+                <div className="hp-path-feature"><CheckCircle size={18} /> Admin-Verified Content</div>
+              </div>
+
+              <div className="hp-path-btn-wrap">
+                <div className="glass-path-btn">
+                  <Zap size={20} /> Join the Medical Path
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* JEE CARD */}
+          <div className="hp-path-card jee animate-premium">
+            <img src={jeeWatermark} className="hp-path-watermark" alt="Engineering Watermark" />
+            <div className="hp-path-content">
+              <div className="hp-path-badge">Engineering Aspirant</div>
+              <h2>JEE <span style={{ color: '#F5C518' }}>Aspirant</span></h2>
+              <p>Crack JEE Main & Advanced with technical precision and automated exam practice.</p>
+              
+              <div className="hp-path-features">
+                <div className="hp-path-feature"><CheckCircle size={18} /> Weekly Technical Exams <span className="coming-soon-tag">Coming Soon</span></div>
+                <div className="hp-path-feature"><CheckCircle size={18} /> JEE Advanced Prep Pack <span className="coming-soon-tag">Coming Soon</span></div>
+                <div className="hp-path-feature"><CheckCircle size={18} /> Formula Cheat Sheets <span className="coming-soon-tag">Coming Soon</span></div>
+                <div className="hp-path-feature"><CheckCircle size={18} /> AI-Powered Analysis</div>
+              </div>
+
+              <div className="hp-path-btn-wrap">
+                <div className="glass-path-btn">
+                  <Zap size={20} /> Join the Engineering Path
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* ── HOW IT WORKS BENTO ── */}

@@ -92,10 +92,9 @@ export default function AdminDashboard() {
   const handleQuickUpload = async (e, category, title, materialType) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (!title?.trim()) {
-      toast.error('Please enter a title before uploading! ✍️');
-      return;
-    }
+    
+    // Auto-generate title if blank for "One-Click" experience
+    const finalTitle = title?.trim() || `${category.toUpperCase()} ${materialType.charAt(0).toUpperCase() + materialType.slice(1)} - ${new Date().toLocaleDateString('en-IN')}`;
 
     setIsUploading(true);
     setUploadProgress(0);
@@ -103,7 +102,7 @@ export default function AdminDashboard() {
     try {
       const url = await uploadFileToStorage(file, `admin_${category}`, (pct) => setUploadProgress(pct));
       await uploadGlobalAsset({
-        title,
+        title: finalTitle,
         category,
         material_type: materialType,
         name: file.name,
@@ -116,11 +115,21 @@ export default function AdminDashboard() {
         price: 0,
         created_at: new Date().toISOString()
       });
-      toast.success(`${category.toUpperCase()} ${materialType} published! 🚀`);
+      toast.success(`${finalTitle} published successfully! 🚀`);
+      
       // Clear inputs manually
-      if (category === 'neet') document.getElementById('neet-title').value = '';
-      if (category === 'jee') document.getElementById('jee-title').value = '';
-      if (category === 'general') document.getElementById('global-title').value = '';
+      if (category === 'neet') {
+        const t = document.getElementById('neet-title');
+        if (t) t.value = '';
+      }
+      if (category === 'jee') {
+        const t = document.getElementById('jee-title');
+        if (t) t.value = '';
+      }
+      if (category === 'general') {
+        const t = document.getElementById('global-title');
+        if (t) t.value = '';
+      }
     } catch (err) {
       toast.error('Upload failed: ' + err.message);
     } finally {
