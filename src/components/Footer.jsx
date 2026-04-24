@@ -63,7 +63,7 @@ const Footer = () => {
             </div>
             <div className="contact-item">
               <MapPinIcon size={18} />
-              <span>Noida, Uttar Pradesh, India</span>
+              <span>Kolkata, West Bengal, India</span>
             </div>
           </div>
 

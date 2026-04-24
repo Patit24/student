@@ -213,7 +213,7 @@ export default function Homepage() {
             </div>
 
             <div className="hp-trust-row">
-              {['500+ Tutors', '12K+ Students', '4.9★ Rating'].map(t => (
+              {['20+ Teachers', '600+ Students', '5★ Rating'].map(t => (
                 <span key={t} className="hp-trust-pill">{t}</span>
               ))}
             </div>
@@ -251,10 +251,10 @@ export default function Homepage() {
       {/* ── STATS ── */}
       <section className="hp-stats-bar" ref={statsRef}>
         {[
-          { n: '500+', l: 'Active Tutors' },
-          { n: '12,000+', l: 'Students Enrolled' },
-          { n: '98%', l: 'Uptime SLA' },
-          { n: '50+', l: 'Subjects Covered' },
+          { n: '20+', l: 'Active Teachers' },
+          { n: '600+', l: 'Students Enrolled' },
+          { n: '20+', l: 'Courses Offered' },
+          { n: '5★', l: 'Rating' },
         ].map(({ n, l }, i) => (
           <div key={i} className={`hp-stat ${statsVis ? 'hp-reveal-up' : 'hp-hidden-up'}`} style={{ animationDelay: `${i * 0.15}s` }}>
             <span className="hp-stat-n">{n}</span>
