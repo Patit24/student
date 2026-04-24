@@ -209,19 +209,14 @@ function ExamResultsPanel({ tutorId, myBatches, myStudents }) {
 export default function TutorDashboard() {
   const toast    = useToast();
   const navigate = useNavigate();
-  const { 
-    currentUser, 
-    mockTutors,
-    mockBatches, setMockBatches,
-    mockStudents, setMockStudents,
-    mockSessions, setMockSessions,
-    mockLeads,
     updateBranding,
     updatePaymentStatus,
     updateBankingDetails,
     setAutoRestriction,
     updateTutorProfile,
     isMockMode,
+    verifyOTP, 
+    sendOTP
   } = useAppContext();
 
   const myTutorRecord            = mockTutors.find(t => t.id === currentUser?.uid) || mockTutors[0];
@@ -279,7 +274,6 @@ export default function TutorDashboard() {
   const { isActive: isSubscribed } = useSubscription();
   const [otp, setOtp] = useState('');
   const [otpError, setOtpError] = useState('');
-  const { verifyOTP, sendOTP } = useAppContext();
 
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
