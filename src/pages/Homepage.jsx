@@ -142,12 +142,18 @@ export default function Homepage() {
       const pendingDownloadId = localStorage.getItem('pending_download_id');
       if (pendingDownloadId) {
         const asset = globalAssets.find(a => a.id === pendingDownloadId);
-        if (asset) {
+        const isGlobalFree = asset?.is_free || asset?.price === 0 || asset?.uploader === 'Super Admin';
+
+        if (asset && isGlobalFree) {
           localStorage.removeItem('pending_download_id');
           toast.success(`Success! Starting download: ${asset.title}`);
           setTimeout(() => {
-            if (asset.url !== '#') window.open(asset.url, '_blank');
+            if (asset.url && asset.url !== '#') window.open(asset.url, '_blank');
           }, 1000);
+        } else if (asset) {
+          // If it was a paid asset, we just keep it in storage or redirect to pay
+          localStorage.removeItem('pending_download_id');
+          toast.info(`Please complete payment for ${asset.title}`);
         }
       }
     }
@@ -160,10 +166,12 @@ export default function Homepage() {
       return;
     }
 
-    // Logic for downloading/buying
-    if (asset.is_free || asset.price === 0) {
+    // Logic for downloading/buying (Super Admin materials are ALWAYS free)
+    const isGlobalFree = asset.is_free || asset.price === 0 || asset.uploader === 'Super Admin';
+    
+    if (isGlobalFree) {
       toast.success(`Starting download: ${asset.title}`);
-      if (asset.url !== '#') window.open(asset.url, '_blank');
+      if (asset.url && asset.url !== '#') window.open(asset.url, '_blank');
     } else {
       const upiId = "yourname@upi";
       const upiUrl = `upi://pay?pa=${upiId}&pn=PPREducation&am=${asset.price}&cu=INR&tn=Payment for ${asset.title}`;

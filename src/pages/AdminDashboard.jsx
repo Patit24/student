@@ -106,7 +106,9 @@ export default function AdminDashboard() {
         url: url,
         type: file.type,
         uploader: 'Super Admin',
-        status: 'published' // Ensure it shows on homepage
+        status: 'published', // Ensure it shows on homepage
+        is_free: true,
+        price: 0
       });
       toast.success('Material published successfully! 📚');
       setAssetTitle(''); // Reset
