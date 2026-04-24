@@ -9,8 +9,8 @@ function friendlyError(code) {
   switch (code) {
     case 'auth/user-not-found':
     case 'auth/wrong-password':
-    case 'auth/invalid-credential': return 'Incorrect email or password.';
-    case 'auth/invalid-email':      return 'Please enter a valid email address.';
+    case 'auth/invalid-credential': return 'Incorrect mobile number or password.';
+    case 'auth/invalid-email':      return 'Please enter a valid mobile number.';
     case 'auth/too-many-requests':  return 'Too many failed attempts. Please try again later.';
     case 'auth/network-request-failed': return 'Network error. Check your internet connection.';
     default: return `Login failed: ${code || 'unknown error'}. Check the console for details.`;
@@ -24,7 +24,7 @@ const ROLE_META = {
 };
 
 export default function Login() {
-  const [email, setEmail]       = useState('');
+  const [phone, setPhone]       = useState('');
   const [password, setPassword] = useState('');
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);
@@ -38,7 +38,7 @@ export default function Login() {
       setError('');
       setLoading(true);
       setDetectedRole(null);
-      const user = await login(email, password);
+      const user = await login(phone, password);
 
       // Show detected-role animation then navigate
       const role = user?.role || 'student';
@@ -59,9 +59,10 @@ export default function Login() {
   }
 
   const prefill = (role) => {
-    if (role === 'admin')   { setEmail('admin@yourplatform.com'); setPassword('MasterCS_2026!'); return; }
-    if (role === 'overdue') { setEmail('overdue@demo.com');      setPassword('password123'); return; }
-    setEmail(`${role}@demo.com`);
+    if (role === 'admin')   { setPhone('admin'); setPassword('MasterCS_2026!'); return; }
+    if (role === 'overdue') { setPhone('9000000001');      setPassword('password123'); return; }
+    if (role === 'tutor')   { setPhone('9876543210');      setPassword('password123'); return; }
+    setPhone('9876543210');
     setPassword('password123');
   };
 
@@ -96,16 +97,15 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="login-field">
-            <label>Email Address</label>
+            <label>Mobile Number</label>
             <input
-              id="login-email"
-              type="email"
+              id="login-phone"
+              type="tel"
               className="input-field"
               required
-              autoComplete="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="you@example.com"
+              value={phone}
+              onChange={e => setPhone(e.target.value)}
+              placeholder="e.g. 9876543210"
             />
           </div>
           <div className="login-field">

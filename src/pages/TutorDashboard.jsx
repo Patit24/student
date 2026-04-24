@@ -248,7 +248,6 @@ export default function TutorDashboard() {
   const [newBatchLimit, setNewBatchLimit] = useState('');
 
   const [studentName, setStudentName] = useState('');
-  const [studentEmail, setStudentEmail] = useState('');
   const [studentPhone, setStudentPhone] = useState('');
   const [studentBatchId, setStudentBatchId] = useState('');
 
@@ -278,6 +277,48 @@ export default function TutorDashboard() {
   const cameraTrackRef = useRef(null);
 
   const { isActive: isSubscribed } = useSubscription();
+  const [otp, setOtp] = useState('');
+  const [otpError, setOtpError] = useState('');
+  const { verifyOTP } = useAppContext();
+
+  const handleVerifyOTP = async (e) => {
+    e.preventDefault();
+    try {
+      setOtpError('');
+      await verifyOTP(otp);
+      toast.success('Account Verified! Welcome to the Command Center. 🚀');
+    } catch (err) {
+      setOtpError('Invalid OTP Code. Please enter 123456.');
+    }
+  };
+
+  // ── VIEW: OTP GATE (FOR UNVERIFIED TUTORS) ──
+  if (currentUser && currentUser.is_verified === false) {
+    return (
+      <div className="container flex justify-center items-center animate-fade-in" style={{ height: 'calc(100vh - 80px)' }}>
+        <div className="glass-panel p-8 text-center" style={{ maxWidth: '400px', border: '1px solid var(--primary)' }}>
+          <Shield size={48} color="var(--primary)" style={{ marginBottom: '1rem' }} />
+          <h2 className="mb-2">Verify Your Authority</h2>
+          <p className="text-muted mb-6">Enter the 6-digit OTP sent to your registered mobile number: <strong>{currentUser.phone}</strong></p>
+          <form onSubmit={handleVerifyOTP} className="flex-col gap-4">
+            <input 
+              type="text" 
+              className="input-field text-center" 
+              placeholder="Enter OTP (123456)" 
+              value={otp} 
+              onChange={e => setOtp(e.target.value)} 
+              maxLength={6} 
+              required 
+              style={{ fontSize: '1.5rem', letterSpacing: '0.5rem', background: 'rgba(79,70,229,0.05)' }} 
+            />
+            {otpError && <p style={{ color: 'var(--danger)', fontSize: '0.85rem' }}>{otpError}</p>}
+            <button type="submit" className="btn btn-primary w-full mt-2" style={{ padding: '1rem' }}>Verify & Activate Dashboard</button>
+          </form>
+          <p className="mt-6" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Didn't receive? <button className="btn-link" onClick={() => toast.info('OTP resent to ' + currentUser.phone)}>Resend OTP</button></p>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     let knockInterval;
@@ -420,35 +461,35 @@ export default function TutorDashboard() {
     setNewBatchLimit('');
   };
 
-  const [emailLookup,     setEmailLookup]     = useState(null);
+  const [phoneLookup,     setPhoneLookup]     = useState(null);
   const [lookupLoading,   setLookupLoading]   = useState(false);
 
-  const handleEmailChange = async (email) => {
-    setStudentEmail(email);
-    setEmailLookup(null);
-    if (!email.includes('@')) return;
+  const handlePhoneChange = async (phone) => {
+    setStudentPhone(phone);
+    setPhoneLookup(null);
+    if (phone.length < 10) return;
 
     setLookupLoading(true);
     try {
       if (!isMockMode) {
-        const { lookupStudentByEmail } = await import('../db.service');
-        const existing = await lookupStudentByEmail(email);
+        const { lookupStudentByPhone } = await import('../db.service');
+        const existing = await lookupStudentByPhone(phone);
         if (existing) {
-          setEmailLookup({ found: true, name: existing.name, id: existing.id });
+          setPhoneLookup({ found: true, name: existing.name, id: existing.id });
           setStudentName(existing.name);
         } else {
-          setEmailLookup({ found: false });
+          setPhoneLookup({ found: false });
         }
       } else {
-        const found = mockStudents.find(s => s.email === email);
+        const found = mockStudents.find(s => s.phone === phone);
         if (found) {
-          setEmailLookup({ found: true, name: found.name, id: found.id });
+          setPhoneLookup({ found: true, name: found.name, id: found.id });
           setStudentName(found.name);
         } else {
-          setEmailLookup({ found: false });
+          setPhoneLookup({ found: false });
         }
       }
-    } catch { setEmailLookup({ found: false }); }
+    } catch { setPhoneLookup({ found: false }); }
     setLookupLoading(false);
   };
 
@@ -459,8 +500,8 @@ export default function TutorDashboard() {
       return;
     }
 
-    if (emailLookup?.found) {
-      const existingId = emailLookup.id;
+    if (phoneLookup?.found) {
+      const existingId = phoneLookup.id;
       if (!isMockMode && db && existingId) {
         try {
           const { enrollStudentInBatch } = await import('../db.service');
@@ -471,14 +512,14 @@ export default function TutorDashboard() {
           return;
         }
       } else {
-        const linked = { id: existingId || `student-${Date.now()}`, name: studentName, email: studentEmail, is_verified: true, tutorId: currentUser.uid, batch_id: studentBatchId, payment_status: 'active' };
+        const linked = { id: existingId || `student-${Date.now()}`, name: studentName, phone: studentPhone, is_verified: false, tutorId: currentUser.uid, batch_id: studentBatchId, payment_status: 'active' };
         if (!mockStudents.find(s => s.id === linked.id)) {
           setMockStudents(prev => [...prev, linked]);
         }
         toast.success(`${studentName} linked ✅`);
       }
-      setStudentName(''); setStudentEmail(''); setStudentPhone(''); setStudentBatchId('');
-      setEmailLookup(null);
+      setStudentName(''); setStudentPhone(''); setStudentBatchId('');
+      setPhoneLookup(null);
       return;
     }
 
@@ -488,21 +529,21 @@ export default function TutorDashboard() {
     if (!isMockMode) {
       try {
         const { createStudentAccount } = await import('../db.service');
-        const { tempPassword: actualPassword } = await createStudentAccount(studentEmail, studentName, currentUser.uid, studentBatchId);
-        setCredentialModal({ name: studentName, email: studentEmail, password: actualPassword });
+        const { tempPassword: actualPassword } = await createStudentAccount(studentPhone, studentName, currentUser.uid, studentBatchId);
+        setCredentialModal({ name: studentName, phone: studentPhone, password: actualPassword });
         toast.success(`Account created!`);
       } catch (err) {
         toast.error(`Failed: ${err.message}`);
         return;
       }
     } else {
-      const newStudent = { id: `student-${Date.now()}`, name: studentName, email: studentEmail, phone: studentPhone, batch_id: studentBatchId, is_verified: true, tutorId: currentUser.uid, payment_status: 'active' };
+      const newStudent = { id: `student-${Date.now()}`, name: studentName, phone: studentPhone, batch_id: studentBatchId, is_verified: false, tutorId: currentUser.uid, payment_status: 'active' };
       setMockStudents(prev => [...prev, newStudent]);
-      setCredentialModal({ name: studentName, email: studentEmail, password: tempPassword });
+      setCredentialModal({ name: studentName, phone: studentPhone, password: tempPassword });
       toast.success(`Account created!`);
     }
-    setStudentName(''); setStudentEmail(''); setStudentPhone(''); setStudentBatchId('');
-    setEmailLookup(null);
+    setStudentName(''); setStudentPhone(''); setStudentBatchId('');
+    setPhoneLookup(null);
   };
 
   const handleScheduleClass = (e) => {
@@ -607,7 +648,16 @@ export default function TutorDashboard() {
           <div className="glass-panel p-8" style={{ flex: 1, minWidth: '320px' }}>
             <h3 className="mb-4 flex items-center gap-2"><UserPlus size={20}/> Add Student</h3>
             <form onSubmit={handleAddStudent} className="flex-col gap-4">
-              <input type="email" className="input-field mb-2" placeholder="Email" value={studentEmail} onChange={e => handleEmailChange(e.target.value)} required />
+              <input 
+                type="tel" 
+                className="input-field mb-2" 
+                placeholder="Student Mobile Number" 
+                value={studentPhone} 
+                onChange={e => handlePhoneChange(e.target.value)} 
+                required 
+              />
+              {lookupLoading && <p style={{ fontSize: '0.7rem', color: 'var(--primary)' }}>Checking records...</p>}
+              {phoneLookup?.found && <p style={{ fontSize: '0.7rem', color: 'var(--secondary)' }}>Existing student found: {phoneLookup.name}</p>}
               <input type="text" className="input-field mb-2" placeholder="Name" value={studentName} onChange={e => setStudentName(e.target.value)} required />
               <select className="input-field mb-2" value={studentBatchId} onChange={e => setStudentBatchId(e.target.value)} required>
                 <option value="" disabled>Assign to Batch...</option>
@@ -695,8 +745,9 @@ export default function TutorDashboard() {
         <div className="modal-overlay">
           <div className="modal-content glass-panel p-8" style={{ maxWidth: '400px' }}>
             <h2 className="mb-4">Credentials Created</h2>
-            <p><strong>Email:</strong> {credentialModal.email}</p>
+            <p><strong>Mobile:</strong> {credentialModal.phone}</p>
             <p><strong>Password:</strong> {credentialModal.password}</p>
+            <p className="mt-4" style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Give these credentials to the student. They will need to verify their OTP on first login.</p>
             <button className="btn btn-primary w-full mt-4" onClick={() => setCredentialModal(null)}>Close</button>
           </div>
         </div>

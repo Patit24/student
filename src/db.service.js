@@ -225,12 +225,12 @@ export async function markStudentPaid(studentId, method = 'cash') {
 // STUDENT MANAGEMENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Look up an existing student by email in Firestore. */
-export async function lookupStudentByEmail(email) {
-  if (!db || !email) return null;
+/** Look up an existing student by phone in Firestore. */
+export async function lookupStudentByPhone(phone) {
+  if (!db || !phone) return null;
   const q    = query(
     collection(db, 'users'),
-    where('email', '==', email.toLowerCase().trim()),
+    where('phone', '==', phone.trim()),
     where('role',  '==', 'student')
   );
   const snap = await getDocs(q);
@@ -249,7 +249,7 @@ export function generateTempPassword() {
  * Create a new student Firebase Auth account + Firestore profile.
  * Uses a secondary Firebase App instance so the tutor stays logged in.
  */
-export async function createStudentAccount(email, name, tutorId, batchId, monthlyFee = 2500) {
+export async function createStudentAccount(phone, name, tutorId, batchId, monthlyFee = 2500) {
   const { getApp, initializeApp } = await import('firebase/app');
   const { getAuth, createUserWithEmailAndPassword, signOut } = await import('firebase/auth');
 
@@ -272,22 +272,23 @@ export async function createStudentAccount(email, name, tutorId, batchId, monthl
 
   const tempPassword  = generateTempPassword();
   const secondaryAuth = getAuth(secondaryApp);
+  const virtualEmail  = `${phone.trim()}@ppreducation.in`;
 
   const credential = await createUserWithEmailAndPassword(
     secondaryAuth,
-    email.toLowerCase().trim(),
+    virtualEmail,
     tempPassword
   );
   const uid = credential.user.uid;
 
   // Write Firestore profile
   await setDoc(doc(db, 'users', uid), {
-    email:               email.toLowerCase().trim(),
+    phone:               phone.trim(),
     name,
     role:                'student',
-    is_verified:         true,
-    tutorId:             tutorId, // For legacy/single-tutor compatibility & dashboard filtering
-    batch_id:            batchId, // For quick access
+    is_verified:         false, // Requirement: needs OTP verification
+    tutorId:             tutorId, 
+    batch_id:            batchId,
     enrolled_batches: [
       {
         tutor_id: tutorId,

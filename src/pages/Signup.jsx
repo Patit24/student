@@ -7,7 +7,7 @@ export default function Signup() {
   const initialRole = searchParams.get('role') || 'student';
 
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState(initialRole);
   const [error, setError] = useState('');
@@ -23,13 +23,13 @@ export default function Signup() {
 
   function friendlyError(code) {
     switch (code) {
-      case 'auth/email-already-in-use':    return 'This email is already registered. Try logging in.';
-      case 'auth/invalid-email':           return 'Please enter a valid email address.';
+      case 'auth/email-already-in-use':    return 'This mobile number is already registered. Try logging in.';
+      case 'auth/invalid-email':           return 'Please enter a valid mobile number.';
       case 'auth/weak-password':           return 'Password must be at least 6 characters.';
-      case 'auth/operation-not-allowed':   return 'Email/Password sign-in is not enabled. Please enable it in the Firebase Console → Authentication → Sign-in methods.';
+      case 'auth/operation-not-allowed':   return 'Phone sign-in is not enabled. Please enable it in the Firebase Console.';
       case 'auth/network-request-failed':  return 'Network error. Check your internet connection.';
-      case 'auth/configuration-not-found': return 'Firebase Auth is not configured. Please enable Email/Password in the Firebase Console.';
-      default: return `Sign-up failed: ${code || 'unknown error'}. Check the browser console for details.`;
+      case 'auth/configuration-not-found': return 'Firebase Auth is not configured properly.';
+      default: return `Registration failed: ${code || 'unknown error'}.`;
     }
   }
 
@@ -42,7 +42,7 @@ export default function Signup() {
     try {
       setError('');
       setLoading(true);
-      await signup(email, password, role, name);
+      await signup(phone, password, role, name);
       navigate(role === 'tutor' ? '/pricing' : '/student');
     } catch (err) {
       console.error('Signup error:', err);
@@ -81,13 +81,14 @@ export default function Signup() {
             />
           </div>
           <div className="input-group">
-            <label className="input-label">Email</label>
+            <label className="input-label">Mobile Number</label>
             <input 
-              type="email" 
+              type="tel" 
               className="input-field" 
               required 
-              value={email} 
-              onChange={e => setEmail(e.target.value)} 
+              placeholder="e.g. 9876543210"
+              value={phone} 
+              onChange={e => setPhone(e.target.value)} 
             />
           </div>
           <div className="input-group">

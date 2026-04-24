@@ -270,7 +270,7 @@ export default function AdminDashboard() {
                         <tr key={tutor.id}>
                           <td>
                             <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{tutor.name}</div>
-                            <div style={{ fontSize: '0.75rem', color: '#7a8ba8' }}>{tutor.email}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#7a8ba8' }}>{tutor.phone}</div>
                           </td>
                           <td className="hide-on-mobile">
                             <code style={{ color: '#f5c518', fontSize: '0.8rem', background: 'rgba(245, 197, 24, 0.05)', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
@@ -512,7 +512,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="tutor-info">
                     <h3>{verifyingTutor.name}</h3>
-                    <p>{verifyingTutor.email}</p>
+                    <p>{verifyingTutor.phone}</p>
                   </div>
                 </div>
 

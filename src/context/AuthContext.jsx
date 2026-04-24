@@ -161,24 +161,28 @@ export function AppProvider({ children }) {
   // AUTH ACTIONS
   // ─────────────────────────────────────────────────────────────────────────
 
-  async function signup(email, password, role, name) {
+  async function signup(phone, password, role, name) {
     if (isMockMode) {
       const newId = role === 'tutor' ? `tutor-${Date.now()}` : `student-${Date.now()}`;
       const user  = {
-        uid: newId, email, role, name, is_verified: true,
+        uid: newId, phone, role, name, is_verified: false,
         subscription_status: role === 'tutor' ? 'inactive' : 'active',
         subscription_tier: null,
       };
       if (role === 'tutor') {
-        setMockTutors(prev => [...prev, { id: newId, email, name, role, subscription_status: 'inactive', subscription_tier: null, branding_color: '#4F46E5' }]);
+        setMockTutors(prev => [...prev, { id: newId, phone, name, role, subscription_status: 'inactive', subscription_tier: null, branding_color: '#4F46E5' }]);
       }
       setMockUser(user);
       return user;
     }
-    const cleanEmail = email.toLowerCase().trim();
-    const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
+    // Convert phone to virtual email for Firebase Auth compatibility
+    const virtualEmail = `${phone.trim()}@ppreducation.in`;
+    const userCredential = await createUserWithEmailAndPassword(auth, virtualEmail, password);
     const profile = {
-      email: cleanEmail, role, name, is_verified: true,
+      phone: phone.trim(), 
+      role, 
+      name, 
+      is_verified: false,
       createdAt: new Date(),
       subscription_status: role === 'tutor' ? 'inactive' : 'active',
     };
@@ -188,32 +192,28 @@ export function AppProvider({ children }) {
     return merged;
   }
 
-  async function login(email, password) {
-    if (isMockMode || (email === 'admin@yourplatform.com' && password === 'MasterCS_2026!')) {
-      if (email === 'admin@yourplatform.com' || email === 'admin@antigravity.edu') {
-        const adminUser = { uid: 'admin-1', email, role: 'super_admin', name: 'Super Admin', subscription_status: 'active' };
+  async function login(phone, password) {
+    if (isMockMode || (phone === 'admin' && password === 'MasterCS_2026!')) {
+      if (phone === 'admin') {
+        const adminUser = { uid: 'admin-1', phone, role: 'super_admin', name: 'Super Admin', subscription_status: 'active' };
         setCurrentUser(adminUser);
         setLoading(false);
         return adminUser;
       }
-      const role = email.includes('tutor') ? 'tutor' : 'student';
+      const role = phone.length > 5 ? 'tutor' : 'student'; // Simple mock logic
       let user;
-      if (role === 'tutor') {
-        const tutor = mockTutors.find(t => t.email === email);
-        user = tutor
-          ? { uid: tutor.id, ...tutor }
-          : { uid: 'tutor-123', email, role, name: 'Demo Tutor', subscription_status: 'active', subscription_tier: 'pro' };
-      } else {
-        const student = mockStudents.find(s => s.email === email);
-        user = student
-          ? { uid: student.id, ...student }
-          : { uid: 'mock-uid-123', email, role, name: 'Demo User', is_verified: true, tutorId: 'tutor-123' };
-      }
+      const foundTutor = mockTutors.find(t => t.phone === phone);
+      const foundStudent = mockStudents.find(s => s.phone === phone);
+      
+      if (foundTutor) user = { uid: foundTutor.id, ...foundTutor };
+      else if (foundStudent) user = { uid: foundStudent.id, ...foundStudent };
+      else user = { uid: 'mock-uid-' + phone, phone, role: 'student', name: 'Demo User', is_verified: false };
+
       setMockUser(user);
       return user;
     }
-    const cleanEmail = email.toLowerCase().trim();
-    const credential = await signInWithEmailAndPassword(auth, cleanEmail, password);
+    const virtualEmail = `${phone.trim()}@ppreducation.in`;
+    const credential = await signInWithEmailAndPassword(auth, virtualEmail, password);
     const docSnap    = await getDoc(doc(db, 'users', credential.user.uid));
     const profile    = docSnap.exists() ? docSnap.data() : {};
     const merged     = { ...credential.user, uid: credential.user.uid, ...profile };
@@ -438,10 +438,15 @@ export function AppProvider({ children }) {
   }, [isMockMode]);
 
   // ── AUTH ACTIONS ──
-  const forgotPassword = async (email) => {
+  async function forgotPassword(phone) {
+    if (isMockMode) {
+      alert('Mock: Password reset SMS/Link triggered for ' + phone);
+      return;
+    }
     const { sendPasswordResetEmail } = await import('firebase/auth');
-    return sendPasswordResetEmail(auth, email);
-  };
+    const virtualEmail = `${phone.trim()}@ppreducation.in`;
+    return sendPasswordResetEmail(auth, virtualEmail);
+  }
 
   // Sync mock mode user to currentUser
   useEffect(() => {

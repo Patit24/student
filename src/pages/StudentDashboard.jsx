@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AuthContext';
-import { Play, Download, MessageSquare, FileText, Lock, Clock, Calendar as CalendarIcon, CheckCircle, ShieldAlert, CheckSquare, CreditCard, AlertTriangle, LogOut, Phone, Users, Video, Search, Package } from 'lucide-react';
+import { Play, Download, MessageSquare, FileText, Shield, Clock, Calendar as CalendarIcon, CheckCircle, ShieldAlert, CheckSquare, CreditCard, AlertTriangle, LogOut, Phone, Users, Video, Search, Package } from 'lucide-react';
 import ChatSidebar from '../components/ChatSidebar';
 import PaymentBanner from '../components/PaymentBanner';
 import TestCenter from '../components/TestCenter';
@@ -135,15 +135,25 @@ export default function StudentDashboard() {
   if (currentUser && currentUser.is_verified === false) {
     return (
       <div className="container flex justify-center items-center animate-fade-in" style={{ height: 'calc(100vh - 80px)' }}>
-        <div className="glass-panel p-8 text-center" style={{ maxWidth: '400px' }}>
-          <ShieldAlert size={48} color="var(--primary)" style={{ marginBottom: '1rem' }} />
+        <div className="glass-panel p-8 text-center" style={{ maxWidth: '400px', border: '1px solid var(--primary)' }}>
+          <Shield size={48} color="var(--primary)" style={{ marginBottom: '1rem' }} />
           <h2 className="mb-2">Verify Your Account</h2>
-          <p className="text-muted mb-6">Enter the 6-digit OTP sent to your registered phone.</p>
+          <p className="text-muted mb-6">Enter the 6-digit OTP sent to your registered mobile number: <strong>{currentUser.phone}</strong></p>
           <form onSubmit={handleVerifyOTP} className="flex-col gap-4">
-            <input type="text" className="input-field text-center" placeholder="Enter OTP (123456)" value={otp} onChange={e => setOtp(e.target.value)} maxLength={6} required style={{ fontSize: '1.5rem', letterSpacing: '0.5rem' }} />
+            <input 
+              type="text" 
+              className="input-field text-center" 
+              placeholder="Enter OTP (123456)" 
+              value={otp} 
+              onChange={e => setOtp(e.target.value)} 
+              maxLength={6} 
+              required 
+              style={{ fontSize: '1.5rem', letterSpacing: '0.5rem', background: 'rgba(79,70,229,0.05)' }} 
+            />
             {otpError && <p style={{ color: 'var(--danger)', fontSize: '0.85rem' }}>{otpError}</p>}
-            <button type="submit" className="btn btn-primary w-full mt-2">Verify & Proceed</button>
+            <button type="submit" className="btn btn-primary w-full mt-2" style={{ padding: '1rem' }}>Verify & Enter Classroom</button>
           </form>
+          <p className="mt-6" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Didn't receive? <button className="btn-link" onClick={() => alert('OTP resent to ' + currentUser.phone)}>Resend OTP</button></p>
         </div>
       </div>
     );

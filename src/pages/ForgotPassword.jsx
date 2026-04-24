@@ -1,24 +1,24 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAppContext } from '../context/AuthContext';
-import { Mail, ChevronLeft, CheckCircle, AlertCircle } from 'lucide-react';
+import { Phone, ChevronLeft, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '../components/Toast';
 
 export default function ForgotPassword() {
   const { forgotPassword } = useAppContext();
   const toast = useToast();
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email) return;
+    if (!phone) return;
     setLoading(true);
     try {
-      await forgotPassword(email);
+      await forgotPassword(phone);
       setSent(true);
-      toast.success('Reset link sent to ' + email);
+      toast.success('Reset instructions triggered for ' + phone);
     } catch (err) {
       toast.error('Error: ' + err.message);
     } finally {
@@ -35,28 +35,28 @@ export default function ForgotPassword() {
 
         <h2 className="mb-2">Reset Password</h2>
         <p className="text-muted mb-8" style={{ fontSize: '0.9rem' }}>
-          Enter your registered email and we'll send you a secure link to reset your password.
+          Enter your registered mobile number and we'll send you instructions to reset your password.
         </p>
 
         {sent ? (
           <div className="text-center p-6" style={{ background: 'rgba(16,185,129,0.05)', borderRadius: '15px', border: '1px solid rgba(16,185,129,0.2)' }}>
             <CheckCircle size={48} color="var(--secondary)" style={{ marginBottom: '1rem' }} />
-            <h4 style={{ color: 'var(--secondary)' }}>Check Your Inbox</h4>
+            <h4 style={{ color: 'var(--secondary)' }}>Instructions Sent</h4>
             <p className="text-muted mt-2" style={{ fontSize: '0.85rem' }}>
-              We've sent recovery instructions to <strong>{email}</strong>.
+              We've sent recovery instructions to <strong>{phone}</strong>.
             </p>
-            <button className="btn btn-primary w-full mt-6" onClick={() => setSent(false)}>Resend Email</button>
+            <button className="btn btn-primary w-full mt-6" onClick={() => setSent(false)}>Resend</button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex-col gap-5">
             <div className="flex-col gap-2">
-              <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Email Address</label>
+              <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Mobile Number</label>
               <div style={{ position: 'relative' }}>
-                <Mail size={18} color="var(--text-muted)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
+                <Phone size={18} color="var(--text-muted)" style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
                 <input 
-                  type="email" className="input-field" placeholder="name@example.com" required
+                  type="tel" className="input-field" placeholder="e.g. 9876543210" required
                   style={{ paddingLeft: '3rem' }}
-                  value={email} onChange={e => setEmail(e.target.value)}
+                  value={phone} onChange={e => setPhone(e.target.value)}
                 />
               </div>
             </div>
