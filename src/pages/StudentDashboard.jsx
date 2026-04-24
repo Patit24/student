@@ -251,7 +251,7 @@ export default function StudentDashboard() {
         <div style={{ flex: 1, backgroundColor: '#000', position: 'relative' }}>
           <video ref={videoRef} autoPlay playsInline style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
           <div className="flex justify-center items-center gap-4 p-4" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(transparent, rgba(0,0,0,0.8))' }}>
-            <button className="btn btn-outline" style={{ background: 'var(--surface)', borderColor: 'transparent' }} onClick={handleLeaveClass}>Leave Class</button>
+            <button className="btn btn-outline" style={{ background: 'var(--surface)', borderColor: 'transparent', borderRadius: '12px' }} onClick={handleLeaveClass}>Leave Class</button>
           </div>
         </div>
         <div className="hide-on-mobile" style={{ width: '350px', borderLeft: '1px solid var(--border)', background: 'var(--surface)', display: 'flex', flexDirection: 'column' }}>
@@ -267,13 +267,35 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="container mt-4 animate-fade-in" style={{ paddingBottom: '2rem' }}>
+    <div className="container mt-6 animate-fade-in" style={{ paddingBottom: '4rem' }}>
       
-      {/* Teacher Switcher */}
-      <div className="mb-8">
-        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '0.8rem' }}>Your Teachers & Batches</p>
-        <div className="flex gap-3 overflow-x-auto pb-4 custom-scrollbar" style={{ scrollSnapType: 'x mandatory' }}>
-          {myEnrolledBatches.map(enr => {
+      {/* ── Dashboard Header ── */}
+      <div className="flex justify-between items-end mb-10 mobile-stack animate-slide-up" style={{ animationDelay: '0.1s' }}>
+        <div>
+          <h1 style={{ fontSize: 'clamp(1.8rem, 5vw, 2.8rem)', fontWeight: 900, letterSpacing: '-1.5px', marginBottom: '0.5rem' }}>
+            Student <span className="text-gradient">Classroom</span>
+          </h1>
+          <div className="flex items-center gap-3">
+            <div className="avatar-sm" style={{ background: 'var(--primary)', color: '#fff', fontSize: '0.8rem', fontWeight: 700 }}>
+              {currentUser?.name?.charAt(0) || 'S'}
+            </div>
+            <p className="text-muted" style={{ fontSize: '1rem' }}>
+              Welcome back, <strong style={{ color: '#fff' }}>{currentUser?.name}</strong>
+            </p>
+          </div>
+        </div>
+        <button onClick={() => logout()} className="btn btn-outline mobile-full" style={{ borderRadius: '14px', padding: '0.8rem 1.5rem', background: 'rgba(255,255,255,0.02)' }}>
+          <LogOut size={16}/> Logout Account
+        </button>
+      </div>
+
+      {/* ── Teacher & Batch Switcher ── */}
+      <div className="mb-12 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+        <p style={{ fontSize: '0.7rem', color: 'var(--primary)', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.2em', marginBottom: '1rem' }}>
+          My Active Batches
+        </p>
+        <div className="flex gap-4 overflow-x-auto pb-6 custom-scrollbar no-scrollbar-mobile" style={{ scrollSnapType: 'x mandatory', padding: '0.5rem' }}>
+          {myEnrolledBatches.map((enr, idx) => {
             const tutor = mockTutors.find(t => t.id === enr.tutor_id);
             const batch = mockBatches.find(b => b.id === enr.batch_id);
             const isActive = selectedEnrollment?.batch_id === enr.batch_id;
@@ -283,137 +305,217 @@ export default function StudentDashboard() {
               <button 
                 key={enr.batch_id}
                 onClick={() => setSelectedEnrollment(enr)}
+                className={`glass-panel ${isActive ? 'active-glow' : 'hover-scale'}`}
                 style={{
-                  padding: '0.75rem 1.25rem', borderRadius: '16px',
-                  background: isActive ? 'rgba(245,197,24,0.12)' : 'rgba(255,255,255,0.03)',
-                  border: isActive ? '1px solid #F5C518' : '1px solid rgba(255,255,255,0.08)',
-                  color: isActive ? '#F5C518' : 'var(--text-muted)',
-                  whiteSpace: 'nowrap', cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  display: 'flex', alignItems: 'center', gap: '0.75rem',
-                  minWidth: '180px', scrollSnapAlign: 'start',
-                  boxShadow: isActive ? '0 8px 24px rgba(245,197,24,0.1)' : 'none',
-                  transform: isActive ? 'translateY(-2px)' : 'none'
+                  padding: '1.2rem', borderRadius: '24px',
+                  minWidth: '220px', textAlign: 'left',
+                  border: isActive ? '2.5px solid var(--primary)' : '1px solid rgba(255,255,255,0.08)',
+                  background: isActive ? 'rgba(79,70,229,0.12)' : 'rgba(255,255,255,0.03)',
+                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                  display: 'flex', alignItems: 'center', gap: '1rem',
+                  scrollSnapAlign: 'start', position: 'relative'
                 }}
               >
                 <div style={{ position: 'relative' }}>
                   <img 
-                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(tutor?.name||'T')}&background=random`} 
-                    style={{ width: '32px', height: '32px', borderRadius: '50%', border: isActive ? '2px solid #F5C518' : 'none' }}
+                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(tutor?.name||'T')}&background=random&color=fff&size=64`} 
+                    style={{ width: '48px', height: '48px', borderRadius: '16px', border: '2px solid rgba(255,255,255,0.1)' }}
                   />
                   {liveSession && (
-                    <div style={{ position: 'absolute', bottom: -2, right: -2, width: '12px', height: '12px', background: '#EF4444', borderRadius: '50%', border: '2px solid #000' }} />
+                    <div style={{ position: 'absolute', top: -5, right: -5, width: '14px', height: '14px', background: '#EF4444', borderRadius: '50%', border: '2px solid #0a0e1a', boxShadow: '0 0 10px #EF4444' }} className="animate-pulse" />
                   )}
                 </div>
-                <div style={{ textAlign: 'left' }}>
-                  <p style={{ fontSize: '0.85rem', fontWeight: 700, margin: 0, color: isActive ? '#F5C518' : '#F0F4FF' }}>{tutor?.name || 'Teacher'}</p>
-                  <p style={{ fontSize: '0.65rem', margin: 0 }}>{batch?.name || 'Class'} · {batch?.schedule || 'Flexible'}</p>
+                <div style={{ overflow: 'hidden' }}>
+                  <p style={{ fontSize: '0.95rem', fontWeight: 800, margin: 0, color: isActive ? '#fff' : 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{tutor?.name || 'Teacher'}</p>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>{batch?.name || 'Class'}</p>
                 </div>
+                {isActive && <div style={{ position: 'absolute', bottom: -12, left: '50%', transform: 'translateX(-50%)', width: '20px', height: '4px', background: 'var(--primary)', borderRadius: '2px' }} />}
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Batch-Specific Fee Warning */}
+      {/* ── Fee Overdue Alert ── */}
       {isOverdue && (
-        <div style={{ 
-          background: 'rgba(239,68,68,0.1)', 
-          border: '1px solid #EF4444', 
-          padding: '1rem 1.5rem', 
-          borderRadius: '12px', 
-          marginBottom: '2rem',
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-        }}>
-          <div>
-            <h4 style={{ color: '#EF4444', margin: 0 }}>⚠️ Access Restricted: {currentTutor?.name}</h4>
-            <p style={{ fontSize: '0.85rem', color: 'rgba(239,68,68,0.8)', margin: 0 }}>
-              Payment of ₹{selectedEnrollment?.outstanding_balance} overdue since {selectedEnrollment?.payment_due_date}.
-            </p>
+        <div className="animate-slide-up mb-10" style={{ animationDelay: '0.25s' }}>
+          <div style={{ 
+            background: 'linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(239,68,68,0.05) 100%)', 
+            border: '1px solid rgba(239,68,68,0.3)', 
+            padding: '1.5rem', borderRadius: '24px',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1.5rem',
+            backdropFilter: 'blur(10px)', flexWrap: 'wrap'
+          }}>
+            <div className="flex gap-4 items-center">
+              <div style={{ background: 'rgba(239,68,68,0.2)', padding: '0.75rem', borderRadius: '15px' }}>
+                <ShieldAlert size={24} color="#EF4444" />
+              </div>
+              <div>
+                <h4 style={{ color: '#EF4444', margin: 0, fontWeight: 800 }}>Payment Overdue</h4>
+                <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
+                  ₹{selectedEnrollment?.outstanding_balance} due for {currentTutor?.name}'s batch. Access is restricted.
+                </p>
+              </div>
+            </div>
+            <button className="btn btn-primary mobile-full" style={{ background: '#EF4444', border: 'none', padding: '1rem 2rem', borderRadius: '15px', fontWeight: 800 }} onClick={() => alert('Opening Payment Gateway...')}>
+              <CreditCard size={18}/> Pay Now
+            </button>
           </div>
-          <button className="btn btn-primary" style={{ background: '#EF4444', border: 'none' }} onClick={() => alert('Opening Payment Gateway...')}>
-            <CreditCard size={15}/> Pay Now
-          </button>
         </div>
       )}
 
-      <div className="flex justify-between items-center mb-8 mobile-stack" style={{ gap: '1.5rem' }}>
-        <div>
-          <h2 style={{ fontSize: 'clamp(1.5rem, 5vw, 2.2rem)' }}>Student Classroom</h2>
-          <p className="text-muted mt-1">
-            Learning with <strong style={{ color: '#F0F4FF' }}>{currentTutor?.name || 'your teacher'}</strong>
-          </p>
-        </div>
-        <div className="flex gap-3 mobile-stack w-full" style={{ justifyContent: 'flex-start' }}>
-          {mockSessions.find(s => s.batch_id === selectedEnrollment?.batch_id && s.status === 'live') && (
-            <button className="btn btn-primary animate-pulse w-full" style={{ background: '#EF4444', border: 'none', padding: '1rem' }} onClick={handleJoinClass}>
-              <Video size={18}/> Join Live Class
-            </button>
-          )}
-          <button onClick={() => logout()} className="btn btn-outline w-full" style={{ fontSize: '0.9rem', padding: '1rem' }}>
-            <LogOut size={14}/> Logout
-          </button>
-        </div>
-      </div>
-
-      <div className="flex gap-8 mobile-stack">
-        {/* Schedule */}
-        <div className="glass-panel p-8" style={{ flex: 1, minWidth: '100%' }}>
-          <h3 className="mb-4 flex items-center gap-2"><CalendarIcon size={20}/> Schedule</h3>
-          {mySessions.length === 0 && <p className="text-muted">No classes scheduled by this teacher.</p>}
-          <div className="flex-col gap-4">
-            {mySessions.map(session => {
-              const isReady = new Date(session.scheduled_time).getTime() - now <= 0;
-              return (
-                <div key={session.id} style={{ border: '1px solid var(--border)', padding: '1.25rem', borderRadius: 'var(--radius)' }}>
-                   <div className="flex justify-between items-start mb-3">
-                     <div>
-                       <h4 style={{ color: '#F5C518' }}>{session.title}</h4>
-                       <p className="text-muted" style={{ fontSize: '0.8rem' }}>{new Date(session.scheduled_time).toLocaleString()}</p>
-                     </div>
-                   </div>
-                   <button 
-                     className={`btn w-full ${isReady ? 'btn-secondary' : 'btn-outline'}`} 
-                     disabled={!isReady || isOverdue} 
-                     onClick={handleJoinClass}
-                   >
-                     {isOverdue ? <><Lock size={15}/> Locked (Payment)</> : isReady ? <><Play size={16}/> Join Class</> : <><Clock size={16}/> Scheduled</>}
-                   </button>
+      {/* ── Main Dashboard Grid ── */}
+      <div className="dashboard-grid">
+        
+        {/* Live Status Card */}
+        <div className="animate-slide-up" style={{ animationDelay: '0.3s' }}>
+          <div className="glass-panel p-8 h-full" style={{ borderRadius: '32px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '300px', border: '1px solid rgba(255,255,255,0.05)', background: 'linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)' }}>
+            <div>
+              <div className="flex justify-between items-start mb-6">
+                <div style={{ background: 'rgba(79,70,229,0.1)', padding: '0.8rem', borderRadius: '16px' }}>
+                  <Video size={28} color="var(--primary)" />
                 </div>
-              );
-            })}
+                {mockSessions.find(s => s.batch_id === selectedEnrollment?.batch_id && s.status === 'live') ? (
+                  <span className="badge-live animate-pulse">LIVE NOW</span>
+                ) : (
+                  <span className="badge-offline">OFFLINE</span>
+                )}
+              </div>
+              <h3 className="mb-2">Virtual Classroom</h3>
+              <p className="text-muted" style={{ fontSize: '0.95rem' }}>Join the high-fidelity interactive session with {currentTutor?.name || 'your teacher'}.</p>
+            </div>
+            <div className="mt-8">
+              {mockSessions.find(s => s.batch_id === selectedEnrollment?.batch_id && s.status === 'live') ? (
+                <button className="btn btn-primary w-full p-4" style={{ borderRadius: '18px', fontSize: '1rem', fontWeight: 800, boxShadow: '0 10px 25px rgba(79,70,229,0.3)' }} onClick={handleJoinClass}>
+                  Enter Live Classroom
+                </button>
+              ) : (
+                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '18px', textAlign: 'center', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                  <p className="text-muted" style={{ fontSize: '0.85rem', margin: 0 }}>No live session currently active</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Materials */}
-        <div style={{ flex: 1, minWidth: '100%' }} className="flex-col gap-6">
-          <div className="glass-panel p-8">
-            <h3 className="mb-4 flex items-center gap-2"><FileText size={20}/> Batch Materials</h3>
+        {/* Upcoming Schedule Card */}
+        <div className="animate-slide-up" style={{ animationDelay: '0.4s' }}>
+          <div className="glass-panel p-8 h-full" style={{ borderRadius: '32px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <h3 className="mb-6 flex items-center gap-3"><CalendarIcon size={24} color="var(--primary)"/> Upcoming Sessions</h3>
+            {mySessions.length === 0 && <p className="text-muted py-10 text-center">No upcoming sessions scheduled.</p>}
+            <div className="flex-col gap-4">
+              {mySessions.slice(0, 3).map(session => {
+                const isReady = new Date(session.scheduled_time).getTime() - Date.now() <= 0;
+                return (
+                  <div key={session.id} className="session-card" style={{ padding: '1.2rem', background: 'rgba(255,255,255,0.02)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                     <div className="flex justify-between items-center">
+                       <div>
+                         <h4 style={{ fontSize: '1rem', marginBottom: '0.2rem' }}>{session.title}</h4>
+                         <p className="text-muted" style={{ fontSize: '0.75rem' }}>{new Date(session.scheduled_time).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' })}</p>
+                       </div>
+                       <button 
+                         className={`btn ${isReady ? 'btn-primary' : 'btn-outline'}`} 
+                         style={{ padding: '0.5rem 1rem', borderRadius: '12px', fontSize: '0.8rem' }}
+                         disabled={!isReady || isOverdue} 
+                         onClick={handleJoinClass}
+                       >
+                         {isOverdue ? <Lock size={14}/> : isReady ? 'Join' : 'Waiting'}
+                       </button>
+                     </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Study Materials Grid Card */}
+        <div className="animate-slide-up" style={{ animationDelay: '0.5s', gridColumn: 'span 1' }}>
+          <div className="glass-panel p-8" style={{ borderRadius: '32px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <h3 className="mb-6 flex items-center gap-3"><FileText size={24} color="var(--primary)"/> Batch Library</h3>
             <StudentMaterialsPanel
               batchId={selectedEnrollment?.batch_id}
               isLocked={isOverdue}
             />
           </div>
+        </div>
 
-          <div className="glass-panel p-8" style={{ border: '1px solid rgba(245,197,24,0.1)' }}>
-            <h3 className="mb-4 flex items-center gap-2"><Package size={20} color="#F5C518"/> Admin Library</h3>
+        {/* Admin Library Card */}
+        <div className="animate-slide-up" style={{ animationDelay: '0.6s' }}>
+          <div className="glass-panel p-8" style={{ borderRadius: '32px', border: '1px solid rgba(245,197,24,0.1)', background: 'linear-gradient(135deg, rgba(245,197,24,0.05) 0%, transparent 100%)' }}>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="flex items-center gap-3"><Package size={24} color="#F5C518"/> Global Assets</h3>
+              <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#F5C518', background: 'rgba(245,197,24,0.1)', padding: '0.3rem 0.6rem', borderRadius: '8px' }}>ADMIN RESOURCES</span>
+            </div>
             <div className="flex-col gap-3">
               {globalAssets.map(asset => (
-                <div key={asset.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <FileText size={18} color="#F5C518" />
+                <div key={asset.id} className="asset-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(245,197,24,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <FileText size={20} color="#F5C518" />
+                  </div>
                   <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: '0.85rem', fontWeight: 600, margin: 0, color: '#F0F4FF' }}>{asset.name}</p>
+                    <p style={{ fontSize: '0.9rem', fontWeight: 700, margin: 0 }}>{asset.name}</p>
                     <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0 }}>{(asset.size / 1024 / 1024).toFixed(1)} MB</p>
                   </div>
-                  <a href={asset.url} target="_blank" rel="noopener noreferrer" className="btn btn-outline" style={{ padding: '0.3rem', minWidth: 'auto', borderRadius: '6px' }}>
-                    <Download size={14}/>
+                  <a href={asset.url} target="_blank" rel="noopener noreferrer" className="btn btn-outline" style={{ padding: '0.5rem', minWidth: 'auto', borderRadius: '10px' }}>
+                    <Download size={16}/>
                   </a>
                 </div>
               ))}
-              {globalAssets.length === 0 && <p className="text-muted" style={{ fontSize: '0.8rem' }}>No admin resources yet.</p>}
+              {globalAssets.length === 0 && <p className="text-muted text-center py-6" style={{ fontSize: '0.85rem' }}>No global resources yet.</p>}
             </div>
           </div>
         </div>
+
       </div>
+
+      <style>{`
+        .dashboard-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+          gap: 2rem;
+        }
+        @media (max-width: 768px) {
+          .dashboard-grid {
+            grid-template-columns: 1fr;
+          }
+          .mobile-full { width: 100%; }
+          .mobile-stack { flex-direction: column; align-items: flex-start ! from; }
+        }
+        .text-gradient {
+          background: linear-gradient(135deg, var(--primary) 0%, #a78bfa 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        .avatar-sm {
+          width: 32px; height: 32px; border-radius: 10px;
+          display: flex; align-items: center; justify-content: center;
+        }
+        .badge-live {
+          font-size: 0.65rem; font-weight: 900; color: #fff;
+          background: #EF4444; padding: 0.3rem 0.8rem; border-radius: 10px;
+          box-shadow: 0 0 15px rgba(239,68,68,0.4);
+        }
+        .badge-offline {
+          font-size: 0.65rem; font-weight: 900; color: rgba(255,255,255,0.4);
+          background: rgba(255,255,255,0.05); padding: 0.3rem 0.8rem; border-radius: 10px;
+        }
+        .active-glow {
+          box-shadow: 0 10px 40px rgba(79,70,229,0.2) !important;
+          transform: translateY(-5px);
+        }
+        .hover-scale:hover {
+          transform: translateY(-5px);
+          background: rgba(255,255,255,0.06) !important;
+          border-color: rgba(255,255,255,0.15) !important;
+        }
+        .asset-card:hover {
+          background: rgba(255,255,255,0.06) !important;
+          transform: scale(1.02);
+          transition: all 0.3s ease;
+        }
+        .no-scrollbar-mobile::-webkit-scrollbar { display: none; }
+      `}</style>
     </div>
   );
 }
