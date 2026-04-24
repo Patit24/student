@@ -5,7 +5,7 @@ import {
   Video, Mic, MicOff, VideoOff, ScreenShare, MessageSquare, Users, 
   Lock, Unlock, Check, X, UserPlus, Calendar, Palette, Crown, 
   FileText, CheckSquare, Building2, AlertOctagon, ToggleLeft, 
-  ToggleRight, Image, Globe, Play, Plus, Trash2, MapPin, TrendingUp, CreditCard, Layers
+  ToggleRight, Image, Globe, Play, Plus, Trash2, MapPin, TrendingUp, CreditCard, Layers, Shield
 } from 'lucide-react';
 import ChatSidebar from '../components/ChatSidebar';
 import ExamCreator from '../components/ExamCreator';
