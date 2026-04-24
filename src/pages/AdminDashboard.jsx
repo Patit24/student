@@ -19,10 +19,15 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
 
   // KPIs & Tutors
+  const [tutors, setTutors] = useState([]);
   const [globalAssets, setGlobalAssets] = useState([]);
   const [activeTab, setActiveTab] = useState('tutors'); // 'tutors' or 'materials'
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+
+  // Selection for Verification
+  const [verifyingTutor, setVerifyingTutor] = useState(null);
+  const [selectedPlan, setSelectedPlan] = useState('pro');
 
   useEffect(() => {
     const q = query(collection(db, 'users'), where('role', '==', 'tutor'));
