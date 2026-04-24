@@ -228,6 +228,27 @@ export function AppProvider({ children }) {
     return merged;
   }
 
+  async function updateUserPassword(newPassword) {
+    if (isMockMode) {
+      setCurrentUser(prev => ({ ...prev, needs_password_reset: false }));
+      toast.success('Password updated (Mock mode)');
+      return;
+    }
+    try {
+      const { updatePassword } = await import('firebase/auth');
+      await updatePassword(auth.currentUser, newPassword);
+      
+      const userRef = doc(db, 'users', currentUser.uid);
+      await updateDoc(userRef, { needs_password_reset: false });
+      
+      setCurrentUser(prev => ({ ...prev, needs_password_reset: false }));
+      toast.success('Password updated successfully! ✅');
+    } catch (error) {
+      console.error('Password update failed:', error);
+      throw error;
+    }
+  }
+
   function logout() {
     setCurrentUser(null);
     if (isMockMode) { setMockUser(null); return Promise.resolve(); }

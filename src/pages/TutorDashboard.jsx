@@ -526,7 +526,7 @@ export default function TutorDashboard() {
           return;
         }
       } else {
-        const linked = { id: existingId || `student-${Date.now()}`, name: studentName, phone: studentPhone, is_verified: false, tutorId: currentUser.uid, batch_id: studentBatchId, payment_status: 'active' };
+        const linked = { id: existingId || `student-${Date.now()}`, name: studentName, phone: studentPhone, is_verified: false, needs_password_reset: true, tutorId: currentUser.uid, batch_id: studentBatchId, payment_status: 'active' };
         if (!mockStudents.find(s => s.id === linked.id)) {
           setMockStudents(prev => [...prev, linked]);
         }
@@ -551,7 +551,7 @@ export default function TutorDashboard() {
         return;
       }
     } else {
-      const newStudent = { id: `student-${Date.now()}`, name: studentName, phone: studentPhone, batch_id: studentBatchId, is_verified: false, tutorId: currentUser.uid, payment_status: 'active' };
+      const newStudent = { id: `student-${Date.now()}`, name: studentName, phone: studentPhone, batch_id: studentBatchId, is_verified: false, needs_password_reset: true, tutorId: currentUser.uid, payment_status: 'active' };
       setMockStudents(prev => [...prev, newStudent]);
       setCredentialModal({ name: studentName, phone: studentPhone, password: tempPassword });
       toast.success(`Account created!`);

@@ -239,10 +239,9 @@ export async function lookupStudentByPhone(phone) {
   return { id: d.id, ...d.data() };
 }
 
-/** Generate a secure readable temp password. e.g. Student@123456 */
+/** Generate a secure readable temp password. e.g. testpass */
 export function generateTempPassword() {
-  const rand = Math.floor(100000 + Math.random() * 900000);
-  return `Student@${rand}`;
+  return "testpass";
 }
 
 /**
@@ -287,6 +286,7 @@ export async function createStudentAccount(phone, name, tutorId, batchId, monthl
     name,
     role:                'student',
     is_verified:         false, // Requirement: needs OTP verification
+    needs_password_reset: true, // Force password reset on first login
     tutorId:             tutorId, 
     batch_id:            batchId,
     enrolled_batches: [

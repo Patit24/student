@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AuthContext';
-import { Play, Download, MessageSquare, FileText, Shield, Clock, Calendar as CalendarIcon, CheckCircle, ShieldAlert, CheckSquare, CreditCard, AlertTriangle, LogOut, Phone, Users, Video, Search, Package } from 'lucide-react';
+import { Play, Download, MessageSquare, FileText, Shield, Clock, Calendar as CalendarIcon, CheckCircle, ShieldAlert, CheckSquare, CreditCard, AlertTriangle, LogOut, Phone, Users, Video, Search, Package, Eye, EyeOff, Lock } from 'lucide-react';
 import ChatSidebar from '../components/ChatSidebar';
 import PaymentBanner from '../components/PaymentBanner';
 import TestCenter from '../components/TestCenter';
@@ -9,6 +9,88 @@ import FeeProgressBar from '../components/FeeProgressBar';
 import StudentMaterialsPanel from '../components/StudentMaterialsPanel';
 import { subscribeGlobalAssets } from '../db.service';
 import { useToast } from '../components/Toast';
+
+function PasswordResetGate() {
+  const { updateUserPassword } = useAppContext();
+  const [newPass, setNewPass] = useState('');
+  const [confirmPass, setConfirmPass] = useState('');
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleReset = async (e) => {
+    e.preventDefault();
+    if (newPass.length < 6) {
+      alert('Password must be at least 6 characters');
+      return;
+    }
+    if (newPass !== confirmPass) {
+      alert('Passwords do not match');
+      return;
+    }
+    setLoading(true);
+    try {
+      await updateUserPassword(newPass);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update password');
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="container flex justify-center items-center animate-fade-in" style={{ height: 'calc(100vh - 80px)' }}>
+      <div className="glass-panel p-8" style={{ width: '100%', maxWidth: '400px', border: '1px solid var(--secondary)' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+          <div style={{ width: '64px', height: '64px', background: 'rgba(34,197,94,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+            <Lock size={32} color="var(--secondary)" />
+          </div>
+          <h2 style={{ marginBottom: '0.5rem' }}>Secure Your Account</h2>
+          <p className="text-muted" style={{ fontSize: '0.9rem', lineHeight: '1.5' }}>This is your first login. Please set a new private password to continue to your classroom.</p>
+        </div>
+
+        <form onSubmit={handleReset} className="flex-col gap-5">
+          <div className="input-group">
+            <label className="input-label">New Password</label>
+            <div style={{ position: 'relative' }}>
+              <input 
+                type={showPass ? "text" : "password"} 
+                className="input-field" 
+                placeholder="Minimum 6 characters"
+                required 
+                value={newPass} 
+                onChange={e => setNewPass(e.target.value)} 
+                style={{ paddingRight: '45px' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPass(!showPass)}
+                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#7A8BA8', cursor: 'pointer', display: 'flex' }}
+              >
+                {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+
+          <div className="input-group">
+            <label className="input-label">Confirm Password</label>
+            <input 
+              type="password" 
+              className="input-field" 
+              placeholder="Repeat your password"
+              required 
+              value={confirmPass} 
+              onChange={e => setConfirmPass(e.target.value)} 
+            />
+          </div>
+
+          <button disabled={loading} type="submit" className="btn btn-primary w-full mt-2" style={{ padding: '1.1rem', fontSize: '1rem', fontWeight: 700 }}>
+            {loading ? 'Securing Account...' : 'Set Password & Enter Classroom'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 export default function StudentDashboard() {
   const { 
@@ -161,12 +243,17 @@ export default function StudentDashboard() {
               style={{ fontSize: '1.5rem', letterSpacing: '0.5rem', background: 'rgba(79,70,229,0.05)' }} 
             />
             {otpError && <p style={{ color: 'var(--danger)', fontSize: '0.85rem' }}>{otpError}</p>}
-            <button type="submit" className="btn btn-primary w-full mt-2" style={{ padding: '1rem' }}>Verify & Enter Classroom</button>
+            <button type="submit" className="btn btn-primary w-full mt-2" style={{ padding: '1rem' }}>Verify & Activate Account</button>
           </form>
           <p className="mt-6" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Didn't receive? <button className="btn-link" onClick={() => sendOTP(currentUser.phone, 'recaptcha-container')}>Resend OTP</button></p>
         </div>
       </div>
     );
+  }
+
+  // ── VIEW: PASSWORD RESET GATE (FOR FIRST TIME LOGIN) ──
+  if (currentUser && currentUser.needs_password_reset === true) {
+    return <PasswordResetGate />;
   }
 
   // ── VIEW: GLOBAL STUDENT (Tutor Directory + Admin Library) ──
