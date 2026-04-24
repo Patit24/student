@@ -209,6 +209,13 @@ function ExamResultsPanel({ tutorId, myBatches, myStudents }) {
 export default function TutorDashboard() {
   const toast    = useToast();
   const navigate = useNavigate();
+  const { 
+    currentUser, 
+    mockTutors,
+    mockBatches, setMockBatches,
+    mockStudents, setMockStudents,
+    mockSessions, setMockSessions,
+    mockLeads,
     updateBranding,
     updatePaymentStatus,
     updateBankingDetails,

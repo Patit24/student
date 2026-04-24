@@ -8,6 +8,7 @@ import TestCenter from '../components/TestCenter';
 import FeeProgressBar from '../components/FeeProgressBar';
 import StudentMaterialsPanel from '../components/StudentMaterialsPanel';
 import { subscribeGlobalAssets } from '../db.service';
+import { useToast } from '../components/Toast';
 
 export default function StudentDashboard() {
   const { 
