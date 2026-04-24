@@ -84,9 +84,15 @@ export default function AdminDashboard() {
     }
   };
 
+  const [assetTitle, setAssetTitle] = useState('');
+
   const handleGlobalFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    if (!assetTitle.trim()) {
+      toast.error('Please enter a title for this material first! ✍️');
+      return;
+    }
 
     setIsUploading(true);
     setUploadProgress(0);
@@ -94,13 +100,16 @@ export default function AdminDashboard() {
     try {
       const url = await uploadFileToStorage(file, 'admin_global', (pct) => setUploadProgress(pct));
       await uploadGlobalAsset({
+        title: assetTitle,
         name: file.name,
         size: file.size,
         url: url,
         type: file.type,
-        uploader: 'Super Admin'
+        uploader: 'Super Admin',
+        status: 'published' // Ensure it shows on homepage
       });
-      toast.success('Material uploaded successfully! 📚');
+      toast.success('Material published successfully! 📚');
+      setAssetTitle(''); // Reset
     } catch (err) {
       toast.error('Upload failed: ' + err.message);
     } finally {
@@ -280,6 +289,19 @@ export default function AdminDashboard() {
 
                 {/* Premium Upload Zone */}
                 <div className="global-upload-zone mb-10">
+                  <div className="flex-col gap-4 mb-6">
+                    <label className="stat-label" style={{ fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>1. Give your material a catchy title</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Class 12 Physics Formula Sheet..." 
+                      className="premium-input"
+                      value={assetTitle}
+                      onChange={(e) => setAssetTitle(e.target.value)}
+                      style={{ width: '100%', padding: '1rem', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+                    />
+                  </div>
+
+                  <label className="stat-label" style={{ fontSize: '0.9rem', marginBottom: '0.5rem', display: 'block' }}>2. Select the file to publish</label>
                   <input 
                     type="file" 
                     id="global-file-upload" 

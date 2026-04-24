@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useAppContext } from '../context/AuthContext';
 import { subscribeGlobalAssets, markAssetPurchased } from '../db.service';
+import { useToast } from '../components/Toast';
 import './Homepage.css';
 
 /* ── Scroll-reveal hook ── */
@@ -114,6 +115,7 @@ const LIVE_CLASSES = [
 ══════════════════════════════════════════ */
 export default function Homepage() {
   const navigate = useNavigate();
+  const toast = useToast();
   const { currentUser, purchasedAssets, isMockMode } = useAppContext();
   const [heroRef, heroVis] = useReveal();
   const [bentoRef, bentoVis] = useReveal();
@@ -125,36 +127,47 @@ export default function Homepage() {
   useEffect(() => {
     if (isMockMode) {
       setGlobalAssets([
-        { id: 'ga1', title: 'Calculus Guide', class_name: '12th', subject: 'Maths', is_free: true, price: 0, downloads: '1.2k', file_url: '#' },
-        { id: 'ga2', title: 'Physics Formula Sheet', class_name: '11th', subject: 'Physics', is_free: false, price: 99, downloads: '850', file_url: '#' },
-        { id: 'ga3', title: 'Organic Chemistry', class_name: '12th', subject: 'Chemistry', is_free: false, price: 149, downloads: '2.1k', file_url: '#' },
+        { id: 'ga1', title: 'Calculus Guide', name: 'calculus_notes.pdf', class_name: '12th', subject: 'Maths', is_free: true, price: 0, downloads: '1.2k', url: '#' },
+        { id: 'ga2', title: 'Physics Formula Sheet', name: 'formulas_final.pdf', class_name: '11th', subject: 'Physics', is_free: false, price: 99, downloads: '850', url: '#' },
+        { id: 'ga3', title: 'Organic Chemistry', name: 'chem_tricks.pdf', class_name: '12th', subject: 'Chemistry', is_free: false, price: 149, downloads: '2.1k', url: '#' },
       ]);
       return;
     }
     return subscribeGlobalAssets(setGlobalAssets);
   }, [isMockMode]);
 
+  // ── Auto-Download Logic ──
+  useEffect(() => {
+    if (currentUser && globalAssets.length > 0) {
+      const pendingDownloadId = localStorage.getItem('pending_download_id');
+      if (pendingDownloadId) {
+        const asset = globalAssets.find(a => a.id === pendingDownloadId);
+        if (asset) {
+          localStorage.removeItem('pending_download_id');
+          toast.success(`Success! Starting download: ${asset.title}`);
+          setTimeout(() => {
+            if (asset.url !== '#') window.open(asset.url, '_blank');
+          }, 1000);
+        }
+      }
+    }
+  }, [currentUser, globalAssets]);
+
   const handleAssetAction = async (asset) => {
     if (!currentUser) {
+      localStorage.setItem('pending_download_id', asset.id);
       navigate('/signup');
       return;
     }
-    const isPurchased = purchasedAssets?.includes(asset.id);
-    if (asset.is_free || isPurchased) {
-      alert(`Starting download for: ${asset.title}`);
-      if (asset.file_url !== '#') window.open(asset.file_url, '_blank');
+
+    // Logic for downloading/buying
+    if (asset.is_free || asset.price === 0) {
+      toast.success(`Starting download: ${asset.title}`);
+      if (asset.url !== '#') window.open(asset.url, '_blank');
     } else {
       const upiId = "yourname@upi";
       const upiUrl = `upi://pay?pa=${upiId}&pn=PPREducation&am=${asset.price}&cu=INR&tn=Payment for ${asset.title}`;
       window.location.href = upiUrl;
-      if (window.confirm(`Simulate payment of ₹${asset.price} for ${asset.title}?`)) {
-        try {
-          await markAssetPurchased(currentUser.uid, asset.id);
-          alert('Purchase successful!');
-        } catch (err) {
-          alert('Failed: ' + err.message);
-        }
-      }
     }
   };
 
@@ -413,32 +426,36 @@ export default function Homepage() {
             marginTop: '3rem' 
           }}>
             {globalAssets.map((asset) => {
-              const isPurchased = purchasedAssets?.includes(asset.id);
               return (
-                <div key={asset.id} className="hp-bento-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', border: '1px solid rgba(255,255,255,0.05)', position: 'relative' }}>
+                <div key={asset.id} className="hp-bento-card" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden' }}>
                   <div style={{ 
                     position: 'absolute', top: '0.75rem', right: '0.75rem', 
                     fontSize: '0.65rem', fontWeight: 800, padding: '2px 8px', borderRadius: '4px',
-                    background: asset.is_free ? 'rgba(16,185,129,0.2)' : isPurchased ? 'rgba(79,70,229,0.2)' : 'rgba(245,197,24,0.2)',
-                    color: asset.is_free ? '#10B981' : isPurchased ? '#4F46E5' : '#F5C518'
+                    background: 'rgba(245,197,24,0.2)',
+                    color: '#F5C518'
                   }}>
-                    {asset.is_free ? 'FREE' : isPurchased ? 'OWNED' : `₹${asset.price}`}
+                    FREE DOWNLOAD
                   </div>
                   <div style={{ background: 'rgba(245,197,24,0.1)', padding: '0.75rem', borderRadius: '12px', width: 'fit-content' }}>
                     <FileText size={24} color="#F5C518" />
                   </div>
                   <div>
-                    <h4 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{asset.title}</h4>
-                    <p style={{ fontSize: '0.8rem' }}>{asset.class_name} · {asset.subject}</p>
+                    <h4 style={{ fontSize: '1.1rem', marginBottom: '0.25rem', color: '#fff' }}>{asset.title}</h4>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <CheckCircle size={12} color="#10B981" /> {asset.name}
+                    </p>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      {asset.subject || 'General Resource'} · {(asset.size / 1024 / 1024).toFixed(1)} MB
+                    </p>
                   </div>
                   <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{asset.downloads || '0'} downloads</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Unlimited Access</span>
                     <button 
                       onClick={() => handleAssetAction(asset)}
-                      className="hp-btn-outline" 
-                      style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'white', cursor: 'pointer' }}
+                      className="hp-btn-primary" 
+                      style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', borderRadius: '8px', border: 'none' }}
                     >
-                      {asset.is_free || isPurchased ? 'Download' : 'Buy Now'}
+                      {currentUser ? 'Download Now' : 'Sign Up to Download'}
                     </button>
                   </div>
                 </div>
