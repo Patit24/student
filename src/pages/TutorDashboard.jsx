@@ -657,21 +657,38 @@ export default function TutorDashboard() {
   return (
     <div className="container mt-6 animate-fade-in" style={{ paddingLeft: '2rem', paddingRight: '2rem', paddingBottom: '6rem' }}>
       
-      {/* ── Dashboard Header ── */}
-      <div className="flex justify-between items-center mb-10 mobile-stack">
-        <div>
-          <h1 style={{ fontSize: 'clamp(1.8rem, 5vw, 2.8rem)', fontWeight: 900, letterSpacing: '-1.5px', marginBottom: '0.5rem' }}>
-            Tutor <span className="text-gradient">Dashboard</span> <span className="plan-badge">{tier.toUpperCase()} PLAN</span>
+      {/* ── Dashboard Header with Radial Glow ── */}
+      <div className="flex-col items-center mb-16 mobile-stack" style={{ 
+        padding: '4rem 2rem', 
+        borderRadius: '40px',
+        background: 'radial-gradient(circle at center, rgba(79,70,229,0.15) 0%, transparent 70%)',
+        position: 'relative',
+        marginTop: '2rem'
+      }}>
+        <div className="neon-border-wrapper animate-slide-up">
+          <h1 className="neon-text" style={{ 
+            fontSize: 'clamp(2rem, 6vw, 4rem)', 
+            fontWeight: 950, 
+            letterSpacing: '-2px', 
+            margin: 0,
+            textAlign: 'center',
+            textTransform: 'uppercase'
+          }}>
+            Tutor Dashboard
           </h1>
-          <p className="text-muted mt-1">{myStudents.length} Students · {myBatches.length} Batches</p>
         </div>
+        <p className="text-muted mt-4" style={{ fontSize: '1.1rem', fontWeight: 600, letterSpacing: '0.1em' }}>
+          {myStudents.length} STUDENTS • {myBatches.length} BATCHES
+        </p>
       </div>
 
       {/* ── Smart Go Live Bar ── */}
-      <div className="glass-panel p-2 mb-10 flex items-center gap-3 animate-slide-up" style={{ 
+      <div className="glass-panel p-2 mb-16 flex items-center gap-3 animate-slide-up" style={{ 
         borderRadius: '20px', 
         border: '1px solid rgba(255,255,255,0.1)',
-        background: 'rgba(255,255,255,0.02)'
+        background: 'rgba(255,255,255,0.02)',
+        marginTop: '2rem',
+        boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
       }}>
         <div style={{ flex: 1, position: 'relative' }}>
           <input 
@@ -884,6 +901,41 @@ export default function TutorDashboard() {
           </div>
         </div>
       )}
+
+      <style>{`
+        .neon-border-wrapper {
+          padding: 1.5rem 3rem;
+          border: 2px solid var(--primary);
+          border-radius: 24px;
+          box-shadow: 0 0 20px rgba(79, 70, 229, 0.2), inset 0 0 20px rgba(79, 70, 229, 0.2);
+          animation: neon-pulse 3s infinite ease-in-out;
+          position: relative;
+          background: rgba(10, 14, 26, 0.6);
+          backdrop-filter: blur(10px);
+        }
+
+        .neon-text {
+          color: #fff;
+          text-shadow: 0 0 10px rgba(79, 70, 229, 0.8), 0 0 20px rgba(79, 70, 229, 0.4), 0 0 30px rgba(79, 70, 229, 0.2);
+          animation: text-flicker 5s infinite;
+        }
+
+        @keyframes neon-pulse {
+          0%, 100% { 
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(79, 70, 229, 0.4), inset 0 0 20px rgba(79, 70, 229, 0.2);
+          }
+          50% { 
+            border-color: #a78bfa;
+            box-shadow: 0 0 40px rgba(167, 139, 250, 0.6), inset 0 0 30px rgba(167, 139, 250, 0.3);
+          }
+        }
+
+        @keyframes text-flicker {
+          0%, 19.999%, 22%, 62.999%, 64%, 64.999%, 70%, 100% { opacity: 1; }
+          20%, 21.999%, 63%, 63.999%, 65%, 69.999% { opacity: 0.95; }
+        }
+      `}</style>
     </div>
   );
 }
