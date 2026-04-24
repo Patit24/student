@@ -903,6 +903,9 @@ export default function TutorDashboard() {
       )}
 
       <style>{`
+        .input-field {
+          margin-bottom: 1rem;
+        }
         .neon-border-wrapper {
           padding: 1.5rem 3rem;
           border: 2px solid var(--primary);
