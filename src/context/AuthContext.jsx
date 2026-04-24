@@ -495,7 +495,7 @@ export function AppProvider({ children }) {
   // ─────────────────────────────────────────────────────────────────────────
   const value = {
     currentUser,
-    signup, login, logout, verifyOTP, forgotPassword,
+    signup, login, logout, sendOTP, verifyOTP, forgotPassword,
     purchasedAssets,
     updateTutorSubscription, updateBranding, updateTutorProfile,
     updatePaymentStatus, updateBankingDetails, setAutoRestriction,
