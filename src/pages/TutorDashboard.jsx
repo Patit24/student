@@ -279,7 +279,7 @@ export default function TutorDashboard() {
   const { isActive: isSubscribed } = useSubscription();
   const [otp, setOtp] = useState('');
   const [otpError, setOtpError] = useState('');
-  const { verifyOTP } = useAppContext();
+  const { verifyOTP, sendOTP } = useAppContext();
 
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
@@ -296,6 +296,7 @@ export default function TutorDashboard() {
   if (currentUser && currentUser.is_verified === false) {
     return (
       <div className="container flex justify-center items-center animate-fade-in" style={{ height: 'calc(100vh - 80px)' }}>
+        <div id="recaptcha-tutor-container"></div>
         <div className="glass-panel p-8 text-center" style={{ maxWidth: '400px', border: '1px solid var(--primary)' }}>
           <Shield size={48} color="var(--primary)" style={{ marginBottom: '1rem' }} />
           <h2 className="mb-2">Verify Your Authority</h2>
@@ -314,7 +315,7 @@ export default function TutorDashboard() {
             {otpError && <p style={{ color: 'var(--danger)', fontSize: '0.85rem' }}>{otpError}</p>}
             <button type="submit" className="btn btn-primary w-full mt-2" style={{ padding: '1rem' }}>Verify & Activate Dashboard</button>
           </form>
-          <p className="mt-6" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Didn't receive? <button className="btn-link" onClick={() => toast.info('OTP resent to ' + currentUser.phone)}>Resend OTP</button></p>
+          <p className="mt-6" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Didn't receive? <button className="btn-link" onClick={() => sendOTP(currentUser.phone, 'recaptcha-tutor-container')}>Resend OTP</button></p>
         </div>
       </div>
     );
@@ -330,6 +331,14 @@ export default function TutorDashboard() {
     }
     return () => clearInterval(knockInterval);
   }, [isLive, isLocked]);
+
+  useEffect(() => {
+    // Auto-trigger OTP if not verified
+    if (currentUser && currentUser.is_verified === false && currentUser.phone) {
+      sendOTP(currentUser.phone, 'recaptcha-tutor-container')
+        .catch(err => console.error('Auto-OTP failed:', err));
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     document.documentElement.style.setProperty('--primary', brandColor);

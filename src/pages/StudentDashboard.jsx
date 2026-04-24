@@ -73,11 +73,19 @@ export default function StudentDashboard() {
   const myExams = mockExams.filter(e => e.batchId === selectedEnrollment?.batch_id);
   const mySubmissions = mockSubmissions.filter(s => s.student_id === currentUser?.uid);
 
-  const [now, setNow] = useState(Date.now());
+  const { 
+    currentUser, verifyOTP, sendOTP, mockSessions, mockExams, 
+    mockSubmissions, mockStudents, mockBatches, mockTutors, 
+    logout 
+  } = useAppContext();
+
   useEffect(() => {
-    const interval = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(interval);
-  }, []);
+    // Auto-trigger OTP if not verified
+    if (currentUser && currentUser.is_verified === false && currentUser.phone) {
+      sendOTP(currentUser.phone, 'recaptcha-container')
+        .catch(err => console.error('Auto-OTP failed:', err));
+    }
+  }, [currentUser]);
 
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
@@ -135,6 +143,7 @@ export default function StudentDashboard() {
   if (currentUser && currentUser.is_verified === false) {
     return (
       <div className="container flex justify-center items-center animate-fade-in" style={{ height: 'calc(100vh - 80px)' }}>
+        <div id="recaptcha-container"></div>
         <div className="glass-panel p-8 text-center" style={{ maxWidth: '400px', border: '1px solid var(--primary)' }}>
           <Shield size={48} color="var(--primary)" style={{ marginBottom: '1rem' }} />
           <h2 className="mb-2">Verify Your Account</h2>
@@ -153,7 +162,7 @@ export default function StudentDashboard() {
             {otpError && <p style={{ color: 'var(--danger)', fontSize: '0.85rem' }}>{otpError}</p>}
             <button type="submit" className="btn btn-primary w-full mt-2" style={{ padding: '1rem' }}>Verify & Enter Classroom</button>
           </form>
-          <p className="mt-6" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Didn't receive? <button className="btn-link" onClick={() => alert('OTP resent to ' + currentUser.phone)}>Resend OTP</button></p>
+          <p className="mt-6" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Didn't receive? <button className="btn-link" onClick={() => sendOTP(currentUser.phone, 'recaptcha-container')}>Resend OTP</button></p>
         </div>
       </div>
     );

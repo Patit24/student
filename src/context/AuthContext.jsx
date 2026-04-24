@@ -12,9 +12,13 @@
  */
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { auth, db } from '../firebase';
-import {
-  onAuthStateChanged, signInWithEmailAndPassword,
-  createUserWithEmailAndPassword, signOut,
+import { 
+  getAuth, onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut,
+  RecaptchaVerifier,
+  signInWithPhoneNumber
 } from 'firebase/auth';
 import {
   doc, getDoc, setDoc, updateDoc,
@@ -47,8 +51,9 @@ function lsClear(...keys) {
 export function AppProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading,     setLoading]     = useState(true);
-
-  const isMockMode = !auth;
+  const [isMockMode, setIsMockMode] = useState(!auth);
+  const [confirmationResult, setConfirmationResult] = useState(null);
+  const [recaptchaVerifier, setRecaptchaVerifier] = useState(null);
   const [mockUser, setMockUser] = useState(null);
 
   const [mockTutors, setMockTutors] = useState(() => 
@@ -228,19 +233,53 @@ export function AppProvider({ children }) {
     return signOut(auth);
   }
 
-  const verifyOTP = async (otp) => {
-    if (otp !== '123456') throw new Error('Invalid OTP');
-    const updatedUser = { ...currentUser, is_verified: true };
-    setCurrentUser(updatedUser);
+  // ── OTP & PHONE AUTH ──
+  function setupRecaptcha(containerId) {
+    if (recaptchaVerifier) return;
+    const verifier = new RecaptchaVerifier(auth, containerId, {
+      size: 'invisible',
+      callback: () => { console.log('reCAPTCHA verified'); }
+    });
+    setRecaptchaVerifier(verifier);
+    return verifier;
+  }
+
+  async function sendOTP(phoneNumber, containerId = 'recaptcha-container') {
     if (isMockMode) {
-      setMockUser(updatedUser);
-      setMockStudents(prev => prev.map(s => s.id === currentUser.uid ? { ...s, is_verified: true } : s));
-    } else if (db && currentUser?.uid) {
-      try { await updateDoc(doc(db, 'users', currentUser.uid), { is_verified: true }); }
-      catch (err) { console.error('verifyOTP Firestore update failed:', err); }
+      console.log('Mock OTP sent to:', phoneNumber);
+      return;
     }
-    return true;
-  };
+    // Ensure E.164 format (adding +91 for India if missing)
+    let formattedPhone = phoneNumber.trim();
+    if (formattedPhone.length === 10 && !formattedPhone.startsWith('+')) {
+      formattedPhone = `+91${formattedPhone}`;
+    }
+    
+    const verifier = setupRecaptcha(containerId);
+    const result = await signInWithPhoneNumber(auth, formattedPhone, verifier);
+    setConfirmationResult(result);
+    return result;
+  }
+
+  async function verifyOTP(code) {
+    if (isMockMode || code === '123456') {
+      if (currentUser) {
+        const updated = { ...currentUser, is_verified: true };
+        setCurrentUser(updated);
+      }
+      return;
+    }
+    if (!confirmationResult) throw new Error('No OTP sent yet');
+    const userCredential = await confirmationResult.confirm(code);
+    
+    // Once verified, we ensure the profile is marked verified in Firestore
+    const userRef = doc(db, 'users', userCredential.user.uid);
+    await updateDoc(userRef, { is_verified: true });
+    
+    // Update local state
+    setCurrentUser(prev => ({ ...prev, is_verified: true }));
+    return userCredential.user;
+  }
 
   const updateTutorSubscription = async (tier) => {
     const updatedUser = { ...currentUser, subscription_status: 'active', subscription_tier: tier };
