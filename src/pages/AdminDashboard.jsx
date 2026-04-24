@@ -5,7 +5,8 @@ import {
   Users, DollarSign, Activity, CheckCircle, XCircle, 
   Trash2, Package, LogOut, LayoutDashboard, Search,
   TrendingUp, CreditCard, ShieldCheck, ExternalLink,
-  Lock, ArrowRight, UserCheck
+  Lock, ArrowRight, UserCheck, Upload, Zap, Globe,
+  BookOpen, Star, Loader2
 } from 'lucide-react';
 import { subscribeGlobalAssets, uploadGlobalAsset, deleteGlobalAsset, uploadFileToStorage } from '../db.service';
 import { useToast } from '../components/Toast';
@@ -88,11 +89,11 @@ export default function AdminDashboard() {
   const [assetCategory, setAssetCategory] = useState('general'); // general, neet, jee
   const [assetType, setAssetType] = useState('material'); // material, mock, suggestion
 
-  const handleGlobalFileUpload = async (e) => {
+  const handleQuickUpload = async (e, category, title, materialType) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (!assetTitle.trim()) {
-      toast.error('Please enter a title for this material first! ✍️');
+    if (!title?.trim()) {
+      toast.error('Please enter a title before uploading! ✍️');
       return;
     }
 
@@ -100,11 +101,11 @@ export default function AdminDashboard() {
     setUploadProgress(0);
 
     try {
-      const url = await uploadFileToStorage(file, 'admin_global', (pct) => setUploadProgress(pct));
+      const url = await uploadFileToStorage(file, `admin_${category}`, (pct) => setUploadProgress(pct));
       await uploadGlobalAsset({
-        title: assetTitle,
-        category: assetCategory,
-        material_type: assetType,
+        title,
+        category,
+        material_type: materialType,
         name: file.name,
         size: file.size,
         url: url,
@@ -115,13 +116,17 @@ export default function AdminDashboard() {
         price: 0,
         created_at: new Date().toISOString()
       });
-      toast.success(`${assetCategory.toUpperCase()} ${assetType} published! 🚀`);
-      setAssetTitle('');
+      toast.success(`${category.toUpperCase()} ${materialType} published! 🚀`);
+      // Clear inputs manually
+      if (category === 'neet') document.getElementById('neet-title').value = '';
+      if (category === 'jee') document.getElementById('jee-title').value = '';
+      if (category === 'general') document.getElementById('global-title').value = '';
     } catch (err) {
       toast.error('Upload failed: ' + err.message);
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
+      e.target.value = null; // Clear file input
     }
   };
 
@@ -294,74 +299,125 @@ export default function AdminDashboard() {
                   </h3>
                 </div>
 
-                <div className="glass-card p-10" style={{ borderRadius: '24px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <div style={{ marginBottom: '2.5rem' }}>
-                    <h3 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '0.5rem' }}>Publish <span className="hp-yellow">New Material</span></h3>
-                    <p className="text-muted">Target your audience with specialized NEET/JEE resources.</p>
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                {/* ── NEET UPLOAD ZONE ── */}
+                <div className="glass-card p-10 mb-10" style={{ borderRadius: '24px', background: 'rgba(5,130,100,0.03)', border: '1px solid rgba(16,185,129,0.1)' }}>
+                  <div className="flex justify-between items-center mb-6">
                     <div>
-                      <label className="stat-label" style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.8rem', display: 'block' }}>1. Resource Title</label>
+                      <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#10B981' }}>NEET <span style={{ color: '#fff' }}>Medical Hub</span></h3>
+                      <p className="text-muted">Upload Mock Tests and Materials for Medical aspirants.</p>
+                    </div>
+                    <div style={{ background: 'rgba(16,185,129,0.1)', padding: '0.8rem', borderRadius: '12px' }}>
+                      <Activity size={24} color="#10B981" />
+                    </div>
+                  </div>
+                  
+                  <div className="flex-col gap-4">
+                    <div className="flex gap-4">
                       <input 
                         type="text" 
-                        placeholder="e.g. Physics Mock Exam #1" 
-                        className="premium-input"
-                        value={assetTitle}
-                        onChange={(e) => setAssetTitle(e.target.value)}
-                        style={{ width: '100%', padding: '1.2rem', borderRadius: '14px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
+                        placeholder="Material Title (e.g. Biology Unit Test #1)" 
+                        className="premium-input flex-1"
+                        id="neet-title"
+                        style={{ padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(16,185,129,0.2)', color: 'white' }}
                       />
+                      <select 
+                        id="neet-type"
+                        className="premium-input"
+                        style={{ padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(16,185,129,0.2)', color: 'white' }}
+                      >
+                        <option value="material">Study Material</option>
+                        <option value="mock">Mock Exam</option>
+                        <option value="suggestion">Last-Min Suggestion</option>
+                      </select>
                     </div>
-
-                    <div className="grid gap-6" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                      <div>
-                        <label className="stat-label" style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.8rem', display: 'block' }}>2. Category</label>
-                        <select 
-                          className="premium-input"
-                          value={assetCategory}
-                          onChange={(e) => setAssetCategory(e.target.value)}
-                          style={{ width: '100%', padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
-                        >
-                          <option value="general">General (Lead Magnets)</option>
-                          <option value="neet">NEET Aspirants</option>
-                          <option value="jee">JEE Aspirants</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="stat-label" style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '0.8rem', display: 'block' }}>3. Content Type</label>
-                        <select 
-                          className="premium-input"
-                          value={assetType}
-                          onChange={(e) => setAssetType(e.target.value)}
-                          style={{ width: '100%', padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white' }}
-                        >
-                          <option value="material">Study Material</option>
-                          <option value="mock">Weekly Mock Exam</option>
-                          <option value="suggestion">Last-Min Suggestion</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div style={{ padding: '2.5rem', borderRadius: '20px', border: '2px dashed rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.01)', textAlign: 'center' }}>
+                    <div className="mt-4">
                       <input 
                         type="file" 
-                        id="global-file-upload" 
-                        onChange={handleGlobalFileUpload}
-                        style={{ display: 'none' }}
+                        id="neet-file" 
+                        onChange={(e) => handleQuickUpload(e, 'neet', document.getElementById('neet-title').value, document.getElementById('neet-type').value)}
+                        hidden 
                       />
-                      <label htmlFor="global-file-upload" style={{ cursor: 'pointer' }}>
-                        <div className="flex-col items-center gap-4">
-                          <div style={{ background: 'rgba(245,197,24,0.1)', padding: '1rem', borderRadius: '50%', color: '#F5C518' }}>
-                            {isUploading ? <Loader2 className="animate-spin" size={32} /> : <Upload size={32} />}
-                          </div>
-                          <div>
-                            <p style={{ fontWeight: 700, marginBottom: '0.2rem' }}>{isUploading ? `Uploading ${uploadProgress}%` : 'Click to Upload Material'}</p>
-                            <p className="text-muted" style={{ fontSize: '0.8rem' }}>PDF, ZIP, or DOC (Max 50MB)</p>
-                          </div>
-                        </div>
+                      <label htmlFor="neet-file" className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#10B981', border: 'none', padding: '1rem', borderRadius: '12px', cursor: 'pointer', justifyContent: 'center' }}>
+                        <Upload size={20} /> Publish to NEET Hub
                       </label>
                     </div>
+                  </div>
+                </div>
+
+                {/* ── JEE UPLOAD ZONE ── */}
+                <div className="glass-card p-10 mb-10" style={{ borderRadius: '24px', background: 'rgba(99,102,241,0.03)', border: '1px solid rgba(99,102,241,0.1)' }}>
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#6366F1' }}>JEE <span style={{ color: '#fff' }}>Engineering Hub</span></h3>
+                      <p className="text-muted">Upload Mock Tests and Materials for Engineering aspirants.</p>
+                    </div>
+                    <div style={{ background: 'rgba(99,102,241,0.1)', padding: '0.8rem', borderRadius: '12px' }}>
+                      <Zap size={24} color="#6366F1" />
+                    </div>
+                  </div>
+                  
+                  <div className="flex-col gap-4">
+                    <div className="flex gap-4">
+                      <input 
+                        type="text" 
+                        placeholder="Material Title (e.g. Physics Mock #4)" 
+                        className="premium-input flex-1"
+                        id="jee-title"
+                        style={{ padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(99,102,241,0.2)', color: 'white' }}
+                      />
+                      <select 
+                        id="jee-type"
+                        className="premium-input"
+                        style={{ padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(99,102,241,0.2)', color: 'white' }}
+                      >
+                        <option value="material">Study Material</option>
+                        <option value="mock">Mock Exam</option>
+                        <option value="suggestion">Last-Min Suggestion</option>
+                      </select>
+                    </div>
+                    <div className="mt-4">
+                      <input 
+                        type="file" 
+                        id="jee-file" 
+                        onChange={(e) => handleQuickUpload(e, 'jee', document.getElementById('jee-title').value, document.getElementById('jee-type').value)}
+                        hidden 
+                      />
+                      <label htmlFor="jee-file" className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#6366F1', border: 'none', padding: '1rem', borderRadius: '12px', cursor: 'pointer', justifyContent: 'center' }}>
+                        <Upload size={20} /> Publish to JEE Hub
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── GLOBAL LIBRARY UPLOAD ── */}
+                <div className="glass-card p-10 mb-10" style={{ borderRadius: '24px', background: 'rgba(245,197,24,0.03)', border: '1px solid rgba(245,197,24,0.1)' }}>
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#F5C518' }}>Global <span style={{ color: '#fff' }}>Library</span></h3>
+                      <p className="text-muted">General lead magnets and public resources.</p>
+                    </div>
+                    <div style={{ background: 'rgba(245,197,24,0.1)', padding: '0.8rem', borderRadius: '12px' }}>
+                      <Globe size={24} color="#F5C518" />
+                    </div>
+                  </div>
+                  
+                  <div className="flex-col gap-4">
+                    <input 
+                      type="text" 
+                      placeholder="Resource Title (e.g. Free Formula Ebook)" 
+                      className="premium-input"
+                      id="global-title"
+                      style={{ width: '100%', marginBottom: '1rem', padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(245,197,24,0.2)', color: 'white' }}
+                    />
+                    <input 
+                      type="file" 
+                      id="global-file" 
+                      onChange={(e) => handleQuickUpload(e, 'general', document.getElementById('global-title').value, 'material')}
+                      hidden 
+                    />
+                    <label htmlFor="global-file" className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#F5C518', color: '#000', border: 'none', padding: '1rem', borderRadius: '12px', cursor: 'pointer', fontWeight: 700, justifyContent: 'center' }}>
+                      <Upload size={20} /> Publish to Public Library
+                    </label>
                   </div>
                 </div>
 

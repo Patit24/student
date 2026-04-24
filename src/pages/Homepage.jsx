@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   BookOpen, Zap, Shield, Play, Users, Star,
-  ChevronRight, MonitorPlay, Brain, Lock, CheckCircle, Search, MapPin, FileText, CheckSquare
+  ChevronRight, MonitorPlay, Brain, Lock, CheckCircle, Search, MapPin, FileText, CheckSquare,
+  Monitor, Globe, Activity
 } from 'lucide-react';
 import { useAppContext } from '../context/AuthContext';
 import { subscribeGlobalAssets, markAssetPurchased } from '../db.service';
@@ -410,17 +411,6 @@ export default function Homepage() {
                   <span className="hp-chat-time">{msg.t}</span>
                 </div>
               ))}
-            </div>
-            <div className="hp-chat-input-row">
-              <input type="text" placeholder="Type a message…" className="hp-chat-input" />
-              <button className="hp-send-btn">➤</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-  const [activeHub, setActiveHub] = useState('neet'); // neet, jee
-
   return (
     <div className="hp-wrapper">
       <Navbar />
@@ -428,172 +418,149 @@ export default function Homepage() {
       {/* ── HERO SECTION ── */}
       <section className="hp-hero" ref={heroRef} style={{ opacity: heroVis ? 1 : 0, transform: heroVis ? 'translateY(0)' : 'translateY(30px)', transition: 'all 0.8s ease-out' }}>
         <div className="container">
-          <div className="hp-badge"><span>SaaS EDUCATION PORTAL</span></div>
-          <h1>Empowering <span className="hp-yellow">Aspirants</span><br/>With Premium Resources</h1>
-          <p>Access curated study materials, weekly mock exams, and last-minute suggestions from top experts. All in one professional dashboard.</p>
-          <div className="hp-hero-btns">
-            <button className="hp-btn-primary" onClick={() => navigate('/signup')}>Start Learning Free</button>
-            <button className="hp-btn-outline" onClick={() => navigate('/about')}>View Curriculum</button>
-          </div>
+          <div className="hp-badge"><span>PPR EDUCATION ECOSYSTEM</span></div>
+          <h1>Empowering <span className="hp-yellow">Aspirants</span><br/>With Specialized Hubs</h1>
+          <p>Access dedicated resources for NEET and JEE. Mock exams, curated materials, and expert suggestions tailored for your success.</p>
         </div>
       </section>
 
-      {/* ── ASPIRANT HUB (SaaS Tabbed Dashboard) ── */}
-      <section className="hp-section" style={{ background: '#0a0f1c', padding: '6rem 2rem' }}>
+      {/* ── NEET SPECIALIZED HUB ── */}
+      <section className="hp-section" style={{ background: 'linear-gradient(to bottom, #0a0f1c, #051a14)', padding: '6rem 2rem' }}>
         <div className="container">
-          <div className="hp-section-head" style={{ marginBottom: '4rem' }}>
-            <h2>Aspirant <span className="hp-yellow">Command Center</span></h2>
-            <p>Select your learning path to access specialized resources.</p>
+          <div className="flex justify-between items-center mb-12">
+            <div style={{ textAlign: 'left' }}>
+              <div className="hp-badge" style={{ background: 'rgba(16,185,129,0.1)', color: '#10B981', marginLeft: 0 }}><span>MEDICAL STREAM</span></div>
+              <h2 style={{ fontSize: '3rem', fontWeight: 900, marginTop: '1rem' }}>NEET <span style={{ color: '#10B981' }}>Aspirant Hub</span></h2>
+              <p className="text-muted" style={{ maxWidth: '500px' }}>Your dedicated sanctuary for medical excellence. Weekly mocks and bio-focused materials.</p>
+            </div>
+            <img src="/assets/neet_icon.png" alt="NEET" style={{ width: '180px', filter: 'drop-shadow(0 0 30px rgba(16,185,129,0.3))' }} />
           </div>
 
-          {/* ── Professional Tab Switcher ── */}
-          <div style={{ 
-            display: 'flex', 
-            background: 'rgba(255,255,255,0.03)', 
-            padding: '6px', 
-            borderRadius: '16px', 
-            width: 'fit-content', 
-            margin: '0 auto 4rem',
-            border: '1px solid rgba(255,255,255,0.08)'
-          }}>
-            <button 
-              onClick={() => setActiveHub('neet')}
-              style={{ 
-                padding: '1rem 2.5rem', 
-                borderRadius: '12px', 
-                border: 'none', 
-                cursor: 'pointer',
-                fontWeight: 700,
-                transition: 'all 0.3s ease',
-                background: activeHub === 'neet' ? '#10B981' : 'transparent',
-                color: activeHub === 'neet' ? '#fff' : 'rgba(255,255,255,0.5)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.8rem'
-              }}
-            >
-              <Zap size={18} /> Medical (NEET)
-            </button>
-            <button 
-              onClick={() => setActiveHub('jee')}
-              style={{ 
-                padding: '1rem 2.5rem', 
-                borderRadius: '12px', 
-                border: 'none', 
-                cursor: 'pointer',
-                fontWeight: 700,
-                transition: 'all 0.3s ease',
-                background: activeHub === 'jee' ? '#6366F1' : 'transparent',
-                color: activeHub === 'jee' ? '#fff' : 'rgba(255,255,255,0.5)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.8rem'
-              }}
-            >
-              <Monitor size={18} /> Engineering (JEE)
-            </button>
-          </div>
-
-          <div className="grid gap-12" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', alignItems: 'center' }}>
-            {/* Visual Side */}
-            <div className="animate-float" style={{ textAlign: 'center' }}>
-              <img 
-                src={activeHub === 'neet' ? "/assets/neet_icon.png" : "/assets/jee_icon.png"} 
-                alt="Hub Icon" 
-                style={{ width: '100%', maxWidth: '400px', filter: 'drop-shadow(0 20px 50px rgba(0,0,0,0.5))' }} 
-              />
-              <div style={{ marginTop: '2rem' }}>
-                <h3 style={{ fontSize: '2rem', color: activeHub === 'neet' ? '#10B981' : '#6366F1', marginBottom: '1rem' }}>
-                  {activeHub === 'neet' ? 'Medical Excellence' : 'Engineering Mastery'}
-                </h3>
-                <p style={{ color: 'var(--text-muted)', maxWidth: '400px', margin: '0 auto' }}>
-                  {activeHub === 'neet' 
-                    ? 'Explore biological depths with curated mock tests and expert-level material.' 
-                    : 'Solve complex engineering challenges with precision-targeted resources.'}
-                </p>
+          <div className="grid gap-12" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))' }}>
+            {/* NEET MOCKS */}
+            <div className="glass-card p-8" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(16,185,129,0.1)', borderRadius: '24px' }}>
+              <h3 className="flex items-center gap-3 mb-6" style={{ fontSize: '1.2rem', color: '#10B981' }}><Zap size={20} /> Weekly Mock Exams</h3>
+              <div className="flex-col gap-4">
+                {globalAssets.filter(a => a.category === 'neet' && a.material_type === 'mock').map(asset => (
+                  <div key={asset.id} className="flex justify-between items-center p-4" style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <span style={{ fontSize: '0.9rem' }}>{asset.title}</span>
+                    <button onClick={() => handleAssetAction(asset)} className="hp-btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.75rem' }}>Start</button>
+                  </div>
+                ))}
+                {globalAssets.filter(a => a.category === 'neet' && a.material_type === 'mock').length === 0 && <p className="text-muted" style={{ fontSize: '0.8rem' }}>No mocks available yet.</p>}
               </div>
             </div>
 
-            {/* Content Side */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              <h4 className="text-muted" style={{ textTransform: 'uppercase', fontSize: '0.75rem', letterSpacing: '2px' }}>Latest Resources</h4>
-              {globalAssets.filter(a => a.category === activeHub).map(asset => (
-                <div key={asset.id} className="glass-card" style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: '1.5rem', 
-                  padding: '1.5rem', 
-                  borderRadius: '20px', 
-                  background: 'rgba(255,255,255,0.02)',
-                  border: '1px solid rgba(255,255,255,0.05)',
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer'
-                }}>
-                  <div style={{ 
-                    background: activeHub === 'neet' ? 'rgba(16,185,129,0.1)' : 'rgba(99,102,241,0.1)', 
-                    padding: '1rem', 
-                    borderRadius: '12px',
-                    color: activeHub === 'neet' ? '#10B981' : '#6366F1'
-                  }}>
-                    {asset.material_type === 'mock' ? <CheckSquare size={24} /> : <FileText size={24} />}
+            {/* NEET MATERIALS */}
+            <div className="glass-card p-8" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(16,185,129,0.1)', borderRadius: '24px' }}>
+              <h3 className="flex items-center gap-3 mb-6" style={{ fontSize: '1.2rem', color: '#10B981' }}><BookOpen size={20} /> Study Materials</h3>
+              <div className="flex-col gap-4">
+                {globalAssets.filter(a => a.category === 'neet' && a.material_type === 'material').map(asset => (
+                  <div key={asset.id} className="flex justify-between items-center p-4" style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <span style={{ fontSize: '0.9rem' }}>{asset.title}</span>
+                    <button onClick={() => handleAssetAction(asset)} className="hp-btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.75rem' }}>View</button>
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <h5 style={{ fontSize: '1.1rem', marginBottom: '0.2rem' }}>{asset.title}</h5>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{asset.material_type?.toUpperCase()}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* NEET SUGGESTIONS */}
+            <div className="glass-card p-8" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(16,185,129,0.1)', borderRadius: '24px' }}>
+              <h3 className="flex items-center gap-3 mb-6" style={{ fontSize: '1.2rem', color: '#10B981' }}><Star size={20} /> Last-Min Suggestions</h3>
+              <div className="flex-col gap-4">
+                {globalAssets.filter(a => a.category === 'neet' && a.material_type === 'suggestion').map(asset => (
+                  <div key={asset.id} className="flex justify-between items-center p-4" style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <span style={{ fontSize: '0.9rem' }}>{asset.title}</span>
+                    <button onClick={() => handleAssetAction(asset)} className="hp-btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.75rem' }}>Get</button>
                   </div>
-                  <button 
-                    onClick={() => handleAssetAction(asset)}
-                    className="hp-btn-outline" 
-                    style={{ padding: '0.6rem 1.2rem', fontSize: '0.8rem' }}
-                  >
-                    Access
-                  </button>
-                </div>
-              ))}
-              {globalAssets.filter(a => a.category === activeHub).length === 0 && (
-                <div style={{ padding: '3rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '20px', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                  <p className="text-muted">No {activeHub.toUpperCase()} resources yet. Stay tuned!</p>
-                </div>
-              )}
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── PUBLIC LIBRARY ── */}
-      <section className="hp-section" style={{ background: '#070b14', padding: '5rem 2rem' }}>
+      {/* ── JEE SPECIALIZED HUB ── */}
+      <section className="hp-section" style={{ background: 'linear-gradient(to bottom, #0a0f1c, #0d0b26)', padding: '6rem 2rem' }}>
+        <div className="container">
+          <div className="flex flex-row-reverse justify-between items-center mb-12">
+            <div style={{ textAlign: 'right' }}>
+              <div className="hp-badge" style={{ background: 'rgba(99,102,241,0.1)', color: '#6366F1', marginRight: 0 }}><span>ENGINEERING STREAM</span></div>
+              <h2 style={{ fontSize: '3rem', fontWeight: 900, marginTop: '1rem' }}>JEE <span style={{ color: '#6366F1' }}>Aspirant Hub</span></h2>
+              <p className="text-muted" style={{ maxWidth: '500px', marginLeft: 'auto' }}>Master physics, math and chemistry. Precision tools for engineering success.</p>
+            </div>
+            <img src="/assets/jee_icon.png" alt="JEE" style={{ width: '180px', filter: 'drop-shadow(0 0 30px rgba(99,102,241,0.3))' }} />
+          </div>
+
+          <div className="grid gap-12" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))' }}>
+            {/* JEE MOCKS */}
+            <div className="glass-card p-8" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(99,102,241,0.1)', borderRadius: '24px' }}>
+              <h3 className="flex items-center gap-3 mb-6" style={{ fontSize: '1.2rem', color: '#6366F1' }}><Monitor size={20} /> Weekly Mock Exams</h3>
+              <div className="flex-col gap-4">
+                {globalAssets.filter(a => a.category === 'jee' && a.material_type === 'mock').map(asset => (
+                  <div key={asset.id} className="flex justify-between items-center p-4" style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <span style={{ fontSize: '0.9rem' }}>{asset.title}</span>
+                    <button onClick={() => handleAssetAction(asset)} className="hp-btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.75rem' }}>Start</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* JEE MATERIALS */}
+            <div className="glass-card p-8" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(99,102,241,0.1)', borderRadius: '24px' }}>
+              <h3 className="flex items-center gap-3 mb-6" style={{ fontSize: '1.2rem', color: '#6366F1' }}><BookOpen size={20} /> Study Materials</h3>
+              <div className="flex-col gap-4">
+                {globalAssets.filter(a => a.category === 'jee' && a.material_type === 'material').map(asset => (
+                  <div key={asset.id} className="flex justify-between items-center p-4" style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <span style={{ fontSize: '0.9rem' }}>{asset.title}</span>
+                    <button onClick={() => handleAssetAction(asset)} className="hp-btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.75rem' }}>View</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* JEE SUGGESTIONS */}
+            <div className="glass-card p-8" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(99,102,241,0.1)', borderRadius: '24px' }}>
+              <h3 className="flex items-center gap-3 mb-6" style={{ fontSize: '1.2rem', color: '#6366F1' }}><Zap size={20} /> Last-Min Suggestions</h3>
+              <div className="flex-col gap-4">
+                {globalAssets.filter(a => a.category === 'jee' && a.material_type === 'suggestion').map(asset => (
+                  <div key={asset.id} className="flex justify-between items-center p-4" style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <span style={{ fontSize: '0.9rem' }}>{asset.title}</span>
+                    <button onClick={() => handleAssetAction(asset)} className="hp-btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.75rem' }}>Get</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── PUBLIC/GLOBAL LIBRARY ── */}
+      <section className="hp-section" style={{ background: '#0a0f1c', padding: '6rem 2rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
         <div className="container">
           <div className="hp-section-head">
-            <h2>Free <span className="hp-yellow">Library</span></h2>
-            <p>High-value lead magnets for everyone.</p>
+            <h2>Global <span className="hp-yellow">Public Library</span></h2>
+            <p>Free resources available for all aspirants.</p>
           </div>
           
           <div className="grid gap-6 mt-12" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
             {globalAssets.filter(a => !a.category || a.category === 'general').map((asset) => (
               <div key={asset.id} className="glass-card p-6" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px' }}>
                 <div style={{ background: 'rgba(245,197,24,0.1)', padding: '0.8rem', borderRadius: '14px', width: 'fit-content', marginBottom: '1.5rem' }}>
-                  <FileText size={24} color="#F5C518" />
+                  <Globe size={24} color="#F5C518" />
                 </div>
                 <h4 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>{asset.title}</h4>
-                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>{asset.name}</p>
-                <button 
-                  onClick={() => handleAssetAction(asset)}
-                  className="hp-btn-primary" 
-                  style={{ width: '100%', borderRadius: '12px' }}
-                >
-                  {currentUser ? 'Download' : 'Sign Up'}
-                </button>
+                <button onClick={() => handleAssetAction(asset)} className="hp-btn-primary" style={{ width: '100%', borderRadius: '12px' }}>Download</button>
               </div>
             ))}
           </div>
         </div>
       </section>
-
       {/* ── FINAL CTA ── */}
       <section className="hp-final-cta">
         <div className="hp-final-inner">
-          <h2>Ready to Build Your<br /><span className="hp-yellow">Coaching Empire?</span></h2>
-          <p>Join 500+ tutors already streaming on the most advanced education platform in India.</p>
+          <h2>Ready to Achieve Your<br /><span className="hp-yellow">Dream Rank?</span></h2>
+          <p>Join thousands of aspirants already using the most advanced education platform in India.</p>
           <div className="hp-cta-row" style={{ justifyContent: 'center' }}>
             <Link to="/signup" className="hp-btn-primary" id="final-cta-signup">
               <Zap size={18} /> Start Free Today
@@ -604,6 +571,7 @@ export default function Homepage() {
         </div>
       </section>
 
+      <Footer />
     </div>
   );
 }
