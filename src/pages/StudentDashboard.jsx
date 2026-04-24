@@ -140,6 +140,7 @@ export default function StudentDashboard() {
   const isOverdue = selectedEnrollment?.payment_status === 'overdue' && autoRestrictionOn;
 
   const { roomId } = useParams();
+  const jitsiApiRef = useRef(null);
   const [activeParticipants, setActiveParticipants] = useState([]);
 
   // OTP States
@@ -204,18 +205,52 @@ export default function StudentDashboard() {
       return;
     }
     
-    // Ensure targetRoom is a string and not a browser event object
     const cleanTargetRoom = (typeof targetRoom === 'string') ? targetRoom : null;
-    
     const finalRoom = cleanTargetRoom || roomId || `ppr-${selectedEnrollment?.batch_id}`;
+    
     if (!finalRoom || typeof finalRoom !== 'string') {
       toast.error('No active session found.');
       return;
     }
 
     setInClass(true);
-    setJoinState('approved');
-    setMeetingRoom(finalRoom);
+    
+    // Small timeout to ensure container is rendered
+    setTimeout(() => {
+      const domain = 'meet.jit.si';
+      const options = {
+        roomName: finalRoom,
+        width: '100%',
+        height: '100%',
+        parentNode: document.getElementById('student-jitsi-container'),
+        userInfo: { displayName: currentUser.name || 'Student' },
+        configOverwrite: {
+          startWithAudioMuted: true,
+          startWithVideoMuted: true,
+          prejoinPageEnabled: false,
+          disableThirdPartyRequests: true,
+          // Premium Branding Removal
+          hideConferenceTimer: false,
+          hideConferenceSubject: true,
+          toolbarButtons: ['microphone', 'camera', 'fullscreen', 'hangup', 'chat', 'settings', 'raisehand', 'videoquality', 'filmstrip', 'tileview'],
+        },
+        interfaceConfigOverwrite: {
+          SHOW_JITSI_WATERMARK: false,
+          SHOW_WATERMARK_FOR_GUESTS: false,
+          SHOW_BRAND_WATERMARK: false,
+          DEFAULT_BACKGROUND: '#0a0e1a',
+          MOBILE_APP_PROMO: false
+        }
+      };
+
+      if (window.JitsiMeetExternalAPI) {
+        const api = new window.JitsiMeetExternalAPI(domain, options);
+        jitsiApiRef.current = api;
+        api.addEventListener('videoConferenceJoined', () => setJoinState('approved'));
+        api.addEventListener('participantJoined', (data) => setActiveParticipants(prev => [...prev, data]));
+        api.addEventListener('participantLeft', (data) => setActiveParticipants(prev => prev.filter(p => p.id !== data.id)));
+      }
+    }, 500);
   };
 
   useEffect(() => {
@@ -225,6 +260,10 @@ export default function StudentDashboard() {
   }, [roomId, currentUser]);
 
   const handleLeaveClass = () => {
+    if (jitsiApiRef.current) {
+      jitsiApiRef.current.dispose();
+      jitsiApiRef.current = null;
+    }
     setInClass(false);
     setJoinState('idle');
     setActiveParticipants([]);
@@ -451,13 +490,16 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          {/* Huddle01 Container */}
-          <div style={{ flex: 1 }}>
-            <iframe
-              src={`https://iframe.huddle01.com/${meetingRoom}`}
-              style={{ width: '100%', height: '100%', border: 'none' }}
-              allow="camera; microphone; display-capture; autoplay; fullscreen; speaker"
-            ></iframe>
+          {/* Private Meeting Container */}
+          <div id="student-jitsi-container" style={{ flex: 1 }}>
+            {joinState !== 'approved' && (
+              <div className="flex justify-center items-center h-full" style={{ color: 'white' }}>
+                <div className="text-center">
+                  <div className="login-spinner mb-4" style={{ margin: '0 auto' }}></div>
+                  <p>Entering Secure Engine...</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Bottom Control Bar */}

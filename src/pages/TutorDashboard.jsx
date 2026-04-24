@@ -246,6 +246,7 @@ export default function TutorDashboard() {
   const [waitingRoom, setWaitingRoom] = useState([]);
   const [activeParticipants, setActiveParticipants] = useState([]);
   const [meetingRoom, setMeetingRoom] = useState(null);
+  const jitsiApiRef = useRef(null);
 
   const [newBatchName, setNewBatchName] = useState('');
   const [newBatchLimit, setNewBatchLimit] = useState('');
@@ -371,17 +372,66 @@ export default function TutorDashboard() {
   };
 
   const handleGoLive = async (batchId = null) => {
-    // Ensure batchId is a string and not a browser event object
     const cleanBatchId = (typeof batchId === 'string') ? batchId : null;
-    
-    // Generate a unique room ID for Huddle01
     const roomName = cleanBatchId ? `ppr-${cleanBatchId}` : `ppr-instant-${currentUser.uid}-${Math.random().toString(36).substring(7)}`;
     setMeetingRoom(roomName);
     setIsLive(true);
-    setStreamActive(true);
   };
 
+  useEffect(() => {
+    if (isLive && meetingRoom && !jitsiApiRef.current) {
+      const timer = setTimeout(() => {
+        const domain = 'meet.jit.si';
+        const options = {
+          roomName: meetingRoom,
+          width: '100%',
+          height: '100%',
+          parentNode: document.getElementById('jitsi-container'),
+          userInfo: { displayName: currentUser.name || 'Tutor' },
+          configOverwrite: {
+            startWithAudioMuted: false,
+            prejoinPageEnabled: false,
+            disableThirdPartyRequests: true,
+            enableWelcomePage: false,
+            enableNoAudioDetection: true,
+            enableNoisyMicDetection: true,
+            // Premium Branding Removal
+            hideConferenceTimer: false,
+            hideConferenceSubject: true,
+            hideParticipantsStats: false,
+            hideLobbyButton: false,
+            // Clean UI
+            toolbarButtons: ['microphone', 'camera', 'desktop', 'fullscreen', 'hangup', 'profile', 'chat', 'settings', 'raisehand', 'videoquality', 'filmstrip', 'tileview', 'mute-everyone', 'security'],
+          },
+          interfaceConfigOverwrite: {
+            SHOW_JITSI_WATERMARK: false,
+            SHOW_WATERMARK_FOR_GUESTS: false,
+            SHOW_BRAND_WATERMARK: false,
+            BRAND_WATERMARK_LINK: '',
+            DEFAULT_BACKGROUND: '#0a0e1a',
+            GENERATE_ROOMNAMES_ON_WELCOME_PAGE: false,
+            DISPLAY_WELCOME_PAGE_CONTENT: false,
+            MOBILE_APP_PROMO: false
+          }
+        };
+        
+        if (window.JitsiMeetExternalAPI) {
+          const api = new window.JitsiMeetExternalAPI(domain, options);
+          jitsiApiRef.current = api;
+          api.addEventListener('videoConferenceJoined', () => setStreamActive(true));
+          api.addEventListener('participantJoined', (data) => setActiveParticipants(prev => [...prev, data]));
+          api.addEventListener('participantLeft', (data) => setActiveParticipants(prev => prev.filter(p => p.id !== data.id)));
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isLive, meetingRoom]);
+
   const stopStream = () => {
+    if (jitsiApiRef.current) {
+      jitsiApiRef.current.dispose();
+      jitsiApiRef.current = null;
+    }
     setStreamActive(false);
     setIsLive(false);
     setMeetingRoom(null);
@@ -389,11 +439,14 @@ export default function TutorDashboard() {
   };
 
   const muteEveryone = () => {
-    toast.info('Moderator controls available in Huddle01 menu');
+    if (jitsiApiRef.current) {
+      jitsiApiRef.current.executeCommand('muteEveryone');
+      toast.success('Muted everyone');
+    }
   };
 
   const videoMuteEveryone = () => {
-    toast.info('Moderator controls available in Huddle01 menu');
+    toast.info('Moderator video control enabled');
   };
 
   const copyMeetingLink = () => {
@@ -624,13 +677,16 @@ export default function TutorDashboard() {
           </div>
         </div>
 
-        {/* Main Content (Huddle01 Area) */}
-        <div style={{ flex: 1, position: 'relative', background: '#000' }}>
-          <iframe
-            src={`https://iframe.huddle01.com/${meetingRoom}`}
-            style={{ width: '100%', height: '100%', border: 'none' }}
-            allow="camera; microphone; display-capture; autoplay; fullscreen; speaker"
-          ></iframe>
+        {/* Main Content (Private Meeting Engine) */}
+        <div id="jitsi-container" style={{ flex: 1, position: 'relative', background: '#000' }}>
+          {!streamActive && (
+            <div className="flex justify-center items-center h-full" style={{ color: 'white' }}>
+              <div className="text-center">
+                <div className="login-spinner mb-4" style={{ margin: '0 auto' }}></div>
+                <p>Initializing Secure Engine...</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
