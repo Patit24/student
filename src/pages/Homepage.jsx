@@ -405,14 +405,25 @@ export default function Homepage() {
             <p>Free resources available for all aspirants.</p>
           </div>
           
-          <div className="grid gap-6 mt-12" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+          <div className="grid gap-8 mt-12" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
             {globalAssets.filter(a => !a.category || a.category === 'general').map((asset) => (
-              <div key={asset.id} className="glass-card p-6" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px' }}>
-                <div style={{ background: 'rgba(245,197,24,0.1)', padding: '0.8rem', borderRadius: '14px', width: 'fit-content', marginBottom: '1.5rem' }}>
-                  <Globe size={24} color="#F5C518" />
+              <div key={asset.id} className="glass-card p-8 animate-premium" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ background: 'rgba(245,197,24,0.1)', padding: '0.8rem', borderRadius: '16px', width: 'fit-content', marginBottom: '1.5rem' }}>
+                    <Globe size={28} color="#F5C518" />
+                  </div>
+                  <h4 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.75rem', color: '#fff' }}>{asset.title}</h4>
+                  <p style={{ fontSize: '0.95rem', color: '#7a8ba8', lineHeight: 1.6, marginBottom: '2rem' }}>
+                    {asset.description || 'Access high-quality study materials and resources curated by top educators.'}
+                  </p>
                 </div>
-                <h4 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>{asset.title}</h4>
-                <button onClick={() => handleAssetAction(asset)} className="hp-btn-primary" style={{ width: '100%', borderRadius: '12px' }}>Download</button>
+                <button 
+                  onClick={() => handleAssetAction(asset)} 
+                  className="hp-btn-primary" 
+                  style={{ width: '100%', borderRadius: '16px', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                >
+                  <FileText size={18} /> Download Resource
+                </button>
               </div>
             ))}
           </div>

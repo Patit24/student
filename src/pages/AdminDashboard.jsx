@@ -89,7 +89,7 @@ export default function AdminDashboard() {
   const [assetCategory, setAssetCategory] = useState('general'); // general, neet, jee
   const [assetType, setAssetType] = useState('material'); // material, mock, suggestion
 
-  const handleQuickUpload = async (e, category, title, materialType) => {
+  const handleQuickUpload = async (e, category, title, materialType, description) => {
     const file = e.target.files[0];
     if (!file) return;
     
@@ -103,6 +103,7 @@ export default function AdminDashboard() {
       const url = await uploadFileToStorage(file, `admin_${category}`, (pct) => setUploadProgress(pct));
       await uploadGlobalAsset({
         title: finalTitle,
+        description: description || '',
         category,
         material_type: materialType,
         name: file.name,
@@ -120,15 +121,21 @@ export default function AdminDashboard() {
       // Clear inputs manually
       if (category === 'neet') {
         const t = document.getElementById('neet-title');
+        const d = document.getElementById('neet-desc');
         if (t) t.value = '';
+        if (d) d.value = '';
       }
       if (category === 'jee') {
         const t = document.getElementById('jee-title');
+        const d = document.getElementById('jee-desc');
         if (t) t.value = '';
+        if (d) d.value = '';
       }
       if (category === 'general') {
         const t = document.getElementById('global-title');
+        const d = document.getElementById('global-desc');
         if (t) t.value = '';
+        if (d) d.value = '';
       }
     } catch (err) {
       toast.error('Upload failed: ' + err.message);
@@ -340,10 +347,17 @@ export default function AdminDashboard() {
                       </select>
                     </div>
                     <div className="mt-4">
+                      <textarea 
+                        placeholder="Short Description (e.g. Detailed notes on Human Physiology...)" 
+                        className="premium-input w-full mb-4"
+                        id="neet-desc"
+                        rows="2"
+                        style={{ padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(16,185,129,0.2)', color: 'white', resize: 'none' }}
+                      />
                       <input 
                         type="file" 
                         id="neet-file" 
-                        onChange={(e) => handleQuickUpload(e, 'neet', document.getElementById('neet-title').value, document.getElementById('neet-type').value)}
+                        onChange={(e) => handleQuickUpload(e, 'neet', document.getElementById('neet-title').value, document.getElementById('neet-type').value, document.getElementById('neet-desc').value)}
                         hidden 
                       />
                       <label htmlFor="neet-file" className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#10B981', border: 'none', padding: '1rem', borderRadius: '12px', cursor: 'pointer', justifyContent: 'center' }}>
@@ -385,10 +399,17 @@ export default function AdminDashboard() {
                       </select>
                     </div>
                     <div className="mt-4">
+                      <textarea 
+                        placeholder="Short Description (e.g. Comprehensive Physics Mock Test based on latest pattern...)" 
+                        className="premium-input w-full mb-4"
+                        id="jee-desc"
+                        rows="2"
+                        style={{ padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(99,102,241,0.2)', color: 'white', resize: 'none' }}
+                      />
                       <input 
                         type="file" 
                         id="jee-file" 
-                        onChange={(e) => handleQuickUpload(e, 'jee', document.getElementById('jee-title').value, document.getElementById('jee-type').value)}
+                        onChange={(e) => handleQuickUpload(e, 'jee', document.getElementById('jee-title').value, document.getElementById('jee-type').value, document.getElementById('jee-desc').value)}
                         hidden 
                       />
                       <label htmlFor="jee-file" className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#6366F1', border: 'none', padding: '1rem', borderRadius: '12px', cursor: 'pointer', justifyContent: 'center' }}>
@@ -418,10 +439,17 @@ export default function AdminDashboard() {
                       id="global-title"
                       style={{ width: '100%', marginBottom: '1rem', padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(245,197,24,0.2)', color: 'white' }}
                     />
+                    <textarea 
+                      placeholder="Short Description (e.g. A comprehensive guide to all physics formulas for quick revision.)" 
+                      className="premium-input"
+                      id="global-desc"
+                      rows="2"
+                      style={{ width: '100%', marginBottom: '1rem', padding: '1rem', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(245,197,24,0.2)', color: 'white', resize: 'none' }}
+                    />
                     <input 
                       type="file" 
                       id="global-file" 
-                      onChange={(e) => handleQuickUpload(e, 'general', document.getElementById('global-title').value, 'material')}
+                      onChange={(e) => handleQuickUpload(e, 'general', document.getElementById('global-title').value, 'material', document.getElementById('global-desc').value)}
                       hidden 
                     />
                     <label htmlFor="global-file" className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#F5C518', color: '#000', border: 'none', padding: '1rem', borderRadius: '12px', cursor: 'pointer', fontWeight: 700, justifyContent: 'center' }}>
