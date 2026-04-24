@@ -344,122 +344,120 @@ export default function Homepage() {
         </div>
       </section>
 
-      {/* ── SEPARATOR HUB ── */}
-      <section className="hp-section" style={{ padding: '4rem 0', background: 'var(--bg-dark)', textAlign: 'center' }}>
+      {/* ── SPECIALIZED PATH EXPLORER ── */}
+      <section className="hp-section" style={{ padding: '8rem 0', background: '#ffffff' }}>
         <div className="container">
-          <div className="hp-badge" style={{ margin: '0 auto 1.5rem' }}><span>SPECIALIZED ASPIRANT ECOSYSTEM</span></div>
-          <h2 style={{ fontSize: '3rem', fontWeight: 900 }}>Dedicated <span className="hp-yellow">Study Hubs</span></h2>
-          <p className="text-muted" style={{ maxWidth: '700px', margin: '0 auto' }}>Choose your path. We've built permanent, resource-rich sanctuaries for both Medical and Engineering aspirants.</p>
-        </div>
-      </section>
-
-      {/* ── NEET SPECIALIZED HUB ── */}
-      <section className="hp-section" style={{ background: 'linear-gradient(to bottom, #0a0f1c, #051a14)', padding: '6rem 2rem' }}>
-        <div className="container">
-          <div className="flex justify-between items-center mb-12">
-            <div style={{ textAlign: 'left' }}>
-              <div className="hp-badge" style={{ background: 'rgba(16,185,129,0.1)', color: '#10B981', marginLeft: 0 }}><span>MEDICAL STREAM</span></div>
-              <h2 style={{ fontSize: '3rem', fontWeight: 900, marginTop: '1rem' }}>NEET <span style={{ color: '#10B981' }}>Aspirant Hub</span></h2>
-              <p className="text-muted" style={{ maxWidth: '500px' }}>Your dedicated sanctuary for medical excellence. Weekly mocks and bio-focused materials.</p>
-            </div>
-            <img src="/assets/neet_icon.png" alt="NEET" style={{ width: '180px', filter: 'drop-shadow(0 0 30px rgba(16,185,129,0.3))' }} />
+          <div style={{ textAlign: 'center', marginBottom: '5rem' }}>
+            <div className="hp-badge" style={{ margin: '0 auto 1.5rem', background: 'rgba(245,197,24,0.1)', color: '#F5C518' }}><span>8K SPECIALIZED PATHS</span></div>
+            <h2 style={{ fontSize: '3.5rem', fontWeight: 900, color: '#1a1a1a' }}>Choose Your <span style={{ color: '#F5C518' }}>Aspirant Hub</span></h2>
+            <p style={{ color: '#666', maxWidth: '600px', margin: '0 auto', fontSize: '1.1rem' }}>Permanent, resource-rich sanctuaries tailored for India's toughest exams.</p>
           </div>
 
-          <div className="grid gap-12" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))' }}>
-            {/* NEET MOCKS */}
-            <div className="glass-card p-8" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(16,185,129,0.1)', borderRadius: '24px' }}>
-              <h3 className="flex items-center gap-3 mb-6" style={{ fontSize: '1.2rem', color: '#10B981' }}><Zap size={20} /> Weekly Mock Exams</h3>
-              <div className="flex-col gap-4">
-                {globalAssets.filter(a => a.category === 'neet' && a.material_type === 'mock').map(asset => (
-                  <div key={asset.id} className="flex justify-between items-center p-4" style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <span style={{ fontSize: '0.9rem' }}>{asset.title}</span>
-                    <button onClick={() => handleAssetAction(asset)} className="hp-btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.75rem' }}>Start</button>
-                  </div>
-                ))}
-                {globalAssets.filter(a => a.category === 'neet' && a.material_type === 'mock').length === 0 && <p className="text-muted" style={{ fontSize: '0.8rem' }}>No mocks available yet.</p>}
+          <div className="grid gap-12" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))' }}>
+            
+            {/* NEET MEDICAL PATH CARD */}
+            <div className="path-card-neet animate-premium" style={{ 
+              background: '#FFFFF0', // Ivory
+              border: '1px solid rgba(245,197,24,0.3)',
+              borderRadius: '32px',
+              padding: '3.5rem',
+              position: 'relative',
+              overflow: 'hidden',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.05)',
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: '500px'
+            }}>
+              {/* DNA Watermark */}
+              <div style={{ 
+                position: 'absolute', top: '-10%', right: '-10%', opacity: 0.05, 
+                fontSize: '15rem', color: '#F5C518', pointerEvents: 'none', transform: 'rotate(-15deg)' 
+              }}>🧬</div>
+              
+              <div className="hp-badge" style={{ background: '#F5C518', color: '#000', marginLeft: 0, width: 'fit-content', fontWeight: 800 }}>
+                MEDICAL ASPIRANT
+              </div>
+              
+              <h3 style={{ fontSize: '2.5rem', color: '#333', marginTop: '2rem', marginBottom: '1rem' }}>NEET Sanctuary</h3>
+              <p style={{ color: '#555', fontSize: '1.1rem', lineHeight: 1.6, flex: 1 }}>
+                Master biology and chemistry with our specialized bio-focused mock tests and curated last-minute suggestions.
+              </p>
+              
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '3rem' }}>
+                <button 
+                  onClick={() => navigate('/signup')} 
+                  className="glass-glow-btn"
+                  style={{ 
+                    flex: 1, padding: '1.2rem', borderRadius: '16px', background: 'rgba(245,197,24,0.1)', 
+                    border: '1px solid #F5C518', color: '#333', fontWeight: 700, fontSize: '1rem' 
+                  }}
+                >
+                  Enter Hub
+                </button>
+                <button 
+                  className="glass-glow-btn"
+                  style={{ 
+                    flex: 1, padding: '1.2rem', borderRadius: '16px', background: 'white', 
+                    border: '1px solid #ddd', color: '#333', fontWeight: 700, fontSize: '1rem' 
+                  }}
+                >
+                  View Mocks
+                </button>
               </div>
             </div>
 
-            {/* NEET MATERIALS */}
-            <div className="glass-card p-8" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(16,185,129,0.1)', borderRadius: '24px' }}>
-              <h3 className="flex items-center gap-3 mb-6" style={{ fontSize: '1.2rem', color: '#10B981' }}><BookOpen size={20} /> Study Materials</h3>
-              <div className="flex-col gap-4">
-                {globalAssets.filter(a => a.category === 'neet' && a.material_type === 'material').map(asset => (
-                  <div key={asset.id} className="flex justify-between items-center p-4" style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <span style={{ fontSize: '0.9rem' }}>{asset.title}</span>
-                    <button onClick={() => handleAssetAction(asset)} className="hp-btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.75rem' }}>View</button>
-                  </div>
-                ))}
+            {/* JEE ENGINEERING PATH CARD */}
+            <div className="path-card-jee animate-premium" style={{ 
+              background: '#FFFFFF', // Bright White
+              border: '1px solid rgba(245,197,24,0.3)',
+              borderRadius: '32px',
+              padding: '3.5rem',
+              position: 'relative',
+              overflow: 'hidden',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.05)',
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: '500px'
+            }}>
+              {/* Technical Grid Watermark */}
+              <div style={{ 
+                position: 'absolute', inset: 0, opacity: 0.03, 
+                backgroundImage: 'radial-gradient(#F5C518 0.5px, transparent 0.5px)', backgroundSize: '20px 20px',
+                pointerEvents: 'none'
+              }} />
+              
+              <div className="hp-badge" style={{ background: '#F5C518', color: '#000', marginLeft: 0, width: 'fit-content', fontWeight: 800 }}>
+                ENGINEERING ASPIRANT
+              </div>
+              
+              <h3 style={{ fontSize: '2.5rem', color: '#333', marginTop: '2rem', marginBottom: '1rem' }}>JEE Command</h3>
+              <p style={{ color: '#555', fontSize: '1.1rem', lineHeight: 1.6, flex: 1 }}>
+                Precision tools for physics, math, and chemistry. Weekly engineering mocks designed by top-tier JEE faculty.
+              </p>
+              
+              <div style={{ display: 'flex', gap: '1rem', marginTop: '3rem' }}>
+                <button 
+                  onClick={() => navigate('/signup')} 
+                  className="glass-glow-btn"
+                  style={{ 
+                    flex: 1, padding: '1.2rem', borderRadius: '16px', background: 'rgba(245,197,24,0.1)', 
+                    border: '1px solid #F5C518', color: '#333', fontWeight: 700, fontSize: '1rem' 
+                  }}
+                >
+                  Enter Hub
+                </button>
+                <button 
+                  className="glass-glow-btn"
+                  style={{ 
+                    flex: 1, padding: '1.2rem', borderRadius: '16px', background: 'white', 
+                    border: '1px solid #ddd', color: '#333', fontWeight: 700, fontSize: '1rem' 
+                  }}
+                >
+                  View Mocks
+                </button>
               </div>
             </div>
 
-            {/* NEET SUGGESTIONS */}
-            <div className="glass-card p-8" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(16,185,129,0.1)', borderRadius: '24px' }}>
-              <h3 className="flex items-center gap-3 mb-6" style={{ fontSize: '1.2rem', color: '#10B981' }}><Star size={20} /> Last-Min Suggestions</h3>
-              <div className="flex-col gap-4">
-                {globalAssets.filter(a => a.category === 'neet' && a.material_type === 'suggestion').map(asset => (
-                  <div key={asset.id} className="flex justify-between items-center p-4" style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <span style={{ fontSize: '0.9rem' }}>{asset.title}</span>
-                    <button onClick={() => handleAssetAction(asset)} className="hp-btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.75rem' }}>Get</button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── JEE SPECIALIZED HUB ── */}
-      <section className="hp-section" style={{ background: 'linear-gradient(to bottom, #0a0f1c, #0d0b26)', padding: '6rem 2rem' }}>
-        <div className="container">
-          <div className="flex flex-row-reverse justify-between items-center mb-12">
-            <div style={{ textAlign: 'right' }}>
-              <div className="hp-badge" style={{ background: 'rgba(99,102,241,0.1)', color: '#6366F1', marginRight: 0 }}><span>ENGINEERING STREAM</span></div>
-              <h2 style={{ fontSize: '3rem', fontWeight: 900, marginTop: '1rem' }}>JEE <span style={{ color: '#6366F1' }}>Aspirant Hub</span></h2>
-              <p className="text-muted" style={{ maxWidth: '500px', marginLeft: 'auto' }}>Master physics, math and chemistry. Precision tools for engineering success.</p>
-            </div>
-            <img src="/assets/jee_icon.png" alt="JEE" style={{ width: '180px', filter: 'drop-shadow(0 0 30px rgba(99,102,241,0.3))' }} />
-          </div>
-
-          <div className="grid gap-12" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))' }}>
-            {/* JEE MOCKS */}
-            <div className="glass-card p-8" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(99,102,241,0.1)', borderRadius: '24px' }}>
-              <h3 className="flex items-center gap-3 mb-6" style={{ fontSize: '1.2rem', color: '#6366F1' }}><Monitor size={20} /> Weekly Mock Exams</h3>
-              <div className="flex-col gap-4">
-                {globalAssets.filter(a => a.category === 'jee' && a.material_type === 'mock').map(asset => (
-                  <div key={asset.id} className="flex justify-between items-center p-4" style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <span style={{ fontSize: '0.9rem' }}>{asset.title}</span>
-                    <button onClick={() => handleAssetAction(asset)} className="hp-btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.75rem' }}>Start</button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* JEE MATERIALS */}
-            <div className="glass-card p-8" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(99,102,241,0.1)', borderRadius: '24px' }}>
-              <h3 className="flex items-center gap-3 mb-6" style={{ fontSize: '1.2rem', color: '#6366F1' }}><BookOpen size={20} /> Study Materials</h3>
-              <div className="flex-col gap-4">
-                {globalAssets.filter(a => a.category === 'jee' && a.material_type === 'material').map(asset => (
-                  <div key={asset.id} className="flex justify-between items-center p-4" style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <span style={{ fontSize: '0.9rem' }}>{asset.title}</span>
-                    <button onClick={() => handleAssetAction(asset)} className="hp-btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.75rem' }}>View</button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* JEE SUGGESTIONS */}
-            <div className="glass-card p-8" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(99,102,241,0.1)', borderRadius: '24px' }}>
-              <h3 className="flex items-center gap-3 mb-6" style={{ fontSize: '1.2rem', color: '#6366F1' }}><Zap size={20} /> Last-Min Suggestions</h3>
-              <div className="flex-col gap-4">
-                {globalAssets.filter(a => a.category === 'jee' && a.material_type === 'suggestion').map(asset => (
-                  <div key={asset.id} className="flex justify-between items-center p-4" style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <span style={{ fontSize: '0.9rem' }}>{asset.title}</span>
-                    <button onClick={() => handleAssetAction(asset)} className="hp-btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.75rem' }}>Get</button>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </section>

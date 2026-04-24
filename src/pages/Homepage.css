@@ -540,6 +540,27 @@
 .hp-final-inner h2 { font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; margin-bottom: 1rem; }
 .hp-final-inner p { color: var(--hp-muted); font-size: 1.05rem; margin-bottom: 2rem; }
 
+/* ── Path Cards & Glow Buttons ── */
+.glass-glow-btn {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+.glass-glow-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(245, 197, 24, 0.4);
+}
+
+.animate-premium {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.animate-premium:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 30px 60px rgba(0,0,0,0.1) !important;
+  border-color: #F5C518 !important;
+}
+
 /* ── Responsive ── */
 @media (max-width: 900px) {
   .hp-hero { grid-template-columns: 1fr; padding: 5rem 5vw 3rem; }
