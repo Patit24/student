@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { 
   User, Mail, Phone, MapPin, Briefcase, GraduationCap, 
-  Award, Code, BookOpen, Download, Plus, Trash2, Globe, Diamond
+  Award, Code, BookOpen, Download, Plus, Trash2, Globe, Diamond, Palette
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
