@@ -71,6 +71,7 @@ export default function Navbar() {
               <Link to="/" style={navLink}>Home</Link>
               <Link to="/search" style={navLink}>Find Tutors</Link>
               <Link to="/about" style={navLink}>About</Link>
+              <Link to="/blogs" style={navLink}>Blogs</Link>
               <Link to="/login" className="btn btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>Log In</Link>
               <Link to="/signup" className="hp-btn-primary" style={{ padding: '0.45rem 1.1rem', fontSize: '0.85rem' }}>
                 <Zap size={13} /> Get Started
@@ -101,6 +102,7 @@ export default function Navbar() {
           <Link to="/" onClick={() => setIsMenuOpen(false)} style={navLink}>Home</Link>
           <Link to="/search" onClick={() => setIsMenuOpen(false)} style={navLink}>Find Tutors</Link>
           <Link to="/about" onClick={() => setIsMenuOpen(false)} style={navLink}>About</Link>
+          <Link to="/blogs" onClick={() => setIsMenuOpen(false)} style={navLink}>Blogs</Link>
           <hr style={{ borderColor: 'rgba(255,255,255,0.05)' }} />
           {currentUser ? (
             <button onClick={handleLogout} className="btn btn-outline" style={{ justifyContent: 'center' }}>

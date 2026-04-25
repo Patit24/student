@@ -12,6 +12,7 @@ import { subscribeGlobalAssets, uploadGlobalAsset, deleteGlobalAsset, uploadFile
 import { useToast } from '../components/Toast';
 import { collection, query, where, onSnapshot, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import AdminBlogManager from '../components/AdminBlogManager';
 import './AdminDashboard.css';
 
 export default function AdminDashboard() {
@@ -22,7 +23,7 @@ export default function AdminDashboard() {
   // KPIs & Tutors
   const [tutors, setTutors] = useState([]);
   const [globalAssets, setGlobalAssets] = useState([]);
-  const [activeTab, setActiveTab] = useState('tutors'); // 'tutors' or 'materials'
+  const [activeTab, setActiveTab] = useState('tutors'); // 'tutors' | 'materials' | 'blogs'
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
@@ -232,10 +233,10 @@ export default function AdminDashboard() {
                 <Users size={18} /> Tutor Management
               </button>
               <button 
-                className={`tab-btn ${activeTab === 'materials' ? 'active' : ''}`}
-                onClick={() => setActiveTab('materials')}
+                className={`tab-btn ${activeTab === 'blogs' ? 'active' : ''}`}
+                onClick={() => setActiveTab('blogs')}
               >
-                <Package size={18} /> Global Materials
+                <FileText size={18} /> Manage Blogs
               </button>
             </div>
 
@@ -486,7 +487,11 @@ export default function AdminDashboard() {
                   )}
                 </div>
               </div>
-            )}
+            ) : activeTab === 'blogs' ? (
+              <div className="glass-card p-8">
+                <AdminBlogManager />
+              </div>
+            ) : null}
           </main>
         </div>
 

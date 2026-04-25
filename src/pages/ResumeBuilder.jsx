@@ -9,87 +9,41 @@ import './ResumeBuilder.css';
 
 const ResumeBuilder = () => {
   const [formData, setFormData] = useState({
-    name: 'PATIT PABAN ROY',
-    title: 'WordPress Developer | Responsive Web Design | Client Collaboration | Digital Solutions',
-    phone: '9014842370',
-    email: 'Patitroy29@gmail.com',
-    location: 'Noida',
+    name: 'YOUR FULL NAME',
+    title: 'PROFESSIONAL JOB TITLE',
+    phone: '+91 98765 43210',
+    email: 'yourname@email.com',
+    location: 'City, State',
     profileImage: '',
-    summary: 'Results-driven WordPress Developer with proven expertise in designing and developing over 15 responsive websites, driving a 30% increase in client engagement. Skilled in translating client requirements into actionable solutions using WordPress, HTML, CSS, and JavaScript. Strong academic background with MCA and BCA degrees, ensuring broad understanding of full-stack development. Efficient project manager recognized for reducing project timelines by 25% while excelling in collaborative environments.',
+    summary: 'A short, impactful summary of your professional background, key strengths, and career objectives. Highlight your most relevant achievements and what you bring to the table.',
     experience: [
       {
-        title: 'WordPress Developer and Coordinator',
-        company: 'Enqodle',
-        dates: '07/2024 - 05/2025',
-        location: 'Delhi',
-        description: 'A company focused on enhancing digital presence through WordPress solutions\n• Design and develop responsive WordPress websites tailored to client needs\n• Manage calendars, schedule meetings, and oversee project timelines\n• Serve as the communication bridge between teams, departments, and clients'
-      },
-      {
-        title: 'WordPress Developer',
-        company: 'Sapco IOT PVT LTD',
-        dates: '07/2023 - 01/2024',
-        location: 'Kolkata',
-        description: 'A company dedicated to IoT solutions and web development\n• Design and develop responsive WordPress websites\n• Improved web solution delivery speed by 60% by collaborating with National clients to define project requirements.'
-      },
-      {
-        title: 'Web Developer',
-        company: 'Parentheses Labs',
-        dates: '08/2021 - 09/2022',
-        location: 'Kolkata',
-        description: 'A web development company focused on innovative solutions\n• Design and develop web pages that are visually appealing and highly functional\n• Create responsive designs ensuring compatibility across various devices and browsers\n• Implement and maintain CSS-heavy projects, ensuring best practices and optimal performance'
+        title: 'Job Title',
+        company: 'Company Name',
+        dates: 'MM/YYYY - Present',
+        location: 'City, Country',
+        description: '• Accomplished X by implementing Y, resulting in Z% improvement.\n• Led a team of N members to deliver project Alpha on time.\n• Optimized workflow efficiency by automating repetitive tasks.'
       }
     ],
     education: [
       {
-        degree: 'MCA',
-        school: 'Brainware University',
-        dates: '08/2022 - 06/2024',
-        location: 'Barasat'
-      },
-      {
-        degree: 'BCA',
-        school: 'Brainware University',
-        dates: '08/2019 - 06/2022',
-        location: 'Barasat'
-      },
-      {
-        degree: '12th',
-        school: 'Katiahat B.K.A.P Institution',
-        dates: '06/2015 - 06/2015',
-        location: 'Katiahat, West Bengal'
-      },
-      {
-        degree: '10th',
-        school: 'Katiahat B.K.A.P Institution',
-        dates: '06/2013 - 06/2013',
-        location: 'Katiahat, West Bengal'
+        degree: 'Your Degree / Qualification',
+        school: 'University or Institution Name',
+        dates: 'YYYY - YYYY',
+        location: 'City, Country'
       }
     ],
     achievements: [
       {
-        title: 'Custom Website Development',
-        desc: 'Developed 15 custom websites increasing client engagement by 30% within 6 months.'
-      },
-      {
-        title: 'Project Management Efficiency',
-        desc: 'Reduced project completion time by 25% through efficient project management.'
-      },
-      {
-        title: 'Team Leadership Success',
-        desc: 'Led a 5-member team achieving 100% project delivery on time for a year.'
-      },
-      {
-        title: 'Website Optimization',
-        desc: 'Improved website loading speed by 40% using optimized code practices.'
+        title: 'Significant Milestone',
+        desc: 'Brief description of the achievement and its impact on the organization or your growth.'
       }
     ],
     skills: [
-      'MS-Office', 'CSS', 'HTML', 'JavaScript', 'Microsoft Excel', 
-      'Microsoft Power Point', 'SEO', 'Shopify', 'Webflow', 
-      'WordPress', 'Website Performance Optimization'
+      'Core Skill 1', 'Professional Skill 2', 'Technical Tool 3', 'Soft Skill 4'
     ],
     training: [
-      'Website Developing -'
+      'Relevant Certification or Course'
     ]
   });
 

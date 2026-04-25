@@ -12,6 +12,8 @@ import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import neetWatermark from '../assets/neet_dna_watermark.png';
 import jeeWatermark from '../assets/jee_grid_watermark.png';
+import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase';
 import './Homepage.css';
 
 /* ── Scroll-reveal hook ── */
@@ -126,6 +128,7 @@ export default function Homepage() {
   const [bentoRef, bentoVis] = useReveal();
   const [demoRef, demoVis] = useReveal();
   const [statsRef, statsVis] = useReveal();
+  const [blogRef, blogVis] = useReveal();
 
   const [globalAssets, setGlobalAssets] = useState([]);
 
@@ -140,6 +143,15 @@ export default function Homepage() {
     }
     return subscribeGlobalAssets(setGlobalAssets);
   }, [isMockMode]);
+
+  const [latestBlogs, setLatestBlogs] = useState([]);
+  useEffect(() => {
+    const q = query(collection(db, 'blogs'), orderBy('createdAt', 'desc'), limit(3));
+    const unsub = onSnapshot(q, (snap) => {
+      setLatestBlogs(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+    return unsub;
+  }, []);
 
   // ── Auto-Download Logic ──
   useEffect(() => {
@@ -463,6 +475,44 @@ export default function Homepage() {
                 </button>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── LATEST BLOGS PREVIEW ── */}
+      <section className="hp-section" ref={blogRef} style={{ background: '#070b18', padding: '6rem 2rem' }}>
+        <div className="container">
+          <div className={`hp-section-head ${blogVis ? 'hp-reveal-up' : 'hp-hidden-up'}`}>
+            <h2>Latest from our <span className="hp-yellow">Blog</span></h2>
+            <p>Expert insights, exam tips, and career guidance for every student.</p>
+          </div>
+          
+          <div className="grid mobile-grid-1 gap-8 mt-12" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+            {latestBlogs.map((blog, i) => (
+              <div key={blog.id} className={`glass-panel overflow-hidden flex-col ${blogVis ? 'hp-reveal-up' : 'hp-hidden-up'}`} style={{ animationDelay: `${i * 0.15}s` }}>
+                {blog.coverImage && (
+                  <div style={{ height: '180px', overflow: 'hidden' }}>
+                    <img src={blog.coverImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                )}
+                <div className="p-6 flex-col gap-3">
+                  <div className="text-xs text-yellow-500 font-bold uppercase tracking-widest">{blog.category}</div>
+                  <h4 style={{ fontSize: '1.2rem', margin: 0, lineHeight: 1.3 }}>{blog.title}</h4>
+                  <p className="text-muted text-sm line-clamp-2" style={{ margin: 0 }}>
+                    {blog.excerpt || blog.content?.substring(0, 100) + '...'}
+                  </p>
+                  <Link to={`/blog/${blog.id}`} className="flex items-center gap-2 text-yellow-500 font-bold text-sm mt-2">
+                    Read More <ChevronRight size={16} />
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex justify-center mt-12">
+            <Link to="/blogs" className="hp-btn-outline" style={{ padding: '0.8rem 2rem', borderRadius: '99px' }}>
+              Read All Articles <ChevronRight size={18} />
+            </Link>
           </div>
         </div>
       </section>
