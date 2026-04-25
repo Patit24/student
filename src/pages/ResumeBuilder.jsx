@@ -153,12 +153,24 @@ const ResumeBuilder = () => {
 
   const downloadPDF = async () => {
     const element = resumeRef.current;
-    const canvas = await html2canvas(element, { scale: 2 });
+    const canvas = await html2canvas(element, { 
+      scale: 3, // Increased scale for clearer small text
+      useCORS: true,
+      logging: false,
+      width: element.offsetWidth,
+      height: element.offsetHeight
+    });
+    
     const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const imgProps = pdf.getImageProperties(imgData);
+    const pdf = new jsPDF({
+      orientation: 'p',
+      unit: 'mm',
+      format: 'a4'
+    });
+    
     const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
     pdf.save(`${formData.name.replace(/\s+/g, '_')}_Resume.pdf`);
   };
