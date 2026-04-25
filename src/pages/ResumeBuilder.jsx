@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { 
   User, Mail, Phone, MapPin, Briefcase, GraduationCap, 
-  Award, Code, BookOpen, Download, Plus, Trash2, Globe, Diamond, Palette
+  Award, Code, BookOpen, Download, Plus, Trash2, Globe, Diamond, Layout
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -177,7 +177,7 @@ const ResumeBuilder = () => {
         {/* Template Selector */}
         <div className="editor-section">
           <h3 className="flex items-center gap-2">
-            <Palette size={18} color="var(--primary)" /> Choose Design
+            <Layout size={18} color="var(--primary)" /> Choose Design
           </h3>
           <div className="template-grid">
             <p className="template-group-label">FREE DESIGNS</p>

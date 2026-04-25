@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAppContext } from '../context/AuthContext';
 import { 
   Video, Mic, MicOff, VideoOff, ScreenShare, MessageSquare, Users, 
-  Lock, Unlock, Check, X, UserPlus, Calendar, Palette, Crown, 
+  Lock, Unlock, Check, X, UserPlus, Calendar, Layout, Crown, 
   FileText, CheckSquare, Building2, AlertOctagon, ToggleLeft, 
   ToggleRight, Image, Globe, Play, Plus, Trash2, MapPin, TrendingUp, CreditCard, Layers, Shield
 } from 'lucide-react';
@@ -791,7 +791,7 @@ export default function TutorDashboard() {
         <Tab id="leads"      label="Leads"      icon={TrendingUp} />
         <Tab id="defaulters" label="Overdue"     icon={AlertOctagon} />
         <Tab id="banking"    label="Banking"     icon={CreditCard} />
-        <Tab id="profile"    label="Public Profile" icon={Palette} />
+        <Tab id="profile"    label="Public Profile" icon={Layout} />
       </div>
 
       {activeTab === 'students' && (
