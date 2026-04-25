@@ -6,7 +6,7 @@ import {
   Trash2, Package, LogOut, LayoutDashboard, Search,
   TrendingUp, CreditCard, ShieldCheck, ExternalLink,
   Lock, ArrowRight, UserCheck, Upload, Zap, Globe,
-  BookOpen, Star, Loader2
+  BookOpen, Star, Loader2, FileText
 } from 'lucide-react';
 import { subscribeGlobalAssets, uploadGlobalAsset, deleteGlobalAsset, uploadFileToStorage } from '../db.service';
 import { useToast } from '../components/Toast';
