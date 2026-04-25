@@ -479,43 +479,130 @@ export default function Homepage() {
         </div>
       </section>
 
-      {/* ── LATEST BLOGS PREVIEW ── */}
-      <section className="hp-section" ref={blogRef} style={{ background: '#070b18', padding: '6rem 2rem' }}>
-        <div className="container">
-          <div className={`hp-section-head ${blogVis ? 'hp-reveal-up' : 'hp-hidden-up'}`}>
-            <h2>Latest from our <span className="hp-yellow">Blog</span></h2>
-            <p>Expert insights, exam tips, and career guidance for every student.</p>
-          </div>
-          
-          <div className="grid mobile-grid-1 gap-8 mt-12" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-            {latestBlogs.map((blog, i) => (
-              <div key={blog.id} className={`glass-panel overflow-hidden flex-col ${blogVis ? 'hp-reveal-up' : 'hp-hidden-up'}`} style={{ animationDelay: `${i * 0.15}s` }}>
-                {blog.coverImage && (
-                  <div style={{ height: '180px', overflow: 'hidden' }}>
-                    <img src={blog.coverImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+    {/* ── LATEST BLOGS PREVIEW ── */}
+    <section className="hp-section" ref={blogRef} style={{ background: '#070b18', padding: '8rem 2rem', position: 'relative', overflow: 'hidden' }}>
+      {/* Background Decorative Glows */}
+      <div style={{ position: 'absolute', top: '10%', right: '-10%', width: '40vw', height: '40vw', background: 'radial-gradient(circle, rgba(245,197,24,0.05) 0%, transparent 70%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: '10%', left: '-10%', width: '40vw', height: '40vw', background: 'radial-gradient(circle, rgba(79,70,229,0.05) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+      <div className="container">
+        <div className={`hp-section-head ${blogVis ? 'hp-reveal-up' : 'hp-hidden-up'}`} style={{ marginBottom: '5rem' }}>
+          <h2 style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 900, letterSpacing: '-1px' }}>
+            Expert <span className="hp-yellow">Insights</span> & Updates
+          </h2>
+          <p style={{ fontSize: '1.2rem', color: '#7a8ba8', maxWidth: '600px', margin: '1rem auto' }}>
+            Master your exams with high-fidelity guidance from India's top educators.
+          </p>
+        </div>
+        
+        <div className="grid mobile-grid-1 gap-10 mt-12" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+          {latestBlogs.map((blog, i) => (
+            <div 
+              key={blog.id} 
+              className={`glass-card overflow-hidden flex-col group ${blogVis ? 'hp-reveal-up' : 'hp-hidden-up'}`} 
+              style={{ 
+                animationDelay: `${i * 0.15}s`,
+                borderRadius: '32px',
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px solid rgba(255,255,255,0.05)',
+                transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                cursor: 'pointer',
+                position: 'relative'
+              }}
+              onClick={() => navigate(`/blog/${blog.id}`)}
+            >
+              {/* Image Container with Gradient Overlay */}
+              <div style={{ height: '240px', overflow: 'hidden', position: 'relative' }}>
+                {blog.coverImage ? (
+                  <img 
+                    src={blog.coverImage} 
+                    alt="" 
+                    style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      objectFit: 'cover',
+                      transition: 'transform 0.7s ease'
+                    }} 
+                    className="group-hover:scale-110"
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full bg-gradient-to-br from-indigo-900/20 to-yellow-900/10">
+                    <BookOpen size={48} className="opacity-20" />
                   </div>
                 )}
-                <div className="p-6 flex-col gap-3">
-                  <div className="text-xs text-yellow-500 font-bold uppercase tracking-widest">{blog.category}</div>
-                  <h4 style={{ fontSize: '1.2rem', margin: 0, lineHeight: 1.3 }}>{blog.title}</h4>
-                  <p className="text-muted text-sm line-clamp-2" style={{ margin: 0 }}>
-                    {blog.excerpt || blog.content?.substring(0, 100) + '...'}
-                  </p>
-                  <Link to={`/blog/${blog.id}`} className="flex items-center gap-2 text-yellow-500 font-bold text-sm mt-2">
-                    Read More <ChevronRight size={16} />
-                  </Link>
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 50%, rgba(7,11,24,0.9) 100%)' }} />
+                
+                {/* Category Badge on Image */}
+                <div style={{ 
+                  position: 'absolute', 
+                  top: '20px', 
+                  left: '20px', 
+                  background: 'rgba(245,197,24,0.15)', 
+                  backdropFilter: 'blur(10px)',
+                  padding: '6px 14px',
+                  borderRadius: '99px',
+                  border: '1px solid rgba(245,197,24,0.3)',
+                  fontSize: '0.7rem',
+                  fontWeight: 800,
+                  color: '#F5C518',
+                  textTransform: 'uppercase',
+                  letterSpacing: '1px'
+                }}>
+                  {blog.category}
                 </div>
               </div>
-            ))}
-          </div>
 
-          <div className="flex justify-center mt-12">
-            <Link to="/blogs" className="hp-btn-outline" style={{ padding: '0.8rem 2rem', borderRadius: '99px' }}>
-              Read All Articles <ChevronRight size={18} />
-            </Link>
-          </div>
+              {/* Content Area */}
+              <div className="p-8 flex-col gap-4" style={{ flex: 1, justifyContent: 'space-between' }}>
+                <div className="flex-col gap-4">
+                  <div className="flex items-center gap-3 text-xs font-semibold text-muted">
+                    <span className="flex items-center gap-1.5"><Activity size={14} color="var(--hp-yellow)" /> {blog.readTime || '5 min read'}</span>
+                    <span>•</span>
+                    <span>{new Date(blog.createdAt?.seconds * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) || 'Recent'}</span>
+                  </div>
+                  
+                  <h4 style={{ 
+                    fontSize: '1.4rem', 
+                    margin: 0, 
+                    lineHeight: 1.25, 
+                    fontWeight: 800,
+                    color: '#fff',
+                    transition: 'color 0.3s ease'
+                  }} className="group-hover:text-yellow-500">
+                    {blog.title}
+                  </h4>
+                  
+                  <p className="text-muted text-sm line-clamp-3" style={{ margin: 0, lineHeight: 1.6 }}>
+                    {blog.excerpt || blog.content?.substring(0, 120).replace(/<[^>]*>?/gm, '') + '...'}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between mt-6 pt-6" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div className="flex items-center gap-2 text-yellow-500 font-bold text-sm">
+                    Keep Reading <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                  </div>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Plus size={16} className="opacity-40" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Hover Glow Effect */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-500" style={{ 
+                boxShadow: 'inset 0 0 50px rgba(245,197,24,0.05), 0 0 40px rgba(245,197,24,0.1)',
+                borderRadius: '32px'
+              }} />
+            </div>
+          ))}
         </div>
-      </section>
+
+        <div className="flex justify-center mt-16">
+          <Link to="/blogs" className="hp-btn-outline group" style={{ padding: '1rem 2.5rem', borderRadius: '99px', background: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            Discover More Articles <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
+      </div>
+    </section>
 
       {/* ── FINAL CTA ── */}
       <section className="hp-final-cta">
