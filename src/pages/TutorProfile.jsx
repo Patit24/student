@@ -87,7 +87,9 @@ export default function TutorProfile() {
                   </div>
                 </div>
                 <h1>{tutor.name}</h1>
-                <p className="profile-tagline">{tutor.qualifications} · {tutor.experience} Experience</p>
+                <p className="profile-tagline">
+                  {tutor.highest_qualification || tutor.qualifications} · {tutor.experience || 'Experienced'} Tutor
+                </p>
                 <div style={{ display: 'flex', gap: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <MapPin size={16} /> {tutor.location?.area}, {tutor.location?.city}
@@ -113,15 +115,19 @@ export default function TutorProfile() {
                 </div>
                 <div className="info-item">
                   <span className="info-label">Specialization</span>
-                  <span className="info-value">{tutor.specialization || tutor.subjects?.[0] || 'General Teaching'}</span>
+                  <span className="info-value">{tutor.specialization || tutor.highest_qualification || tutor.subjects?.[0]}</span>
+                </div>
+                <div className="info-item">
+                  <span className="info-label">Experience</span>
+                  <span className="info-value">{tutor.experience || 'Not Specified'}</span>
                 </div>
                 <div className="info-item">
                   <span className="info-label">Mode</span>
                   <span className="info-value" style={{ textTransform: 'capitalize' }}>{tutor.teaching_mode}</span>
                 </div>
                 <div className="info-item">
-                  <span className="info-label">Qualifications</span>
-                  <span className="info-value">{tutor.qualifications}</span>
+                  <span className="info-label">Highest Qualification</span>
+                  <span className="info-value">{tutor.highest_qualification || tutor.qualifications}</span>
                 </div>
               </div>
             </div>

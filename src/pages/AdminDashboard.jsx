@@ -527,6 +527,28 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
+                {/* Certificates for Verification */}
+                {verifyingTutor.certificates?.length > 0 && (
+                  <div className="certificates-review-area mt-6">
+                    <label className="text-xs font-bold uppercase tracking-widest text-yellow-500 mb-2 block">Credentials to Verify</label>
+                    <div className="flex gap-4 overflow-x-auto pb-4">
+                      {verifyingTutor.certificates.map((cert, idx) => (
+                        <a 
+                          key={idx} 
+                          href={cert.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="glass-card p-3 flex-col items-center gap-2 hover:border-yellow-500 transition-all"
+                          style={{ minWidth: '120px', background: 'rgba(255,255,255,0.03)' }}
+                        >
+                          <FileText size={24} color="#f5c518" />
+                          <span style={{ fontSize: '0.7rem' }}>{cert.name || 'Certificate'}</span>
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Glowing Transaction ID Section */}
                 <div className="txn-highlight-box">
                   <span className="label">Verification Code</span>

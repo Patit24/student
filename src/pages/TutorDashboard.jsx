@@ -273,6 +273,8 @@ export default function TutorDashboard() {
   const [profileVideo, setProfileVideo] = useState(myTutorRecord?.intro_video || '');
   const [profileArea, setProfileArea] = useState(myTutorRecord?.location?.area || '');
   const [profileCity, setProfileCity] = useState(myTutorRecord?.location?.city || '');
+  const [profileExperience, setProfileExperience] = useState(myTutorRecord?.experience || '');
+  const [profileQualification, setProfileQualification] = useState(myTutorRecord?.highest_qualification || '');
   const [profileCertificates, setProfileCertificates] = useState(myTutorRecord?.certificates || []);
   const [brandColor, setBrandColor] = useState(currentUser?.branding_color || '#4F46E5');
 
@@ -362,6 +364,8 @@ export default function TutorDashboard() {
       boards: profileBoards.split(',').map(s => s.trim()).filter(s => s),
       teaching_mode: profileMode,
       intro_video: profileVideo,
+      experience: profileExperience,
+      highest_qualification: profileQualification,
       location: {
         area: profileArea,
         city: profileCity,
@@ -917,9 +921,60 @@ export default function TutorDashboard() {
               
               <label style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 800 }}>TEACHING SUBJECTS</label>
               <input className="input-field" placeholder="e.g. Mathematics, Physics" value={profileSubjects} onChange={e => setProfileSubjects(e.target.value)} />
+
+              <div className="flex mobile-stack gap-4">
+                <div className="flex-1 flex-col gap-2">
+                  <label style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 800 }}>TARGET CLASSES</label>
+                  <input className="input-field" placeholder="e.g. Class 10, Class 12, JEE" value={profileClasses} onChange={e => setProfileClasses(e.target.value)} />
+                </div>
+                <div className="flex-1 flex-col gap-2">
+                  <label style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 800 }}>LOCATION (AREA/COLONY)</label>
+                  <input className="input-field" placeholder="e.g. Salt Lake, Sector V" value={profileArea} onChange={e => setProfileArea(e.target.value)} />
+                </div>
+              </div>
+
+              <div className="flex mobile-stack gap-4">
+                <div className="flex-1 flex-col gap-2">
+                  <label style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 800 }}>YEARS OF EXPERIENCE</label>
+                  <input className="input-field" placeholder="e.g. 5 Years" value={profileExperience} onChange={e => setProfileExperience(e.target.value)} />
+                </div>
+                <div className="flex-1 flex-col gap-2">
+                  <label style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 800 }}>HIGHEST QUALIFICATION</label>
+                  <input className="input-field" placeholder="e.g. M.Sc in Physics" value={profileQualification} onChange={e => setProfileQualification(e.target.value)} />
+                </div>
+              </div>
+
+              {/* Certificate Upload Section */}
+              <div className="glass-panel p-6 mt-4" style={{ background: 'rgba(79, 70, 229, 0.05)', border: '1px dashed var(--primary)' }}>
+                <div className="flex items-center gap-3 mb-4">
+                  <Shield size={20} color="var(--primary)" />
+                  <h4 style={{ margin: 0 }}>Qualification Verification</h4>
+                </div>
+                <p className="text-muted text-sm mb-4">Please upload your highest qualification certificate (PDF or Image). This will be used to verify your authority on the platform.</p>
+                
+                <div className="flex items-center gap-4 flex-wrap">
+                  <FileUploadVercel 
+                    uid={currentUser?.uid} 
+                    folder="certificates" 
+                    onUploadSuccess={(url) => setProfileCertificates(prev => [...prev, { url, type: 'qualification', name: 'Certificate', uploaded_at: new Date().toISOString(), status: 'pending' }])} 
+                    label="Upload Certificate"
+                  />
+                  
+                  {profileCertificates.map((cert, idx) => (
+                    <div key={idx} className="glass-panel p-2 flex items-center gap-2" style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.05)' }}>
+                      <FileText size={14} />
+                      <span>Certificate {idx + 1}</span>
+                      <span style={{ color: cert.status === 'active' ? 'var(--secondary)' : '#f5c518' }}>
+                        ({cert.status || 'Pending'})
+                      </span>
+                      <button onClick={() => setProfileCertificates(prev => prev.filter((_, i) => i !== idx))} className="btn-link" style={{ color: 'var(--danger)' }}><Trash2 size={12}/></button>
+                    </div>
+                  ))}
+                </div>
+              </div>
               
-              <button className="btn btn-primary w-full mt-4" onClick={handleSaveProfile} style={{ padding: '1rem' }}>
-                Save Profile Changes
+              <button className="btn btn-primary w-full mt-6" onClick={handleSaveProfile} style={{ padding: '1rem', fontWeight: 800 }}>
+                <Check size={20} /> Save & Submit for Verification
               </button>
             </div>
           </div>
