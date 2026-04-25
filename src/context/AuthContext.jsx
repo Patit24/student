@@ -51,9 +51,12 @@ const LS_ADMIN_SESSION = 'ag_admin_session';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function AppProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(null);
-  const [loading,     setLoading]     = useState(true);
   const [isMockMode, setIsMockMode] = useState(!auth);
+  const [currentUser, setCurrentUser] = useState(() => {
+    const cachedAdmin = localStorage.getItem(LS_ADMIN_SESSION);
+    return cachedAdmin ? JSON.parse(cachedAdmin) : null;
+  });
+  const [loading,     setLoading]     = useState(true);
   const [confirmationResult, setConfirmationResult] = useState(null);
   const [recaptchaVerifier, setRecaptchaVerifier] = useState(null);
   const [mockUser, setMockUser] = useState(() => {
@@ -410,8 +413,9 @@ export function AppProvider({ children }) {
     let unsubAuth, unsubProfile, unsubBatches, unsubStudents, unsubMaterials, unsubPurchases;
 
     unsubAuth = onAuthStateChanged(auth, async (user) => {
-      // ── Bypass Check: If we already have a mock/bypass admin, don't let null auth kick them out ──
-      if (!user && currentUser?.uid === 'admin-1') {
+      // ── Bypass Check: If we already have a cached/active admin, don't let null auth kick them out ──
+      const cachedAdmin = localStorage.getItem(LS_ADMIN_SESSION);
+      if (!user && cachedAdmin) {
         setLoading(false);
         return;
       }
