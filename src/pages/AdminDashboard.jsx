@@ -233,6 +233,12 @@ export default function AdminDashboard() {
                 <Users size={18} /> Tutor Management
               </button>
               <button 
+                className={`tab-btn ${activeTab === 'materials' ? 'active' : ''}`}
+                onClick={() => setActiveTab('materials')}
+              >
+                <Package size={18} /> Global Materials
+              </button>
+              <button 
                 className={`tab-btn ${activeTab === 'blogs' ? 'active' : ''}`}
                 onClick={() => setActiveTab('blogs')}
               >
