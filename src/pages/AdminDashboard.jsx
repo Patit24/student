@@ -304,7 +304,7 @@ export default function AdminDashboard() {
                   </table>
                 </div>
               </div>
-            ) : (
+            ) : activeTab === 'materials' ? (
               <div className="glass-card p-8">
                 <div className="flex justify-between items-center mb-8">
                   <h3 className="flex items-center gap-3">
