@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
 import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, orderBy, serverTimestamp } from 'firebase/firestore';
-import { Plus, Trash2, Edit2, Save, X, Image as ImageIcon, FileText } from 'lucide-react';
+import { Plus, Trash2, Edit2, Save, X, Image as ImageIcon, FileText, Upload } from 'lucide-react';
 import { useToast } from './Toast';
+import FileUploadVercel from './FileUploadVercel';
+import { useAppContext } from '../context/AuthContext';
 
 export default function AdminBlogManager() {
   const [blogs, setBlogs] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
+  const { currentUser } = useAppContext();
   const toast = useToast();
 
   const [formData, setFormData] = useState({
@@ -116,14 +119,31 @@ export default function AdminBlogManager() {
             </div>
             
             <div className="grid grid-cols-2 gap-4">
-              <input 
-                type="text" className="input-field" placeholder="Cover Image URL"
-                value={formData.coverImage} onChange={e => setFormData({...formData, coverImage: e.target.value})}
-              />
-              <input 
-                type="text" className="input-field" placeholder="Estimated Read Time (e.g. 5 min)"
-                value={formData.readTime} onChange={e => setFormData({...formData, readTime: e.target.value})}
-              />
+              <div className="flex-col gap-2">
+                <label className="text-xs font-bold text-primary uppercase">Blog Cover Image</label>
+                <div className="flex gap-4 items-center">
+                  {formData.coverImage && (
+                    <div style={{ width: '80px', height: '50px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--primary)' }}>
+                      <img src={formData.coverImage} alt="Cover Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <FileUploadVercel 
+                      uid={currentUser?.uid} 
+                      folder="blogs" 
+                      onUploadSuccess={(url) => setFormData({...formData, coverImage: url})} 
+                      label={formData.coverImage ? "Change Cover" : "Upload Cover Image"}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="flex-col gap-2">
+                <label className="text-xs font-bold text-primary uppercase">Reading Time</label>
+                <input 
+                  type="text" className="input-field w-full" placeholder="e.g. 5 min"
+                  value={formData.readTime} onChange={e => setFormData({...formData, readTime: e.target.value})}
+                />
+              </div>
             </div>
 
             <textarea 
