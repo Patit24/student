@@ -314,6 +314,43 @@ export default function Homepage() {
         </div>
       </section>
 
+      {/* ── RESUME BUILDER SECTION ── */}
+      <section className="hp-section" style={{ background: '#080c16', padding: '6rem 2rem' }}>
+        <div className="container">
+          <div className="hp-section-head">
+            <h2>Modern <span className="hp-yellow">Resume Builder</span></h2>
+            <p>Stand out with our futuristic 2026-style professional templates.</p>
+          </div>
+          
+          <div className="flex mobile-stack items-center gap-12 mt-12">
+            <div className="flex-1">
+              <div className="glass-panel p-8 animate-premium" style={{ borderLeft: '4px solid var(--hp-yellow)' }}>
+                <h3 style={{ fontSize: '1.8rem', marginBottom: '1.5rem' }}>Create a Resume that <span className="hp-yellow">Gets Noticed</span></h3>
+                <ul className="flex-col gap-4 mb-8">
+                  <li className="flex items-center gap-3"><CheckCircle size={18} color="var(--hp-yellow)" /> 5+ Premium Free-to-Edit Templates</li>
+                  <li className="flex items-center gap-3"><CheckCircle size={18} color="var(--hp-yellow)" /> 6+ Modern 2026 Style Elite Designs</li>
+                  <li className="flex items-center gap-3"><CheckCircle size={18} color="var(--hp-yellow)" /> AI-Powered Content Optimization</li>
+                  <li className="flex items-center gap-3"><CheckCircle size={18} color="var(--hp-yellow)" /> Instant PDF Download in High-Res</li>
+                </ul>
+                <Link to="/resume-builder" className="hp-btn-primary" style={{ width: 'fit-content' }}>
+                  <FileText size={20} /> Build My Resume Now
+                </Link>
+              </div>
+            </div>
+            <div className="flex-1 flex gap-4">
+              <div className="resume-preview-card" style={{ transform: 'rotate(-5deg) translateY(20px)' }}>
+                <div className="preview-label">FREE</div>
+                <div className="preview-skeleton" />
+              </div>
+              <div className="resume-preview-card elite" style={{ transform: 'rotate(5deg)' }}>
+                <div className="preview-label">ELITE 2026</div>
+                <div className="preview-skeleton gradient" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── HOW IT WORKS BENTO ── */}
       <section className="hp-section" ref={bentoRef}>
         <div className={`hp-section-head ${bentoVis ? 'hp-reveal-up' : 'hp-hidden-up'}`}>

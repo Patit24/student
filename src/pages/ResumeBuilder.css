@@ -62,6 +62,55 @@
   align-items: center;
 }
 
+.template-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.template-group-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+}
+
+.template-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.template-tab {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid #e2e8f0;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.template-tab.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.template-tab.elite {
+  border-color: #F5C518;
+  color: #b48a04;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.template-tab.elite.active {
+  background: #F5C518;
+  color: black;
+}
+
 .input-group {
   display: flex;
   flex-direction: column;
@@ -328,6 +377,48 @@ textarea {
   font-weight: 700;
   margin-bottom: 4px;
 }
+
+/* ── 2026 STYLE LAYOUTS ────────────────────────────────────────────── */
+
+/* ELITE 1: Futuristic 2026 */
+.template-elite-1 {
+  background: #fdfdfd;
+}
+.template-elite-1 .resume-header {
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+  color: white;
+  padding: 40px;
+  margin: -40px -40px 40px -40px;
+  border-radius: 0 0 40px 40px;
+}
+.template-elite-1 .header-info h1, 
+.template-elite-1 .header-info h2, 
+.template-elite-1 .contact-info {
+  color: white !important;
+}
+
+/* ELITE 2: Neon Gradient */
+.template-elite-2 .section-title {
+  border-bottom: none;
+  background: linear-gradient(to right, #8b5cf6, #ec4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 1.4rem;
+}
+
+/* ELITE 3: Cyber Glass */
+.template-elite-3 {
+  background: #0f172a;
+  color: #f8fafc;
+}
+.template-elite-3 .resume-paper { background: #0f172a; }
+.template-elite-3 .header-info h1 { color: #818CF8; }
+.template-elite-3 .section-title { border-color: #818CF8; color: #818CF8; }
+.template-elite-3 .item-desc, .template-elite-3 .summary-text, .template-elite-3 .contact-info { color: #94a3b8; }
+
+/* ELITE 4: Midnight Pro */
+.template-elite-4 .resume-body { grid-template-columns: 1fr 1.4fr; }
+.template-elite-4 .column-left { background: #f1f5f9; padding: 20px; border-radius: 12px; }
 
 /* ── PRINT MEDIA ─────────────────────────────────────────────────── */
 @media print {
