@@ -17,6 +17,7 @@ import StudentManagePanel from '../components/StudentManagePanel';
 import SubscriptionGuard, { useSubscription } from '../components/SubscriptionGuard';
 import TutorLeadsPanel from '../components/TutorLeadsPanel';
 import FinancialAnalytics from '../components/FinancialAnalytics';
+import FileUploadVercel from '../components/FileUploadVercel';
 import { useToast } from '../components/Toast';
 import { db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -881,12 +882,46 @@ export default function TutorDashboard() {
 
       {activeTab === 'profile' && (
         <div className="glass-panel p-8">
-          <h3 className="mb-4">Public Profile Editor</h3>
-          <div className="flex-col gap-4">
-            <textarea className="input-field" placeholder="Bio" value={profileBio} onChange={e => setProfileBio(e.target.value)} rows={4} />
-            <input className="input-field" placeholder="Profile Pic URL" value={profilePic} onChange={e => setProfilePic(e.target.value)} />
-            <input className="input-field" placeholder="Subjects" value={profileSubjects} onChange={e => setProfileSubjects(e.target.value)} />
-            <button className="btn btn-primary w-full" onClick={handleSaveProfile}>Save Profile</button>
+          <h3 className="mb-8">Public Profile Editor</h3>
+          <div className="flex mobile-stack gap-10">
+            {/* Round Photo Preview & Upload */}
+            <div className="flex-col items-center gap-4" style={{ minWidth: '200px' }}>
+              <div style={{ 
+                width: '120px', 
+                height: '120px', 
+                borderRadius: '50%', 
+                border: '3px solid var(--primary)',
+                padding: '4px',
+                boxShadow: '0 0 20px rgba(79, 70, 229, 0.3)',
+                background: 'rgba(255,255,255,0.02)',
+                overflow: 'hidden'
+              }}>
+                <img 
+                  src={profilePic || 'https://api.dicebear.com/7.x/avataaars/svg?seed=tutor'} 
+                  alt="Profile" 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                />
+              </div>
+              <FileUploadVercel 
+                uid={currentUser?.uid} 
+                folder="profiles" 
+                onUploadSuccess={(url) => setProfilePic(url)} 
+                label="Change Photo"
+              />
+            </div>
+
+            {/* Info Form */}
+            <div className="flex-1 flex-col gap-4">
+              <label style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 800 }}>BIO / ABOUT ME</label>
+              <textarea className="input-field" placeholder="Bio" value={profileBio} onChange={e => setProfileBio(e.target.value)} rows={4} />
+              
+              <label style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 800 }}>TEACHING SUBJECTS</label>
+              <input className="input-field" placeholder="e.g. Mathematics, Physics" value={profileSubjects} onChange={e => setProfileSubjects(e.target.value)} />
+              
+              <button className="btn btn-primary w-full mt-4" onClick={handleSaveProfile} style={{ padding: '1rem' }}>
+                Save Profile Changes
+              </button>
+            </div>
           </div>
         </div>
       )}

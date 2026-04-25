@@ -26,9 +26,10 @@
 .profile-avatar {
   width: 150px;
   height: 150px;
-  border-radius: var(--radius);
+  border-radius: 50%;
   object-fit: cover;
-  border: 4px solid var(--border);
+  border: 4px solid var(--primary);
+  box-shadow: 0 0 25px rgba(79, 70, 229, 0.3);
 }
 
 .profile-title-info {
