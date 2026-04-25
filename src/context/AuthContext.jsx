@@ -46,6 +46,8 @@ function lsClear(...keys) {
   keys.forEach(k => { try { localStorage.removeItem(k); } catch {} });
 }
 
+const LS_ADMIN_SESSION = 'ag_admin_session';
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function AppProvider({ children }) {
@@ -54,7 +56,10 @@ export function AppProvider({ children }) {
   const [isMockMode, setIsMockMode] = useState(!auth);
   const [confirmationResult, setConfirmationResult] = useState(null);
   const [recaptchaVerifier, setRecaptchaVerifier] = useState(null);
-  const [mockUser, setMockUser] = useState(null);
+  const [mockUser, setMockUser] = useState(() => {
+    const cachedAdmin = localStorage.getItem(LS_ADMIN_SESSION);
+    return cachedAdmin ? JSON.parse(cachedAdmin) : null;
+  });
 
   const [mockTutors, setMockTutors] = useState(() => 
     isMockMode ? [
@@ -202,7 +207,9 @@ export function AppProvider({ children }) {
     if (isMockMode || (id === 'admin' && password === 'MasterCS_2026!')) {
       if (id === 'admin') {
         const adminUser = { uid: 'admin-1', phone: 'admin', role: 'super_admin', name: 'Super Admin', subscription_status: 'active' };
+        localStorage.setItem(LS_ADMIN_SESSION, JSON.stringify(adminUser));
         setCurrentUser(adminUser);
+        setMockUser(adminUser);
         setLoading(false);
         return adminUser;
       }
@@ -251,6 +258,7 @@ export function AppProvider({ children }) {
 
   function logout() {
     setCurrentUser(null);
+    localStorage.removeItem(LS_ADMIN_SESSION);
     if (isMockMode) { setMockUser(null); return Promise.resolve(); }
     lsClear(LS_BATCHES, LS_STUDENTS);   // wipe cache on logout
     return signOut(auth);
