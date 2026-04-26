@@ -104,15 +104,36 @@ export default function BlogDetail() {
               border: '1px solid rgba(255,255,255,0.05)', 
               animationDelay: '0.2s' 
             }}>
-              <div className="blog-content" style={{ 
-                fontSize: '1.15rem', 
-                lineHeight: 1.9, 
-                color: 'rgba(255,255,255,0.8)', 
-                letterSpacing: '0.1px' 
-              }}>
-                {blog.content.split('\n').map((para, i) => (
-                  para.trim() && <p key={i} className="mb-8" style={{ fontWeight: 400 }}>{para}</p>
-                ))}
+              <div className="blog-content-container animate-reveal" style={{ animationDelay: '0.2s' }}>
+                <style>
+                  {`
+                    .blog-content-render {
+                      font-size: 1.15rem;
+                      line-height: 1.9;
+                      color: rgba(255,255,255,0.85);
+                    }
+                    .blog-content-render h1 { font-size: 2.5rem; color: #fff; margin-bottom: 2rem; margin-top: 3rem; font-weight: 900; letter-spacing: -1px; }
+                    .blog-content-render h2 { font-size: 2rem; color: #fff; margin-bottom: 1.5rem; margin-top: 2.5rem; font-weight: 850; letter-spacing: -0.5px; }
+                    .blog-content-render h3 { font-size: 1.6rem; color: #fff; margin-bottom: 1.2rem; margin-top: 2rem; font-weight: 800; }
+                    .blog-content-render p { margin-bottom: 1.8rem; }
+                    .blog-content-render ul, .blog-content-render ol { margin-bottom: 2rem; padding-left: 1.5rem; }
+                    .blog-content-render li { margin-bottom: 0.8rem; }
+                    .blog-content-render strong { color: #fff; font-weight: 700; }
+                    .blog-content-render a { color: #F5C518; text-decoration: underline; font-weight: 600; }
+                    .blog-content-render blockquote { 
+                      border-left: 4px solid #F5C518; 
+                      padding-left: 2rem; 
+                      margin: 3rem 0; 
+                      font-style: italic; 
+                      color: rgba(255,255,255,0.9);
+                      font-size: 1.3rem;
+                    }
+                  `}
+                </style>
+                <div 
+                  className="blog-content-render"
+                  dangerouslySetInnerHTML={{ __html: blog.content }} 
+                />
               </div>
 
               <div className="flex items-center justify-between mt-16 pt-12 mobile-stack gap-8" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>

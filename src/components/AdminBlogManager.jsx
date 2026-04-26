@@ -151,10 +151,16 @@ export default function AdminBlogManager() {
               value={formData.excerpt} onChange={e => setFormData({...formData, excerpt: e.target.value})}
             />
 
-            <textarea 
-              className="input-field" placeholder="Blog Content (supports multiple paragraphs)" rows="10" required
-              value={formData.content} onChange={e => setFormData({...formData, content: e.target.value})}
-            />
+            <div className="flex-col gap-2">
+              <label className="text-xs font-bold text-primary uppercase">Blog Content</label>
+              <textarea 
+                className="input-field" placeholder="Blog Content (HTML Tags Supported for h1, h2, ul, etc.)" rows="12" required
+                value={formData.content} onChange={e => setFormData({...formData, content: e.target.value})}
+              />
+              <p className="text-[10px] text-muted-foreground opacity-60">
+                <strong>Pro Tip:</strong> You can paste HTML tags like <code>&lt;h1&gt;</code>, <code>&lt;h2&gt;</code>, <code>&lt;ul&gt;</code>, or <code>&lt;strong&gt;</code> for cinematic formatting.
+              </p>
+            </div>
 
             <div className="flex gap-4 mt-2">
               <button type="submit" className="hp-btn-primary flex-1">
