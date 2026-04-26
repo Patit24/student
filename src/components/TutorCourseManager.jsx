@@ -3,7 +3,7 @@ import {
   Plus, Package, Trash2, Edit3, Globe, 
   DollarSign, Users, Award, BookOpen, FileText,
   PlusCircle, XCircle, CheckCircle, TrendingUp, HelpCircle, Image as ImageIcon,
-  Upload, Download
+  Upload, Download, Loader2
 } from 'lucide-react';
 import { useToast } from './Toast';
 import { createCourse, subscribeTutorCourses, deleteCourse, createCourseExam, uploadFileToStorage, subscribeAllCourses, updateCourse } from '../db.service';
@@ -259,8 +259,8 @@ export default function TutorCourseManager({ tutorId, isAdmin = false }) {
 
       {/* Create Modal */}
       {showModal && (
-        <div className="verification-overlay animate-reveal">
-          <div className="glass-card verification-card" style={{ maxWidth: '800px', padding: '3rem' }}>
+        <div className="verification-overlay animate-reveal" style={{ zIndex: 10000 }}>
+          <div className="glass-card verification-card" style={{ maxWidth: '800px', padding: '2.5rem', maxHeight: '90vh', overflowY: 'auto' }}>
             <button className="close-modal" onClick={() => setShowModal(false)}><XCircle /></button>
             <h2 className="cinematic-title mb-8">Course Creator</h2>
             
@@ -341,35 +341,37 @@ export default function TutorCourseManager({ tutorId, isAdmin = false }) {
                   <PlusCircle size={14} /> Add Module
                 </button>
               </div>
-              <div className="flex-col gap-4 overflow-y-auto" style={{ maxHeight: '300px' }}>
+              <div className="flex-col gap-4 overflow-y-auto pr-2" style={{ maxHeight: '250px', scrollbarWidth: 'none' }}>
                 {curriculum.map((mod, mIdx) => (
-                  <div key={mIdx} className="glass-panel p-4 bg-white/5 border-white/10">
+                  <div key={mIdx} className="glass-panel p-4 bg-white/5 border-white/10 rounded-xl mb-2">
                     <input 
                       type="text" placeholder={`Module ${mIdx + 1} Title`} 
                       className="premium-input w-full mb-3"
                       value={mod.title} onChange={e => updateModuleTitle(mIdx, e.target.value)}
                     />
-                    <div className="flex-col gap-2 pl-6 border-l border-yellow-500/30">
+                    <div className="flex-col gap-2 pl-4 border-l-2 border-yellow-500/30">
                       {mod.items.map((item, iIdx) => (
                         <input 
                           key={iIdx} type="text" placeholder="Lesson/Resource Title" 
-                          className="premium-input w-full" style={{ fontSize: '0.8rem', padding: '0.6rem' }}
+                          className="premium-input w-full mb-1" style={{ fontSize: '0.8rem', padding: '0.6rem' }}
                           value={item} onChange={e => updateMaterial(mIdx, iIdx, e.target.value)}
                         />
                       ))}
-                      <button className="text-[10px] text-muted flex items-center gap-1 mt-1" onClick={() => addMaterial(mIdx)}>
-                        <Plus size={10} /> Add Lesson
-                      </button>
-                      <button 
-                        className={`text-[10px] flex items-center gap-1 mt-2 font-bold ${mod.exam ? 'text-green-500' : 'text-yellow-500'}`}
-                        onClick={() => handleAddExamToModule(mIdx)}
-                      >
-                        <HelpCircle size={10} /> {mod.exam ? 'Edit Exam' : 'Attach MCQ Exam'}
-                      </button>
+                      <div className="flex gap-4 mt-2">
+                        <button className="text-[10px] text-muted flex items-center gap-1 hover:text-white transition-colors" onClick={() => addMaterial(mIdx)}>
+                          <Plus size={10} /> Add Lesson
+                        </button>
+                        <button 
+                          className={`text-[10px] flex items-center gap-1 font-bold transition-all ${mod.exam ? 'text-green-500' : 'text-yellow-500 hover:text-yellow-400'}`}
+                          onClick={() => handleAddExamToModule(mIdx)}
+                        >
+                          <HelpCircle size={10} /> {mod.exam ? 'Edit Exam' : 'Attach MCQ Exam'}
+                        </button>
+                      </div>
                       
                       <div className="mt-3 pt-2 border-t border-white/5">
                         <input type="file" id={`pdf-${mIdx}`} accept=".pdf" onChange={(e) => handleModulePDF(mIdx, e.target.files[0])} hidden />
-                        <label htmlFor={`pdf-${mIdx}`} className={`text-[10px] flex items-center gap-1 cursor-pointer ${mod.pdfUrl ? 'text-green-500' : 'text-blue-400'}`}>
+                        <label htmlFor={`pdf-${mIdx}`} className={`text-[10px] flex items-center gap-1 cursor-pointer transition-all ${mod.pdfUrl ? 'text-green-500' : 'text-blue-400 hover:text-blue-300'}`}>
                           <Download size={10} /> {mod.pdfUrl ? `Replace: ${mod.pdfName}` : 'Upload Module PDF (Notes)'}
                         </label>
                       </div>
@@ -379,9 +381,12 @@ export default function TutorCourseManager({ tutorId, isAdmin = false }) {
               </div>
             </div>
 
-            <button className="hp-btn-primary w-full py-4 flex items-center justify-center gap-2" onClick={handleCreate}>
-              <Globe size={20} /> Publish to Elite Marketplace
-            </button>
+            <div className="mt-4 pt-6 border-t border-white/10">
+              <button className="hp-btn-primary w-full py-4 flex items-center justify-center gap-2" onClick={handleCreate} disabled={isPublishing}>
+                {isPublishing ? <Loader2 className="animate-spin" size={20} /> : <Globe size={20} />}
+                {editingId ? 'Update Masterclass' : 'Publish to Elite Marketplace'}
+              </button>
+            </div>
           </div>
         </div>
       )}
