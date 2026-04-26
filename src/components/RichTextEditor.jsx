@@ -95,11 +95,13 @@ export default function RichTextEditor({ value, onChange, placeholder }) {
             color: rgba(255,255,255,0.3);
             pointer-events: none;
           }
-                    .rich-editor-surface h1 { font-size: 2rem; font-weight: 900; margin-bottom: 1rem; color: #fff; }
-                    .rich-editor-surface h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.8rem; color: #fff; }
-                    .rich-editor-surface p, .rich-editor-surface div { margin-bottom: 1.5rem; min-height: 1em; }
-                    .rich-editor-surface ul { padding-left: 1.5rem; margin-bottom: 1rem; }
-                    .rich-editor-surface b, .rich-editor-surface strong { font-weight: 900; color: #fff; }
+                    .rich-editor-surface h1 { font-size: 2.5rem !important; font-weight: 900 !important; margin-bottom: 1.5rem !important; margin-top: 2rem !important; color: #fff !important; line-height: 1.2 !important; }
+                    .rich-editor-surface h2 { font-size: 1.8rem !important; font-weight: 800 !important; margin-bottom: 1.2rem !important; margin-top: 1.8rem !important; color: #fff !important; line-height: 1.3 !important; }
+                    .rich-editor-surface h3 { font-size: 1.4rem !important; font-weight: 700 !important; margin-bottom: 1rem !important; margin-top: 1.5rem !important; color: #fff !important; }
+                    .rich-editor-surface p, .rich-editor-surface div { margin-bottom: 1.5rem !important; min-height: 1.5em !important; line-height: 1.8 !important; }
+                    .rich-editor-surface ul, .rich-editor-surface ol { padding-left: 1.5rem !important; margin-bottom: 1.5rem !important; }
+                    .rich-editor-surface li { margin-bottom: 0.5rem !important; }
+                    .rich-editor-surface b, .rich-editor-surface strong { font-weight: 900 !important; color: #fff !important; }
         `}
       </style>
     </div>

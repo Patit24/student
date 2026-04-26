@@ -113,13 +113,13 @@ export default function BlogDetail() {
                       line-height: 1.9;
                       color: rgba(255,255,255,0.85);
                     }
-                    .blog-content-render h1 { font-size: 2.5rem; color: #fff; margin-bottom: 2rem; margin-top: 3rem; font-weight: 900; letter-spacing: -1px; }
-                    .blog-content-render h2 { font-size: 2rem; color: #fff; margin-bottom: 1.5rem; margin-top: 2.5rem; font-weight: 850; letter-spacing: -0.5px; }
-                    .blog-content-render h3 { font-size: 1.6rem; color: #fff; margin-bottom: 1.2rem; margin-top: 2rem; font-weight: 800; }
-                    .blog-content-render p, .blog-content-render div { margin-bottom: 1.8rem; min-height: 1em; }
-                    .blog-content-render ul, .blog-content-render ol { margin-bottom: 2rem; padding-left: 1.5rem; }
-                    .blog-content-render li { margin-bottom: 0.8rem; }
-                    .blog-content-render strong { color: #fff; font-weight: 700; }
+                    .blog-content-render h1 { font-size: 2.5rem !important; color: #fff !important; margin-bottom: 2rem !important; margin-top: 3rem !important; font-weight: 900 !important; letter-spacing: -1px !important; line-height: 1.2 !important; }
+                    .blog-content-render h2 { font-size: 2rem !important; color: #fff !important; margin-bottom: 1.5rem !important; margin-top: 2.5rem !important; font-weight: 850 !important; letter-spacing: -0.5px !important; line-height: 1.3 !important; }
+                    .blog-content-render h3 { font-size: 1.6rem !important; color: #fff !important; margin-bottom: 1.2rem !important; margin-top: 2rem !important; font-weight: 800 !important; }
+                    .blog-content-render p, .blog-content-render div { margin-bottom: 1.8rem !important; min-height: 1em !important; line-height: 1.9 !important; }
+                    .blog-content-render ul, .blog-content-render ol { margin-bottom: 2rem !important; padding-left: 1.5rem !important; }
+                    .blog-content-render li { margin-bottom: 0.8rem !important; }
+                    .blog-content-render strong { color: #fff !important; font-weight: 700 !important; }
                     .blog-content-render a { color: #F5C518; text-decoration: underline; font-weight: 600; }
                     .blog-content-render blockquote { 
                       border-left: 4px solid #F5C518; 
