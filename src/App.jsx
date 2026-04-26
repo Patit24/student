@@ -18,6 +18,7 @@ import ResumeBuilder from './pages/ResumeBuilder';
 import Blogs from './pages/Blogs';
 import BlogDetail from './pages/BlogDetail';
 import CourseDetail from './pages/CourseDetail';
+import Courses from './pages/Courses';
 import Footer from './components/Footer';
 import './index.css';
 
@@ -44,6 +45,7 @@ function AppRoutes() {
       <Route path="/blogs" element={<Blogs />} />
       <Route path="/blog/:blogId" element={<BlogDetail />} />
       <Route path="/course/:courseId" element={<CourseDetail />} />
+      <Route path="/courses" element={<Courses />} />
       <Route path="/pricing" element={<Pricing />} />
 
       {!currentUser ? (
