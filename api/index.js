@@ -3,11 +3,9 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import multer from 'multer';
 import crypto from 'crypto';
-import admin from 'firebase-admin';
-import Razorpay from 'razorpay';
-import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { initFirebase, admin } from './lib/firebase.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -22,43 +20,10 @@ app.use(cors());
 app.use(express.json());
 
 // ── FIREBASE INITIALIZATION ─────────────────────────────────────────────────
-const initFirebase = () => {
-  if (admin.apps.length > 0) return admin.apps[0];
-
-  let serviceAccount;
-  const keyPath = process.env.FIREBASE_KEY_PATH;
-  const keyJson = process.env.FIREBASE_KEY_JSON;
-
-  try {
-    if (keyPath) {
-      // Read from file path
-      const absolutePath = path.isAbsolute(keyPath) 
-        ? keyPath 
-        : path.join(__dirname, keyPath);
-      serviceAccount = JSON.parse(fs.readFileSync(absolutePath, 'utf8'));
-    } else if (keyJson) {
-      // Fallback to environment variable string
-      serviceAccount = JSON.parse(keyJson.trim());
-    } else {
-      console.error("❌ CRITICAL: Neither FIREBASE_KEY_PATH nor FIREBASE_KEY_JSON found in .env");
-      return null;
-    }
-
-    return admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-      databaseURL: process.env.FIREBASE_DATABASE_URL || "https://antigravity-tuition-os-default-rtdb.asia-southeast1.firebasedatabase.app",
-      storageBucket: process.env.FIREBASE_BUCKET || "antigravity-tuition-os.firebasestorage.app"
-    });
-  } catch (err) {
-    console.error("❌ Firebase Init Error:", err.message);
-    return null;
-  }
-};
-
 const firebaseApp = initFirebase();
 
 // ── RAZORPAY INITIALIZATION ─────────────────────────────────────────────────
-const razorpay = new Razorpay({
+const razorpay = new (await import('razorpay')).default({
   key_id: process.env.RAZORPAY_KEY_ID || '',
   key_secret: process.env.RAZORPAY_KEY_SECRET || '',
 });
@@ -130,7 +95,13 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
   const file = req.file;
   const { uid, folder } = req.body;
 
-  if (!file || !firebaseApp) return res.status(400).send('Upload failed');
+  if (!file) return res.status(400).send('No file uploaded');
+  if (!firebaseApp) {
+    return res.status(503).json({ 
+      error: 'Firebase not initialized', 
+      details: 'The server is missing FIREBASE_KEY_JSON environment variable. Please add it to your hosting dashboard.' 
+    });
+  }
 
   try {
     const bucket = admin.storage().bucket();
