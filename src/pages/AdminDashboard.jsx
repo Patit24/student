@@ -529,6 +529,12 @@ export default function AdminDashboard() {
               <div className="glass-card p-8">
                 <AdminBlogManager />
               </div>
+            ) : activeTab === 'courses' ? (
+              <div className="flex-col gap-8 animate-reveal">
+                <div className="glass-card p-8">
+                  <TutorCourseManager tutorId={currentUser.uid} isAdmin={true} />
+                </div>
+              </div>
             ) : activeTab === 'marketplace' ? (
               <div className="flex-col gap-8 animate-reveal">
                 <div className="grid grid-cols-3 mobile-grid-1 gap-6">

@@ -6,9 +6,9 @@ import {
   Upload, Download
 } from 'lucide-react';
 import { useToast } from './Toast';
-import { createCourse, subscribeTutorCourses, deleteCourse, createCourseExam, uploadFileToStorage } from '../db.service';
+import { createCourse, subscribeTutorCourses, deleteCourse, createCourseExam, uploadFileToStorage, subscribeAllCourses, updateCourse } from '../db.service';
 
-export default function TutorCourseManager({ tutorId }) {
+export default function TutorCourseManager({ tutorId, isAdmin = false }) {
   const [courses, setCourses] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const toast = useToast();
@@ -25,10 +25,14 @@ export default function TutorCourseManager({ tutorId }) {
   const [examQuestions, setExamQuestions] = useState([{ question: '', options: ['', '', '', ''], correct: 0 }]);
   const [isPublishing, setIsPublishing] = useState(false);
   const [subject, setSubject] = useState('');
+  const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
+    if (isAdmin) {
+      return subscribeAllCourses(setCourses);
+    }
     return subscribeTutorCourses(tutorId, setCourses);
-  }, [tutorId]);
+  }, [tutorId, isAdmin]);
 
   const addModule = () => setCurriculum([...curriculum, { title: '', items: [''], exam: null }]);
   const updateModuleTitle = (idx, val) => {
@@ -131,8 +135,9 @@ export default function TutorCourseManager({ tutorId }) {
 
   const handleCreate = async () => {
     if (!title || !price) return toast.error("Please fill title and price");
+    setIsPublishing(true);
     try {
-      await createCourse({
+      const courseData = {
         title,
         category,
         subject,
@@ -142,22 +147,46 @@ export default function TutorCourseManager({ tutorId }) {
         image: courseImage,
         curriculum,
         tutorId,
-        tutorName: "Super Admin", // Or use currentUser.name if available
+        tutorName: isAdmin ? "Super Admin" : "Elite Faculty",
         sales_count: 0,
         rating: 5.0,
         reviewCount: 0,
         created_at: new Date().toISOString()
-      });
-      toast.success("Elite Course Published! 🚀");
+      };
+
+      if (editingId) {
+        await updateCourse(editingId, courseData);
+        toast.success("Masterclass Updated! 🔄");
+      } else {
+        await createCourse(courseData);
+        toast.success("Elite Course Published! 🚀");
+      }
+      
       setShowModal(false);
       resetForm();
     } catch (err) {
       toast.error("Failed: " + err.message);
+    } finally {
+      setIsPublishing(false);
     }
   };
 
+  const handleEditInit = (course) => {
+    setEditingId(course.id);
+    setTitle(course.title);
+    setCategory(course.category || 'Medical');
+    setSubject(course.subject || '');
+    setPrice(course.price);
+    setOriginalPrice(course.originalPrice);
+    setTag(course.tag || 'Top Seller');
+    setCourseImage(course.image || '');
+    setCurriculum(course.curriculum || [{ title: '', items: [''], exam: null }]);
+    setShowModal(true);
+  };
+
   const resetForm = () => {
-    setTitle(''); setPrice(''); setOriginalPrice(''); setCurriculum([{ title: '', items: [''] }]);
+    setEditingId(null);
+    setTitle(''); setPrice(''); setOriginalPrice(''); setCourseImage(''); setCurriculum([{ title: '', items: [''], exam: null }]);
   };
 
   const totalEarnings = courses.reduce((acc, c) => acc + (c.total_revenue || 0), 0) * 0.8;
@@ -211,7 +240,7 @@ export default function TutorCourseManager({ tutorId }) {
               </div>
             </div>
             <div className="flex gap-3">
-              <button className="btn-icon" onClick={() => toast.info("Editing coming soon!")}>
+              <button className="btn-icon" onClick={() => handleEditInit(course)}>
                 <Edit3 size={18} />
               </button>
               <button className="btn-icon delete" onClick={() => deleteCourse(course.id)}>

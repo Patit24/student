@@ -152,6 +152,23 @@ export async function createCourseExam(courseId, moduleId, examData) {
   });
 }
 
+/** Global: Subscribe to all courses (Admin Mode) */
+export function subscribeAllCourses(callback) {
+  const q = query(collection(db, 'courses'), orderBy('created_at', 'desc'));
+  return onSnapshot(q, snap => {
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  });
+}
+
+/** Update an existing course */
+export async function updateCourse(courseId, courseData) {
+  const ref = doc(db, 'courses', courseId);
+  return await updateDoc(ref, {
+    ...courseData,
+    updated_at: serverTimestamp()
+  });
+}
+
 /** Subscribe to exams for a specific course */
 export function subscribeCourseExams(courseId, callback) {
   const q = query(collection(db, 'course_exams'), where('courseId', '==', courseId));
