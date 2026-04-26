@@ -95,14 +95,14 @@ export default function Courses() {
       <section className="gallery-trust">
         <div className="container">
           <div className="glass-panel trust-box flex items-center justify-between mobile-stack gap-8">
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-10">
               <div className="trust-icon-wrap"><Zap size={24} color="#FFD700" /></div>
               <div className="text-left">
                 <h4 className="font-bold">Instant Learning</h4>
                 <p className="text-muted text-sm">Access your materials immediately after verification.</p>
               </div>
             </div>
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-10">
               <div className="trust-icon-wrap"><Award size={24} color="#FFD700" /></div>
               <div className="text-left">
                 <h4 className="font-bold">Verified Content</h4>
