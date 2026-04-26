@@ -20,7 +20,7 @@ export default function BlogDetail() {
       setLoading(false);
     };
     fetchBlog();
-  }, [id]);
+  }, [blogId]);
 
   if (loading) {
     return (
