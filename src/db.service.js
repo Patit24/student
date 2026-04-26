@@ -94,12 +94,18 @@ export async function deleteCourse(id) {
 }
 
 /**
- * Record a course sale with 80/20 split logic
- * Admin gets 20%, Tutor gets 80%
+ * Record a course sale with intelligent split logic
+ * - If Admin created: 100% Admin Revenue
+ * - If Tutor created: 80% Tutor / 20% Admin Commission
  */
 export async function recordCourseSale(studentId, courseId, amount, tutorId) {
-  const adminCommission = amount * 0.20;
-  const tutorEarnings = amount * 0.80;
+  // Fetch creator profile to determine role
+  const creatorSnap = await getDoc(doc(db, 'users', tutorId));
+  const creatorData = creatorSnap.exists() ? creatorSnap.data() : { role: 'tutor' };
+  const isAdmin = creatorData.role === 'super_admin';
+
+  const adminCommission = isAdmin ? amount : (amount * 0.20);
+  const tutorEarnings = isAdmin ? 0 : (amount * 0.80);
 
   // 1. Record the transaction for auditing
   await addDoc(collection(db, 'transactions'), {
@@ -110,6 +116,7 @@ export async function recordCourseSale(studentId, courseId, amount, tutorId) {
     total_amount: amount,
     admin_commission: adminCommission,
     tutor_earnings: tutorEarnings,
+    is_admin_flagship: isAdmin,
     status: 'completed',
     created_at: serverTimestamp()
   });
