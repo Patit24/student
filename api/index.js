@@ -35,11 +35,14 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // 1. Health Check
 app.get('/api/health', (req, res) => {
+  const currentApp = initFirebase();
   res.status(200).json({
     status: 'ok',
-    firebase: !!firebaseApp,
-    razorpay: !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET),
-    server: 'AWS EC2',
+    firebase_initialized: !!currentApp,
+    firebase_key_exists: !!process.env.FIREBASE_KEY_JSON,
+    firebase_key_length: process.env.FIREBASE_KEY_JSON?.length || 0,
+    bucket: process.env.FIREBASE_BUCKET || 'default',
+    node_env: process.env.NODE_ENV,
     uptime: process.uptime()
   });
 });
@@ -94,12 +97,18 @@ app.post('/api/webhook', async (req, res) => {
 app.post('/api/upload', upload.single('file'), async (req, res) => {
   const file = req.file;
   const { uid, folder } = req.body;
+  
+  // Lazy-init to ensure fresh env vars
+  const currentApp = initFirebase();
 
   if (!file) return res.status(400).send('No file uploaded');
-  if (!firebaseApp) {
+  if (!currentApp) {
     return res.status(503).json({ 
       error: 'Firebase not initialized', 
-      details: 'The server is missing FIREBASE_KEY_JSON environment variable. Please add it to your hosting dashboard.' 
+      debug_info: {
+        key_exists: !!process.env.FIREBASE_KEY_JSON,
+        key_length: process.env.FIREBASE_KEY_JSON?.length || 0
+      }
     });
   }
 
