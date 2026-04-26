@@ -5,13 +5,14 @@ import { doc, getDoc } from 'firebase/firestore';
 import { Calendar, Clock, ChevronLeft, User, Share2, Tag } from 'lucide-react';
 
 export default function BlogDetail() {
-  const { id } = useParams();
+  const { blogId } = useParams();
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchBlog = async () => {
-      const docRef = doc(db, 'blogs', id);
+      if (!blogId) return;
+      const docRef = doc(db, 'blogs', blogId);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         setBlog({ id: docSnap.id, ...docSnap.data() });
