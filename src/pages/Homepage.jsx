@@ -146,7 +146,7 @@ export default function Homepage() {
 
   const [latestBlogs, setLatestBlogs] = useState([]);
   useEffect(() => {
-    const q = query(collection(db, 'blogs'), orderBy('createdAt', 'desc'), limit(3));
+    const q = query(collection(db, 'blogs'), orderBy('createdAt', 'desc'), limit(6));
     const unsub = onSnapshot(q, (snap) => {
       setLatestBlogs(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
@@ -495,7 +495,7 @@ export default function Homepage() {
           </p>
         </div>
         
-        <div className="grid mobile-grid-1 gap-10 mt-12" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+        <div className="hp-blog-scroller mt-12">
           {latestBlogs.map((blog, i) => (
             <div 
               key={blog.id} 
@@ -507,7 +507,10 @@ export default function Homepage() {
                 border: '1px solid rgba(255,255,255,0.05)',
                 transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
                 cursor: 'pointer',
-                position: 'relative'
+                position: 'relative',
+                minWidth: '380px',
+                maxWidth: '380px',
+                scrollSnapAlign: 'start'
               }}
               onClick={() => navigate(`/blog/${blog.id}`)}
             >

@@ -622,6 +622,27 @@
 .hp-path-card h2 { font-size: 3rem; font-weight: 900; margin-bottom: 1rem; color: #111; line-height: 1.1; }
 .hp-path-card p { font-size: 1.1rem; line-height: 1.6; color: #444; margin-bottom: 2.5rem; max-width: 90%; }
 
+/* Horizontal Blog Scroller */
+.hp-blog-scroller {
+  display: flex;
+  gap: 2.5rem;
+  overflow-x: auto;
+  padding: 1rem 0.5rem 3rem;
+  scroll-snap-type: x mandatory;
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+.hp-blog-scroller::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+@media (max-width: 768px) {
+  .hp-blog-scroller {
+    gap: 1.5rem;
+  }
+}
+
 .hp-path-features { display: flex; flex-direction: column; gap: 1rem; margin-bottom: auto; }
 .hp-path-feature { display: flex; align-items: center; gap: 0.8rem; font-weight: 600; font-size: 1rem; color: #222; }
 .hp-path-feature svg { color: #F5C518; }
