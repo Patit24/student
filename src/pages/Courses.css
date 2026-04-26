@@ -249,6 +249,18 @@
   flex-shrink: 0;
 }
 
+.trust-item {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+  text-align: left;
+}
+
+.trust-item h4 {
+  margin-bottom: 4px;
+  font-size: 1.1rem;
+}
+
 @media (max-width: 768px) {
   .courses-grid {
     grid-template-columns: 1fr;
