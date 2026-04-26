@@ -13,6 +13,7 @@ import { useToast } from '../components/Toast';
 import { collection, query, where, onSnapshot, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import AdminBlogManager from '../components/AdminBlogManager';
+import TutorCourseManager from '../components/TutorCourseManager';
 import './AdminDashboard.css';
 
 export default function AdminDashboard() {
@@ -546,31 +547,7 @@ export default function AdminDashboard() {
                 </div>
         
                 <div className="glass-card p-8">
-                  <h3 className="text-xl font-bold mb-6">Course Management</h3>
-                  <div className="flex-col gap-4">
-                    {allCourses.map(course => (
-                      <div key={course.id} className="flex justify-between items-center p-4 border-b border-white/5 hover:bg-white/5 transition-all">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-lg bg-yellow-500/10 flex items-center justify-center">
-                            <BookOpen className="text-yellow-500" size={20} />
-                          </div>
-                          <div>
-                            <h4 className="font-bold">{course.title}</h4>
-                            <p className="text-xs text-muted">Tutor ID: {course.tutorId} • {course.category}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-8">
-                          <div className="text-right">
-                            <div className="font-bold text-sm">₹{course.total_revenue || 0}</div>
-                            <div className="text-[10px] text-muted">Admin: ₹{(course.total_revenue || 0) * 0.2}</div>
-                          </div>
-                          <button className="text-red-400 hover:text-red-300" onClick={() => deleteCourse(course.id)}>
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <TutorCourseManager tutorId={currentUser.uid} />
                 </div>
               </div>
             ) : activeTab === 'analytics' || activeTab === 'revenue' ? (
