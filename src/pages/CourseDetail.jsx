@@ -73,8 +73,8 @@ export default function CourseDetail() {
       return navigate('/login');
     }
 
-    if (currentUser.role !== 'student') {
-      return toast.error("Only student accounts can enroll in courses");
+    if (currentUser.role === 'admin') {
+      return toast.error("Admin accounts cannot enroll in courses. Use a student or tutor account for learning.");
     }
 
     // Razorpay Integration
