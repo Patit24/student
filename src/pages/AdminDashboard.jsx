@@ -22,14 +22,16 @@ export default function AdminDashboard() {
 
   // KPIs & Tutors
   const [tutors, setTutors] = useState([]);
+  const [batches, setBatches] = useState([]);
+  const [allStudents, setAllStudents] = useState([]);
   const [globalAssets, setGlobalAssets] = useState([]);
-  const [activeTab, setActiveTab] = useState('tutors'); // 'tutors' | 'materials' | 'blogs'
+  const [activeTab, setActiveTab] = useState('tutors'); // 'tutors' | 'materials' | 'blogs' | 'analytics'
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Selection for Verification
-  const [verifyingTutor, setVerifyingTutor] = useState(null);
-  const [selectedPlan, setSelectedPlan] = useState('pro');
+  // Search/Filters for Analytics
+  const [searchTutor, setSearchTutor] = useState('');
+  const [selectedAnalyticsTutor, setSelectedAnalyticsTutor] = useState(null);
 
   useEffect(() => {
     const q = query(collection(db, 'users'), where('role', '==', 'tutor'));
@@ -39,9 +41,20 @@ export default function AdminDashboard() {
         ...d.data(),
         txn_id: d.data().payment_tx_id || (isMockMode ? `MOCK-TXN-${d.id}` : 'N/A')
       }));
-      if (real.length > 0 || !isMockMode) setTutors(real);
+      setTutors(real);
     });
-    return unsub;
+
+    const qBatches = query(collection(db, 'batches'));
+    const unsubBatches = onSnapshot(qBatches, (snap) => {
+      setBatches(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+
+    const qStudents = query(collection(db, 'users'), where('role', '==', 'student'));
+    const unsubStudents = onSnapshot(qStudents, (snap) => {
+      setAllStudents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+
+    return () => { unsub(); unsubBatches(); unsubStudents(); };
   }, [isMockMode]);
 
   // Subscribe to Global Assets
@@ -243,6 +256,12 @@ export default function AdminDashboard() {
                 onClick={() => setActiveTab('blogs')}
               >
                 <FileText size={18} /> Manage Blogs
+              </button>
+              <button 
+                className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
+                onClick={() => setActiveTab('analytics')}
+              >
+                <TrendingUp size={18} /> Educational Analytics
               </button>
             </div>
 
@@ -496,6 +515,161 @@ export default function AdminDashboard() {
             ) : activeTab === 'blogs' ? (
               <div className="glass-card p-8">
                 <AdminBlogManager />
+              </div>
+            ) : activeTab === 'analytics' ? (
+              <div className="flex-col gap-8">
+                {/* Analytics Summary Bar */}
+                <div className="grid grid-cols-3 mobile-grid-1 gap-6 mb-4">
+                  <div className="glass-card p-6 border-l-4 border-yellow-500">
+                    <span className="text-xs font-bold uppercase tracking-widest text-muted">Total Batches</span>
+                    <div className="text-3xl font-black mt-2">{batches.length}</div>
+                  </div>
+                  <div className="glass-card p-6 border-l-4 border-indigo-500">
+                    <span className="text-xs font-bold uppercase tracking-widest text-muted">Total Students</span>
+                    <div className="text-3xl font-black mt-2">{allStudents.length}</div>
+                  </div>
+                  <div className="glass-card p-6 border-l-4 border-green-500">
+                    <span className="text-xs font-bold uppercase tracking-widest text-muted">Average/Batch</span>
+                    <div className="text-3xl font-black mt-2">{batches.length ? (allStudents.length / batches.length).toFixed(1) : 0}</div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-12 gap-8">
+                  {/* Tutor Workload List */}
+                  <div className="col-span-12 lg:col-span-5 glass-card p-8">
+                    <h4 className="flex items-center gap-2 mb-6"><Users size={20} color="#f5c518" /> Tutor Workloads</h4>
+                    <div className="flex-col gap-4 overflow-y-auto" style={{ maxHeight: '600px' }}>
+                      {tutors.map(tutor => {
+                        const tutorBatches = batches.filter(b => b.tutorId === tutor.id);
+                        const tutorStudents = allStudents.filter(s => s.tutorId === tutor.id);
+                        return (
+                          <div 
+                            key={tutor.id} 
+                            className={`glass-card p-4 hover:border-yellow-500 cursor-pointer transition-all ${selectedAnalyticsTutor?.id === tutor.id ? 'border-yellow-500 bg-yellow-500/5' : ''}`}
+                            onClick={() => setSelectedAnalyticsTutor(tutor)}
+                          >
+                            <div className="flex justify-between items-center">
+                              <div>
+                                <div className="font-bold">{tutor.name}</div>
+                                <div className="text-xs text-muted">{tutor.phone}</div>
+                              </div>
+                              <div className="text-right">
+                                <div className="badge-active" style={{ fontSize: '0.7rem' }}>{tutorBatches.length} Batches</div>
+                                <div className="text-xs font-bold mt-1">{tutorStudents.length} Students</div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Batch & Student Drill-Down */}
+                  <div className="col-span-12 lg:col-span-7 flex-col gap-6">
+                    {selectedAnalyticsTutor ? (
+                      <>
+                        <div className="glass-card p-8 animate-reveal">
+                          <h4 className="flex items-center gap-2 mb-6">
+                            <Package size={20} color="#f5c518" /> 
+                            Batches for {selectedAnalyticsTutor.name}
+                          </h4>
+                          <div className="grid grid-cols-2 mobile-grid-1 gap-4">
+                            {batches.filter(b => b.tutorId === selectedAnalyticsTutor.id).map(batch => {
+                              const studentsInBatch = allStudents.filter(s => s.batch_id === batch.id);
+                              return (
+                                <div key={batch.id} className="glass-card p-5 flex-col gap-2" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                                  <div className="flex justify-between items-start">
+                                    <div className="font-black text-lg">{batch.name}</div>
+                                    <div style={{ fontSize: '0.7rem', fontWeight: 800, background: 'rgba(245,197,24,0.1)', color: '#f5c518', padding: '2px 8px', borderRadius: '4px' }}>
+                                      {studentsInBatch.length} / {batch.limit}
+                                    </div>
+                                  </div>
+                                  <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+                                    <div style={{ 
+                                      width: `${Math.min(100, (studentsInBatch.length / batch.limit) * 100)}%`, 
+                                      height: '100%', 
+                                      background: '#f5c518',
+                                      boxShadow: '0 0 10px #f5c518'
+                                    }} />
+                                  </div>
+                                  <div className="text-xs text-muted mt-2">
+                                    {studentsInBatch.length > 0 ? (
+                                      <div className="flex-col gap-1">
+                                        <span className="font-bold text-white mb-1">Student Data:</span>
+                                        {studentsInBatch.slice(0, 5).map(s => (
+                                          <div key={s.id} className="flex justify-between border-b border-white/5 pb-1">
+                                            <span>{s.name}</span>
+                                            <span className="opacity-50">{s.phone}</span>
+                                          </div>
+                                        ))}
+                                        {studentsInBatch.length > 5 && <div className="text-center italic mt-1 opacity-40">+ {studentsInBatch.length - 5} more</div>}
+                                      </div>
+                                    ) : (
+                                      'No students enrolled yet.'
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                            {batches.filter(b => b.tutorId === selectedAnalyticsTutor.id).length === 0 && (
+                              <div className="col-span-2 text-center p-10 opacity-30">No batches found for this tutor.</div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Export/Collect Student Data View */}
+                        <div className="glass-card p-8 animate-reveal" style={{ animationDelay: '0.1s' }}>
+                          <div className="flex justify-between items-center mb-6">
+                            <h4 className="flex items-center gap-2"><UserCheck size={20} color="#f5c518" /> Student Directory</h4>
+                            <button 
+                              className="hp-btn-outline text-xs py-2" 
+                              onClick={() => {
+                                const data = allStudents.filter(s => s.tutorId === selectedAnalyticsTutor.id);
+                                const csv = "Name,Phone,Batch\n" + data.map(s => `"${s.name}","${s.phone}","${batches.find(b => b.id === s.batch_id)?.name || 'Unknown'}"`).join("\n");
+                                const blob = new Blob([csv], { type: 'text/csv' });
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `students_${selectedAnalyticsTutor.name.replace(/\s+/g, '_')}.csv`;
+                                a.click();
+                              }}
+                            >
+                              Collect CSV Data
+                            </button>
+                          </div>
+                          <div className="table-responsive" style={{ maxHeight: '400px' }}>
+                            <table className="premium-table">
+                              <thead>
+                                <tr>
+                                  <th>Student Name</th>
+                                  <th>Phone</th>
+                                  <th>Batch</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {allStudents.filter(s => s.tutorId === selectedAnalyticsTutor.id).map(student => (
+                                  <tr key={student.id}>
+                                    <td className="font-bold">{student.name}</td>
+                                    <td>{student.phone}</td>
+                                    <td className="text-xs text-yellow-500 font-bold">
+                                      {batches.find(b => b.id === student.batch_id)?.name || 'N/A'}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="glass-card p-20 flex-col items-center justify-center text-center opacity-50 h-full">
+                        <Activity size={48} className="mb-4 text-yellow-500 animate-pulse" />
+                        <h3>Select a tutor to analyze batches</h3>
+                        <p>Detailed workload metrics and student enrollment data will appear here.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             ) : null}
           </main>
