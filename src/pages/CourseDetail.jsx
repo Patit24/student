@@ -1,0 +1,290 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { 
+  ChevronRight, Star, ShieldCheck, Clock, Users, 
+  BookOpen, FileText, CheckCircle, ArrowRight,
+  ShieldAlert, Award, Play, Download, MessageCircle,
+  ExternalLink, ChevronDown, ChevronUp, Zap
+} from 'lucide-react';
+import { useToast } from '../components/Toast';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
+import './CourseDetail.css';
+
+export default function CourseDetail() {
+  const { courseId } = useParams();
+  const navigate = useNavigate();
+  const toast = useToast();
+  const [course, setCourse] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [activeAccordion, setActiveAccordion] = useState(0);
+  const [isHeaderSticky, setIsHeaderSticky] = useState(false);
+
+  // Handle Scroll for Sticky Header
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsHeaderSticky(window.scrollY > 400);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    // In a real app, fetch from Firestore. For now, we'll use a high-fidelity mock
+    // to show off the "NEET Organic Chemistry Masterclass" design.
+    const fetchCourse = async () => {
+      try {
+        // const docRef = doc(db, 'courses', courseId);
+        // const docSnap = await getDoc(docRef);
+        // if (docSnap.exists()) setCourse(docSnap.data());
+        
+        // MOCK DATA FOR THE ELITE DEMO
+        setTimeout(() => {
+          setCourse({
+            id: courseId,
+            title: "NEET Organic Chemistry Masterclass 2026",
+            category: "Medical",
+            subject: "Chemistry",
+            tutorName: "Dr. Aryan Sharma",
+            tutorRole: "Ex-Aakash Senior Faculty",
+            tutorAvatar: "https://ui-avatars.com/api/?name=Aryan+Sharma&background=FFD700&color=000&bold=true",
+            price: 1499,
+            originalPrice: 2999,
+            enrolledCount: 1248,
+            rating: 4.9,
+            reviewCount: 450,
+            lastUpdated: "April 2026",
+            tag: "Top Seller",
+            curriculum: [
+              { title: "Module 1: General Organic Chemistry (GOC)", items: ["Electronic Effects Deep Dive", "Stability of Intermediates", "Acidity & Basicity Logic", "GOC Mock Test #1"] },
+              { title: "Module 2: Hydrocarbons & Isomerism", items: ["Alkanes/Alkenes Synthesis", "Stereoisomerism Visualized", "NTA-Pattern Practice Sheet"] },
+              { title: "Module 3: Reaction Mechanisms", items: ["SN1 vs SN2 Masterclass", "E1/E2 Elimination Logic", "Naming Reactions Cheat Sheet"] }
+            ],
+            offerings: [
+              { title: "Weekly Mock Exams", desc: "NTA-pattern tests with detailed PDF solutions.", icon: <FileText /> },
+              { title: "Last Minute Suggestions", desc: "High-yield topics curated by top tutors.", icon: <Zap /> },
+              { title: "Personal Mentorship", desc: "Direct connection to tutor after verification.", icon: <MessageCircle /> }
+            ]
+          });
+          setLoading(false);
+        }, 800);
+      } catch (err) {
+        toast.error("Failed to load course details");
+        setLoading(false);
+      }
+    };
+    fetchCourse();
+  }, [courseId]);
+
+  if (loading) return (
+    <div className="course-loading">
+      <div className="loader-ring"></div>
+      <p>Loading Elite Curriculum...</p>
+    </div>
+  );
+
+  if (!course) return <div className="p-20 text-center">Course not found.</div>;
+
+  return (
+    <div className="course-page-root">
+      
+      {/* Dynamic Sticky Mini Header */}
+      <div className={`sticky-nav ${isHeaderSticky ? 'visible' : ''}`}>
+        <div className="container flex justify-between items-center h-full">
+          <div className="flex items-center gap-4">
+            <span className="sticky-title">{course.title}</span>
+            <div className="sticky-price-tag">₹{course.price}</div>
+          </div>
+          <button className="buy-now-btn-sm" onClick={() => navigate('/signup')}>
+            Enroll Now <ArrowRight size={14} />
+          </button>
+        </div>
+      </div>
+
+      {/* Hero Section */}
+      <section className="course-hero">
+        <div className="container">
+          <nav className="breadcrumbs animate-reveal">
+            <Link to="/">Home</Link> <ChevronRight size={12} />
+            <Link to="/courses">{course.category}</Link> <ChevronRight size={12} />
+            <span>{course.subject}</span>
+          </nav>
+
+          <div className="hero-grid mt-8">
+            <div className="hero-content animate-reveal" style={{ animationDelay: '0.1s' }}>
+              <div className="hero-badges">
+                <span className="badge-top-seller"><Award size={14} /> {course.tag}</span>
+                <span className="badge-verified"><ShieldCheck size={14} /> Verified Tutor</span>
+              </div>
+              
+              <h1 className="course-main-title">{course.title}</h1>
+              
+              <div className="course-meta-row">
+                <div className="tutor-mini-profile">
+                  <img src={course.tutorAvatar} alt={course.tutorName} />
+                  <div>
+                    <span className="tutor-label">Instructor</span>
+                    <span className="tutor-name">{course.tutorName} <CheckCircle size={12} className="text-blue-500 inline" /></span>
+                  </div>
+                </div>
+                <div className="meta-divider" />
+                <div className="rating-block">
+                  <div className="stars">
+                    {[1,2,3,4,5].map(s => <Star key={s} size={14} fill={s <= 4 ? "#FFD700" : "none"} stroke="#FFD700" />)}
+                    <span className="rating-val">{course.rating}</span>
+                  </div>
+                  <span className="review-count">({course.reviewCount} reviews)</span>
+                </div>
+                <div className="meta-divider" />
+                <div className="social-proof">
+                  <Users size={16} /> <span>{course.enrolledCount.toLocaleString()}+ Aspirants Joined</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Decorative Background Elements */}
+        <div className="hero-bg-accent" />
+      </section>
+
+      {/* Main Content & Sticky Sidebar Container */}
+      <div className="container main-layout-grid">
+        
+        {/* Left Column: Course Details */}
+        <div className="course-details-column">
+          
+          {/* Section: Master Grid */}
+          <section className="modular-section animate-reveal" style={{ animationDelay: '0.2s' }}>
+            <h2 className="section-title">What you will Master</h2>
+            <div className="offerings-grid">
+              {course.offerings.map((off, i) => (
+                <div key={i} className="offering-card glass-card">
+                  <div className="offering-icon">{off.icon}</div>
+                  <h3>{off.title}</h3>
+                  <p>{off.desc}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Section: Curriculum (Accordion Style) */}
+          <section className="modular-section animate-reveal" style={{ animationDelay: '0.3s' }}>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="section-title">Course Content</h2>
+              <span className="text-muted text-sm">{course.curriculum.length} Modules • {course.curriculum.reduce((acc, c) => acc + c.items.length, 0)} Materials</span>
+            </div>
+            
+            <div className="curriculum-accordion">
+              {course.curriculum.map((module, idx) => (
+                <div key={idx} className={`accordion-item ${activeAccordion === idx ? 'active' : ''}`}>
+                  <button className="accordion-trigger" onClick={() => setActiveAccordion(activeAccordion === idx ? -1 : idx)}>
+                    <div className="flex items-center gap-4">
+                      <div className="module-number">0{idx + 1}</div>
+                      <span className="module-title">{module.title}</span>
+                    </div>
+                    {activeAccordion === idx ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                  </button>
+                  <div className="accordion-content">
+                    {module.items.map((item, i) => (
+                      <div key={i} className="content-item">
+                        <div className="flex items-center gap-3">
+                          <BookOpen size={16} className="text-muted" />
+                          <span>{item}</span>
+                        </div>
+                        <Lock size={14} className="text-muted opacity-50" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Section: Tutor Bio */}
+          <section className="modular-section animate-reveal" style={{ animationDelay: '0.4s' }}>
+            <h2 className="section-title">About the Instructor</h2>
+            <div className="tutor-bio-card glass-card">
+              <div className="flex gap-6 mobile-stack">
+                <img src={course.tutorAvatar} className="bio-avatar" alt="" />
+                <div>
+                  <h3 className="bio-name">{course.tutorName}</h3>
+                  <p className="bio-role">{course.tutorRole}</p>
+                  <div className="bio-stats">
+                    <div className="bio-stat"><strong>4.9</strong> Instructor Rating</div>
+                    <div className="bio-stat"><strong>15+</strong> Years Exp.</div>
+                    <div className="bio-stat"><strong>50k+</strong> Students Taught</div>
+                  </div>
+                  <p className="bio-text">
+                    Specializing in high-yield Organic Chemistry logic for NEET & JEE. Known for simplifying complex 
+                    Reaction Mechanisms into logical flowcharts that ensure zero-error in the actual exam.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        {/* Right Column: Sticky Sidebar */}
+        <aside className="course-sidebar">
+          <div className="sticky-card-wrapper animate-reveal" style={{ animationDelay: '0.2s' }}>
+            <div className="enroll-card glass-card">
+              <div className="price-section">
+                <div className="current-price">₹{course.price}</div>
+                <div className="original-price">₹{course.originalPrice}</div>
+                <div className="discount-pill">50% OFF</div>
+              </div>
+              
+              <div className="urgency-banner">
+                <Clock size={16} /> <span>Offer ends in 12 hours!</span>
+              </div>
+
+              <button className="enroll-now-btn" onClick={() => navigate('/signup')}>
+                Enroll Now <ArrowRight size={20} />
+              </button>
+
+              <p className="card-guarantee">
+                <ShieldCheck size={14} className="text-green-500" />
+                30-Minute Verification Guarantee
+              </p>
+
+              <div className="divider" />
+
+              <div className="course-includes">
+                <h4 className="includes-title">This course includes:</h4>
+                <ul className="includes-list">
+                  <li><FileText size={16} /> Full Lifetime Access</li>
+                  <li><Download size={16} /> 45+ Downloadable Resources</li>
+                  <li><Award size={16} /> Certificate of Completion</li>
+                  <li><Zap size={16} /> Direct Tutor Feedback</li>
+                </ul>
+              </div>
+
+              <div className="admin-promise-box">
+                <ShieldAlert size={18} color="#FFD700" />
+                <div>
+                  <strong>Admin Promise</strong>
+                  <p>Your transaction is verified manually by our Super Admin within 30 minutes for 100% security.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+      </div>
+
+      {/* Trust Footer */}
+      <footer className="course-footer">
+        <div className="container flex-col items-center text-center">
+          <div className="pulse-indicator">
+            <div className="pulse-dot"></div>
+            <span>Super Admin Online: Average Verification 14 mins</span>
+          </div>
+          <div className="footer-links mt-6">
+            <span>© 2026 PPREducation · Antigravity Elite Series</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}

@@ -17,6 +17,7 @@ import TutorProfile from './pages/TutorProfile';
 import ResumeBuilder from './pages/ResumeBuilder';
 import Blogs from './pages/Blogs';
 import BlogDetail from './pages/BlogDetail';
+import CourseDetail from './pages/CourseDetail';
 import Footer from './components/Footer';
 import './index.css';
 
@@ -41,8 +42,9 @@ function AppRoutes() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/resume-builder" element={<ResumeBuilder />} />
       <Route path="/blogs" element={<Blogs />} />
-      <Route path="/blog/:id" element={<BlogDetail />} />
-      {/* Removed Resume Builder */}
+      <Route path="/blog/:blogId" element={<BlogDetail />} />
+      <Route path="/course/:courseId" element={<CourseDetail />} />
+      <Route path="/pricing" element={<Pricing />} />
 
       {!currentUser ? (
         <>
