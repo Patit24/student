@@ -7,14 +7,17 @@ import {
   ExternalLink, ChevronDown, ChevronUp, Zap
 } from 'lucide-react';
 import { useToast } from '../components/Toast';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, onSnapshot, query } from 'firebase/firestore';
 import { db } from '../firebase';
+import { recordCourseSale } from '../db.service';
+import { useAppContext } from '../context/AuthContext';
 import './CourseDetail.css';
 
 export default function CourseDetail() {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
+  const { currentUser } = useAppContext();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeAccordion, setActiveAccordion] = useState(0);
@@ -75,6 +78,53 @@ export default function CourseDetail() {
     };
     fetchCourse();
   }, [courseId]);
+
+  const handlePurchase = async () => {
+    if (!currentUser) {
+      toast.info("Please login to enroll in this course");
+      return navigate('/login');
+    }
+
+    if (currentUser.role !== 'student') {
+      return toast.error("Only student accounts can enroll in courses");
+    }
+
+    // Razorpay Integration
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.onload = () => {
+      const options = {
+        key: 'rzp_test_YourKeyHere', // Replace with your key
+        amount: course.price * 100, // in paise
+        currency: 'INR',
+        name: 'PPREducation',
+        description: course.title,
+        handler: async function(response) {
+          try {
+            await recordCourseSale(
+              currentUser.uid,
+              course.id,
+              course.price,
+              course.tutorId
+            );
+            toast.success("Enrollment Successful! Welcome to the Elite Masterclass 🚀");
+            navigate('/student');
+          } catch (err) {
+            toast.error("Enrollment error: " + err.message);
+          }
+        },
+        prefill: {
+          name: currentUser.name,
+          contact: currentUser.phone
+        },
+        theme: { color: '#FFD700' }
+      };
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    };
+    document.body.appendChild(script);
+  };
 
   if (loading) return (
     <div className="course-loading">
@@ -239,7 +289,7 @@ export default function CourseDetail() {
                 <Clock size={16} /> <span>Offer ends in 12 hours!</span>
               </div>
 
-              <button className="enroll-now-btn" onClick={() => navigate('/signup')}>
+              <button className="enroll-now-btn" onClick={handlePurchase}>
                 Enroll Now <ArrowRight size={20} />
               </button>
 

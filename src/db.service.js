@@ -64,6 +64,75 @@ export async function markAssetPurchased(userId, assetId) {
   });
 }
 
+// ── COURSE MARKETPLACE ──
+export async function createCourse(data) {
+  return await addDoc(collection(db, 'courses'), {
+    ...data,
+    status: 'published',
+    created_at: serverTimestamp(),
+    sales_count: 0,
+    total_revenue: 0
+  });
+}
+
+export function subscribeCourses(callback) {
+  const q = query(collection(db, 'courses'), where('status', '==', 'published'));
+  return onSnapshot(q, snap => {
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  });
+}
+
+export function subscribeTutorCourses(tutorId, callback) {
+  const q = query(collection(db, 'courses'), where('tutorId', '==', tutorId));
+  return onSnapshot(q, snap => {
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  });
+}
+
+export async function deleteCourse(id) {
+  await deleteDoc(doc(db, 'courses', id));
+}
+
+/**
+ * Record a course sale with 80/20 split logic
+ * Admin gets 20%, Tutor gets 80%
+ */
+export async function recordCourseSale(studentId, courseId, amount, tutorId) {
+  const adminCommission = amount * 0.20;
+  const tutorEarnings = amount * 0.80;
+
+  // 1. Record the transaction for auditing
+  await addDoc(collection(db, 'transactions'), {
+    type: 'course_purchase',
+    studentId,
+    courseId,
+    tutorId,
+    total_amount: amount,
+    admin_commission: adminCommission,
+    tutor_earnings: tutorEarnings,
+    status: 'completed',
+    created_at: serverTimestamp()
+  });
+
+  // 2. Add course to student's library
+  await setDoc(doc(db, 'users', studentId, 'enrolled_courses', courseId), {
+    enrolled_at: serverTimestamp(),
+    courseId,
+    tutorId,
+    amount_paid: amount
+  });
+
+  // 3. Update course stats
+  const courseRef = doc(db, 'courses', courseId);
+  const courseSnap = await getDoc(courseRef);
+  if (courseSnap.exists()) {
+    await updateDoc(courseRef, {
+      sales_count: (courseSnap.data().sales_count || 0) + 1,
+      total_revenue: (courseSnap.data().total_revenue || 0) + amount
+    });
+  }
+}
+
 export function subscribePurchases(userId, callback) {
   return onSnapshot(collection(db, 'users', userId, 'purchased_items'), snap => {
     callback(snap.docs.map(d => d.id));

@@ -16,6 +16,7 @@ import TutorMaterialsPanel from '../components/TutorMaterialsPanel';
 import StudentManagePanel from '../components/StudentManagePanel';
 import SubscriptionGuard, { useSubscription } from '../components/SubscriptionGuard';
 import TutorLeadsPanel from '../components/TutorLeadsPanel';
+import TutorCourseManager from '../components/TutorCourseManager';
 import FinancialAnalytics from '../components/FinancialAnalytics';
 import FileUploadVercel from '../components/FileUploadVercel';
 import { useToast } from '../components/Toast';
@@ -394,7 +395,6 @@ export default function TutorDashboard() {
     ));
     
     toast.success(`🚀 Link broadcasted to ${myBatches.find(b => b.id === selectedBatchForLive)?.name}!`);
-    setMeetingRoom(googleMeetLink);
     setIsLive(true);
     setShowGoLiveModal(false);
   };
@@ -402,8 +402,6 @@ export default function TutorDashboard() {
   const stopStream = () => {
     setStreamActive(false);
     setIsLive(false);
-    setMeetingRoom(null);
-    setActiveParticipants([]);
     // Clear live status
     setMockSessions(prev => prev.map(s => ({ ...s, is_live: false })));
   };
@@ -411,47 +409,6 @@ export default function TutorDashboard() {
   const copyMeetingLink = () => {
     navigator.clipboard.writeText(googleMeetLink);
     toast.success('Google Meet link copied!');
-  };
-
-  const toggleCamera = () => {
-    if (stream && !isScreenSharing) {
-      const t = stream.getVideoTracks()[0];
-      if (t) { t.enabled = !cameraOn; setCameraOn(!cameraOn); }
-    }
-  };
-
-  const revertToCamera = () => {
-    if (stream && cameraTrackRef.current) {
-      stream.getVideoTracks()[0]?.stop();
-      stream.removeTrack(stream.getVideoTracks()[0]);
-      stream.addTrack(cameraTrackRef.current);
-      if (videoRef.current) videoRef.current.srcObject = stream;
-      setIsScreenSharing(false);
-      setCameraOn(true);
-    }
-  };
-
-  const toggleScreenShare = async () => {
-    if (!limits.recording) {
-      alert('Screen sharing is available on the Pro plan. Please upgrade.');
-      return;
-    }
-    try {
-      if (!isScreenSharing) {
-        const ss = await navigator.mediaDevices.getDisplayMedia({ video: true });
-        const screenTrack = ss.getVideoTracks()[0];
-        screenTrack.onended = revertToCamera;
-        const current = stream.getVideoTracks()[0];
-        stream.removeTrack(current);
-        stream.addTrack(screenTrack);
-        if (videoRef.current) videoRef.current.srcObject = stream;
-        setIsScreenSharing(true);
-      } else {
-        revertToCamera();
-      }
-    } catch (err) {
-      console.error("Error toggling screen share", err);
-    }
   };
 
   const createBatch = async (e) => {
@@ -607,19 +564,14 @@ export default function TutorDashboard() {
           <div className="mb-8 p-4" style={{ background: '#1a1a1a', borderRadius: 'var(--radius)', border: '1px solid #333' }}>
             <p style={{ fontSize: '0.75rem', color: '#888', marginBottom: '0.5rem' }}>STUDENT JOIN LINK</p>
             <div style={{ wordBreak: 'break-all', fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem', padding: '0.5rem', background: '#000', borderRadius: '4px' }}>
-              {window.location.origin}/join/{meetingRoom}
+              {window.location.origin}/join/live
             </div>
             <button className="btn btn-primary w-full" style={{ padding: '0.5rem', fontSize: '0.8rem' }} onClick={copyMeetingLink}>
               Copy Link
             </button>
           </div>
 
-
           <div className="mt-auto">
-            <div className="flex items-center gap-2 mb-4">
-              <div style={{ width: '8px', height: '8px', background: 'var(--secondary)', borderRadius: '50%', animation: 'pulse 1.5s infinite' }}></div>
-              <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{activeParticipants.length + 1} Online</span>
-            </div>
             <button className="btn btn-danger w-full" onClick={stopStream}>End Class</button>
           </div>
         </div>
@@ -733,64 +685,13 @@ export default function TutorDashboard() {
         </button>
       </div>
 
-      {/* Start Live Session Modal */}
-      {showGoLiveModal && (
-        <div className="modal-overlay animate-fade-in" style={{ 
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
-          background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)',
-          zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center'
-        }}>
-          <div className="glass-panel p-10 animate-slide-up" style={{ maxWidth: '500px', width: '90%', border: '1px solid var(--primary)' }}>
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="m-0">Go Live 🔴</h2>
-              <button onClick={() => setShowGoLiveModal(false)} className="btn-link" style={{ color: '#888' }}><X size={24}/></button>
-            </div>
-            
-            <p className="text-muted mb-8">Select which batch should receive your Google Meet link to join the class.</p>
-            
-            <div className="flex-col gap-6">
-              <div>
-                <label style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 800, display: 'block', marginBottom: '0.5rem' }}>SELECT TARGET BATCH</label>
-                <select 
-                  className="input-field w-full" 
-                  value={selectedBatchForLive} 
-                  onChange={(e) => setSelectedBatchForLive(e.target.value)}
-                  style={{ background: 'rgba(255,255,255,0.02)' }}
-                >
-                  <option value="">Choose a batch...</option>
-                  {myBatches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                </select>
-              </div>
-
-              <div>
-                <label style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 800, display: 'block', marginBottom: '0.5rem' }}>GOOGLE MEET LINK</label>
-                <input 
-                  type="text" 
-                  className="input-field w-full" 
-                  placeholder="https://meet.google.com/xxx-xxxx-xxx"
-                  value={googleMeetLink}
-                  onChange={(e) => setGoogleMeetLink(e.target.value)}
-                />
-              </div>
-
-              <button 
-                onClick={handleGoLive}
-                className="btn btn-primary w-full" 
-                style={{ padding: '1rem', marginTop: '1rem', fontWeight: 800 }}
-              >
-                BROADCAST & START CLASS
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       <div className="tabs-row mb-6 custom-scrollbar" style={{ display: 'flex', gap: '0.8rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
         <Tab id="students"   label="Students"   icon={Users} />
         <Tab id="analytics"  label="Analytics"  icon={TrendingUp} />
         <Tab id="batches"    label="Batches"     icon={Layers} />
         <Tab id="schedule"   label="Schedule"    icon={Calendar} />
         <Tab id="materials"  label="Materials"   icon={FileText} />
+        <Tab id="marketplace" label="Marketplace" icon={Globe} />
         <Tab id="exams"      label="Exams"       icon={CheckSquare} />
         <Tab id="leads"      label="Leads"      icon={TrendingUp} />
         <Tab id="defaulters" label="Overdue"     icon={AlertOctagon} />
@@ -864,6 +765,7 @@ export default function TutorDashboard() {
       )}
 
       {activeTab === 'materials' && <TutorMaterialsPanel myBatches={myBatches} />}
+      {activeTab === 'marketplace' && <TutorCourseManager tutorId={currentUser?.uid} />}
       {activeTab === 'exams' && <ExamResultsPanel tutorId={currentUser?.uid} myBatches={myBatches} myStudents={myStudents} />}
       {activeTab === 'leads' && <TutorLeadsPanel />}
       {activeTab === 'defaulters' && (
