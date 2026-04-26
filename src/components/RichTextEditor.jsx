@@ -24,6 +24,19 @@ export default function RichTextEditor({ value, onChange, placeholder }) {
     handleInput();
   };
 
+  const applyFontSize = (size) => {
+    // Custom font size using span wrapping for pixel precision
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      const span = document.createElement('span');
+      span.style.fontSize = size;
+      span.appendChild(range.extractContents());
+      range.insertNode(span);
+      handleInput();
+    }
+  };
+
   return (
     <div className="rich-editor-wrapper flex-col gap-2">
       {/* Basic Formatting Toolbar */}
@@ -35,6 +48,7 @@ export default function RichTextEditor({ value, onChange, placeholder }) {
         <button type="button" onClick={() => execCommand('formatBlock', 'H1')} className="toolbar-btn" title="Heading 1">H1</button>
         <button type="button" onClick={() => execCommand('formatBlock', 'H2')} className="toolbar-btn" title="Heading 2">H2</button>
         <button type="button" onClick={() => execCommand('formatBlock', 'P')} className="toolbar-btn" title="Paragraph">P</button>
+        <button type="button" onClick={() => applyFontSize('18px')} className="toolbar-btn" title="18px Font">18px</button>
         <div className="toolbar-divider" />
         <button type="button" onClick={() => execCommand('insertUnorderedList')} className="toolbar-btn" title="Bullet List">• List</button>
         <button type="button" onClick={() => execCommand('justifyLeft')} className="toolbar-btn">L</button>
