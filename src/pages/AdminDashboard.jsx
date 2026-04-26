@@ -32,6 +32,8 @@ export default function AdminDashboard() {
   // Search/Filters for Analytics
   const [searchTutor, setSearchTutor] = useState('');
   const [selectedAnalyticsTutor, setSelectedAnalyticsTutor] = useState(null);
+  const [verifyingTutor, setVerifyingTutor] = useState(null);
+  const [selectedPlan, setSelectedPlan] = useState('pro');
 
   useEffect(() => {
     const q = query(collection(db, 'users'), where('role', '==', 'tutor'));
