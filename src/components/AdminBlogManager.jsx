@@ -4,6 +4,7 @@ import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, order
 import { Plus, Trash2, Edit2, Save, X, Image as ImageIcon, FileText, Upload } from 'lucide-react';
 import { useToast } from './Toast';
 import FileUploadVercel from './FileUploadVercel';
+import RichTextEditor from './RichTextEditor';
 import { useAppContext } from '../context/AuthContext';
 
 export default function AdminBlogManager() {
@@ -153,13 +154,11 @@ export default function AdminBlogManager() {
 
             <div className="flex-col gap-2">
               <label className="text-xs font-bold text-primary uppercase">Blog Content</label>
-              <textarea 
-                className="input-field" placeholder="Blog Content (HTML Tags Supported for h1, h2, ul, etc.)" rows="12" required
-                value={formData.content} onChange={e => setFormData({...formData, content: e.target.value})}
+              <RichTextEditor 
+                value={formData.content} 
+                onChange={val => setFormData({...formData, content: val})} 
+                placeholder="Paste or write your blog content here. Formats like headings, colors, and lists will be preserved."
               />
-              <p className="text-[10px] text-muted-foreground opacity-60">
-                <strong>Pro Tip:</strong> You can paste HTML tags like <code>&lt;h1&gt;</code>, <code>&lt;h2&gt;</code>, <code>&lt;ul&gt;</code>, or <code>&lt;strong&gt;</code> for cinematic formatting.
-              </p>
             </div>
 
             <div className="flex gap-4 mt-2">
