@@ -83,12 +83,17 @@ export default function Pricing() {
 
     if (!currentUser) return navigate('/login');
 
+    const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
+    if (!razorpayKey || razorpayKey === 'rzp_test_your_key_id') {
+      return toast.error("Payment Gateway misconfigured. Please set a valid VITE_RAZORPAY_KEY_ID in environment variables.");
+    }
+
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
     script.onload = () => {
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_YourKeyHere',
+        key: razorpayKey,
         amount: plan.priceINR * 100,
         currency: 'INR',
         name: 'PPREducation',
