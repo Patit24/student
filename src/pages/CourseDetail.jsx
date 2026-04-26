@@ -83,7 +83,7 @@ export default function CourseDetail() {
     script.async = true;
     script.onload = () => {
       const options = {
-        key: 'rzp_test_YourKeyHere', // Replace with your key
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_YourKeyHere', 
         amount: course.price * 100, // in paise
         currency: 'INR',
         name: 'PPREducation',

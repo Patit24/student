@@ -81,39 +81,41 @@ export default function Pricing() {
       return;
     }
 
-    const upiUrl = `upi://pay?pa=${MY_UPI_ID}&pn=${encodeURIComponent(MY_NAME)}&am=${plan.priceINR}&cu=INR&tn=${encodeURIComponent(`Upgrade: ${plan.label}`)}`;
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (!currentUser) return navigate('/login');
 
-    if (isMobile) {
-      window.location.href = upiUrl;
-    }
-    setUpiModal({ show: true, url: upiUrl, plan });
-  };
-
-  const handleConfirmPayment = async () => {
-    if (!txId.trim()) return toast.error("Please enter your Transaction ID / UTR");
-    
-    setPaying(upiModal.plan.id);
-    try {
-      const { db } = await import('../firebase');
-      const { doc, updateDoc } = await import('firebase/firestore');
-      
-      await updateDoc(doc(db, 'users', currentUser.uid), {
-        subscription_status: 'pending_verification',
-        pending_plan: upiModal.plan.id,
-        payment_tx_id: txId,
-        payment_requested_at: new Date().toISOString()
-      });
-
-      setSuccess(true);
-      setUpiModal({ show: false, url: '', plan: null });
-      toast.success("Payment Received! Verifying now.");
-      setTimeout(() => navigate('/tutor'), 4000);
-    } catch (err) {
-      toast.error("Submission Error: " + err.message);
-    } finally {
-      setPaying(null);
-    }
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.onload = () => {
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_YourKeyHere',
+        amount: plan.priceINR * 100,
+        currency: 'INR',
+        name: 'PPREducation',
+        description: `Upgrade to ${plan.label} Plan`,
+        handler: async function(response) {
+          try {
+            setPaying(plan.id);
+            await updateTutorSubscription(plan.id);
+            setSuccess(true);
+            toast.success(`${plan.label} Activation Successful! 🚀`);
+            setTimeout(() => navigate('/tutor'), 3000);
+          } catch (err) {
+            toast.error("Activation failed: " + err.message);
+          } finally {
+            setPaying(null);
+          }
+        },
+        prefill: {
+          name: currentUser.name,
+          contact: currentUser.phone
+        },
+        theme: { color: plan.color }
+      };
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    };
+    document.body.appendChild(script);
   };
 
   if (success) {
