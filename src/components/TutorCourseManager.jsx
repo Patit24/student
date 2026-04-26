@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { 
   Plus, Package, Trash2, Edit3, Globe, 
   DollarSign, Users, Award, BookOpen, FileText,
-  PlusCircle, XCircle, CheckCircle, TrendingUp
+  PlusCircle, XCircle, CheckCircle, TrendingUp, HelpCircle
 } from 'lucide-react';
 import { useToast } from './Toast';
-import { createCourse, subscribeTutorCourses, deleteCourse } from '../db.service';
+import { createCourse, subscribeTutorCourses, deleteCourse, createCourseExam } from '../db.service';
 
 export default function TutorCourseManager({ tutorId }) {
   const [courses, setCourses] = useState([]);
@@ -18,13 +18,15 @@ export default function TutorCourseManager({ tutorId }) {
   const [price, setPrice] = useState('');
   const [originalPrice, setOriginalPrice] = useState('');
   const [tag, setTag] = useState('Top Seller');
-  const [curriculum, setCurriculum] = useState([{ title: '', items: [''] }]);
+  const [curriculum, setCurriculum] = useState([{ title: '', items: [''], exam: null }]);
+  const [activeExamModule, setActiveExamModule] = useState(null); // module index for exam creation
+  const [examQuestions, setExamQuestions] = useState([{ question: '', options: ['', '', '', ''], correct: 0 }]);
 
   useEffect(() => {
     return subscribeTutorCourses(tutorId, setCourses);
   }, [tutorId]);
 
-  const addModule = () => setCurriculum([...curriculum, { title: '', items: [''] }]);
+  const addModule = () => setCurriculum([...curriculum, { title: '', items: [''], exam: null }]);
   const updateModuleTitle = (idx, val) => {
     const newCur = [...curriculum];
     newCur[idx].title = val;
@@ -34,6 +36,31 @@ export default function TutorCourseManager({ tutorId }) {
     const newCur = [...curriculum];
     newCur[idx].items.push('');
     setCurriculum(newCur);
+  };
+
+  const handleAddExamToModule = (mIdx) => {
+    setActiveExamModule(mIdx);
+    setExamQuestions([{ question: '', options: ['', '', '', ''], correct: 0 }]);
+  };
+
+  const saveExamToModule = () => {
+    const newCur = [...curriculum];
+    newCur[activeExamModule].exam = { questions: examQuestions };
+    setCurriculum(newCur);
+    setActiveExamModule(null);
+    toast.success("Exam attached to module! 🧠");
+  };
+
+  const addQuestion = () => setExamQuestions([...examQuestions, { question: '', options: ['', '', '', ''], correct: 0 }]);
+  const updateQuestion = (qIdx, field, val) => {
+    const newQ = [...examQuestions];
+    newQ[qIdx][field] = val;
+    setExamQuestions(newQ);
+  };
+  const updateOption = (qIdx, oIdx, val) => {
+    const newQ = [...examQuestions];
+    newQ[qIdx].options[oIdx] = val;
+    setExamQuestions(newQ);
   };
   const updateMaterial = (mIdx, iIdx, val) => {
     const newCur = [...curriculum];
@@ -204,6 +231,12 @@ export default function TutorCourseManager({ tutorId }) {
                       <button className="text-[10px] text-muted flex items-center gap-1 mt-1" onClick={() => addMaterial(mIdx)}>
                         <Plus size={10} /> Add Lesson
                       </button>
+                      <button 
+                        className={`text-[10px] flex items-center gap-1 mt-2 font-bold ${mod.exam ? 'text-green-500' : 'text-yellow-500'}`}
+                        onClick={() => handleAddExamToModule(mIdx)}
+                      >
+                        <HelpCircle size={10} /> {mod.exam ? 'Edit Exam' : 'Attach MCQ Exam'}
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -213,6 +246,57 @@ export default function TutorCourseManager({ tutorId }) {
             <button className="hp-btn-primary w-full py-4 flex items-center justify-center gap-2" onClick={handleCreate}>
               <Globe size={20} /> Publish to Elite Marketplace
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* MCQ Creator Modal */}
+      {activeExamModule !== null && (
+        <div className="verification-overlay animate-reveal" style={{ zIndex: 1100 }}>
+          <div className="glass-card verification-card" style={{ maxWidth: '900px', padding: '3rem' }}>
+            <button className="close-modal" onClick={() => setActiveExamModule(null)}><XCircle /></button>
+            <h2 className="cinematic-title mb-2">Module Exam Creator</h2>
+            <p className="text-muted mb-8">Creating assessment for: <span className="text-yellow-500 font-bold">{curriculum[activeExamModule].title}</span></p>
+
+            <div className="flex-col gap-6 overflow-y-auto pr-2" style={{ maxHeight: '500px' }}>
+              {examQuestions.map((q, qIdx) => (
+                <div key={qIdx} className="glass-panel p-6 bg-white/5">
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="text-xs font-bold text-yellow-500">Question {qIdx + 1}</span>
+                  </div>
+                  <input 
+                    type="text" placeholder="Enter your question here..." 
+                    className="premium-input w-full mb-4"
+                    value={q.question} onChange={e => updateQuestion(qIdx, 'question', e.target.value)}
+                  />
+                  <div className="grid grid-cols-2 gap-4">
+                    {q.options.map((opt, oIdx) => (
+                      <div key={oIdx} className="flex items-center gap-3">
+                        <input 
+                          type="radio" name={`correct-${qIdx}`} 
+                          checked={q.correct === oIdx}
+                          onChange={() => updateQuestion(qIdx, 'correct', oIdx)}
+                        />
+                        <input 
+                          type="text" placeholder={`Option ${oIdx + 1}`} 
+                          className="premium-input w-full" style={{ fontSize: '0.8rem', padding: '0.6rem' }}
+                          value={opt} onChange={e => updateOption(qIdx, oIdx, e.target.value)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <button className="hp-btn-outline w-full py-3 flex items-center justify-center gap-2" onClick={addQuestion}>
+                <PlusCircle size={16} /> Add Another Question
+              </button>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-white/10">
+              <button className="hp-btn-primary w-full py-4" onClick={saveExamToModule}>
+                Save & Attach Assessment
+              </button>
+            </div>
           </div>
         </div>
       )}

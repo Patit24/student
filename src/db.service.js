@@ -140,6 +140,38 @@ export async function recordCourseSale(studentId, courseId, amount, tutorId) {
   }
 }
 
+// ── ELITE COURSE EXAMS ──
+
+/** Create an MCQ exam for a specific course module */
+export async function createCourseExam(courseId, moduleId, examData) {
+  return await addDoc(collection(db, 'course_exams'), {
+    courseId,
+    moduleId,
+    ...examData,
+    created_at: serverTimestamp()
+  });
+}
+
+/** Subscribe to exams for a specific course */
+export function subscribeCourseExams(courseId, callback) {
+  const q = query(collection(db, 'course_exams'), where('courseId', '==', courseId));
+  return onSnapshot(q, snap => {
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  });
+}
+
+/** Record student exam results */
+export async function submitCourseExamResult(studentId, courseId, moduleId, examId, resultData) {
+  await addDoc(collection(db, 'course_exam_results'), {
+    studentId,
+    courseId,
+    moduleId,
+    examId,
+    ...resultData,
+    submitted_at: serverTimestamp()
+  });
+}
+
 export function subscribePurchases(userId, callback) {
   return onSnapshot(collection(db, 'users', userId, 'purchased_items'), snap => {
     callback(snap.docs.map(d => d.id));

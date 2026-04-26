@@ -7,9 +7,9 @@ import {
   ExternalLink, ChevronDown, ChevronUp, Zap
 } from 'lucide-react';
 import { useToast } from '../components/Toast';
-import { doc, getDoc, collection, onSnapshot, query } from 'firebase/firestore';
+import { doc, getDoc, collection, onSnapshot, query, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { recordCourseSale } from '../db.service';
+import { recordCourseSale, submitCourseExamResult } from '../db.service';
 import { useAppContext } from '../context/AuthContext';
 import './CourseDetail.css';
 
@@ -22,6 +22,10 @@ export default function CourseDetail() {
   const [loading, setLoading] = useState(true);
   const [activeAccordion, setActiveAccordion] = useState(0);
   const [isHeaderSticky, setIsHeaderSticky] = useState(false);
+  const [activeExam, setActiveExam] = useState(null); // module for exam
+  const [userAnswers, setUserAnswers] = useState({});
+  const [examResult, setExamResult] = useState(null);
+  const [isEnrolled, setIsEnrolled] = useState(false);
 
   // Handle Scroll for Sticky Header
   useEffect(() => {
@@ -77,7 +81,17 @@ export default function CourseDetail() {
       }
     };
     fetchCourse();
-  }, [courseId]);
+
+    // Check enrollment
+    if (currentUser) {
+      const q = query(collection(db, 'users', currentUser.uid, 'enrolled_courses'));
+      const unsub = onSnapshot(q, snap => {
+        const enrolled = snap.docs.some(d => d.id === courseId);
+        setIsEnrolled(enrolled);
+      });
+      return unsub;
+    }
+  }, [courseId, currentUser]);
 
   const handlePurchase = async () => {
     if (!currentUser) {
@@ -124,6 +138,41 @@ export default function CourseDetail() {
       rzp.open();
     };
     document.body.appendChild(script);
+  };
+
+  const handleStartExam = (module) => {
+    if (!isEnrolled) return toast.info("Please enroll to attend exams!");
+    setActiveExam(module);
+    setUserAnswers({});
+    setExamResult(null);
+  };
+
+  const submitExam = async () => {
+    let score = 0;
+    activeExam.exam.questions.forEach((q, idx) => {
+      if (userAnswers[idx] === q.correct) score++;
+    });
+
+    const result = {
+      score,
+      total: activeExam.exam.questions.length,
+      percentage: (score / activeExam.exam.questions.length) * 100
+    };
+
+    setExamResult(result);
+
+    try {
+      await submitCourseExamResult(
+        currentUser.uid,
+        course.id,
+        activeExam.title,
+        activeExam.title, // using title as pseudo-id for simplicity
+        result
+      );
+      toast.success("Assessment submitted! 🎓");
+    } catch (err) {
+      toast.error("Result save error: " + err.message);
+    }
   };
 
   if (loading) return (
@@ -245,6 +294,14 @@ export default function CourseDetail() {
                         <Lock size={14} className="text-muted opacity-50" />
                       </div>
                     ))}
+                    {module.exam && (
+                      <button 
+                        className="mt-4 w-full py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-500 text-xs font-bold hover:bg-yellow-500 hover:text-black transition-all flex items-center justify-center gap-2"
+                        onClick={() => handleStartExam(module)}
+                      >
+                        <Zap size={14} /> Attend Module Assessment
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -335,6 +392,54 @@ export default function CourseDetail() {
           </div>
         </div>
       </footer>
+
+      {/* Assessment Modal */}
+      {activeExam && (
+        <div className="verification-overlay animate-reveal" style={{ zIndex: 1100 }}>
+          <div className="glass-card verification-card" style={{ maxWidth: '800px', padding: '3rem' }}>
+            <button className="close-modal" onClick={() => setActiveExam(null)}><XCircle /></button>
+            <h2 className="cinematic-title mb-2">Module Assessment</h2>
+            <p className="text-muted mb-8">Subject: <span className="text-yellow-500 font-bold">{activeExam.title}</span></p>
+
+            {!examResult ? (
+              <div className="flex-col gap-8 overflow-y-auto pr-2" style={{ maxHeight: '500px' }}>
+                {activeExam.exam.questions.map((q, idx) => (
+                  <div key={idx} className="glass-panel p-8 bg-white/5 border border-white/10 rounded-2xl">
+                    <h3 className="text-lg font-bold mb-6 flex gap-4">
+                      <span className="text-yellow-500">Q{idx + 1}.</span> {q.question}
+                    </h3>
+                    <div className="grid grid-cols-1 gap-3">
+                      {q.options.map((opt, oIdx) => (
+                        <button 
+                          key={oIdx}
+                          className={`w-full p-4 rounded-xl text-left transition-all border ${userAnswers[idx] === oIdx ? 'bg-yellow-500 border-yellow-500 text-black font-bold' : 'bg-white/5 border-white/5 hover:border-white/20'}`}
+                          onClick={() => setUserAnswers({...userAnswers, [idx]: oIdx})}
+                        >
+                          <span className="opacity-50 mr-3">{String.fromCharCode(65 + oIdx)}.</span> {opt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                <button className="hp-btn-primary w-full py-4 mt-4" onClick={submitExam}>
+                  Submit Assessment
+                </button>
+              </div>
+            ) : (
+              <div className="text-center py-10 animate-premium">
+                <div className="w-24 h-24 rounded-full bg-yellow-500/10 flex items-center justify-center mx-auto mb-6">
+                  <Award className="text-yellow-500" size={48} />
+                </div>
+                <h3 className="text-3xl font-black mb-2">Result: {examResult.score}/{examResult.total}</h3>
+                <p className="text-muted mb-8">You achieved a score of {examResult.percentage}% in this module.</p>
+                <div className="flex gap-4">
+                  <button className="hp-btn-primary flex-1 py-4" onClick={() => setActiveExam(null)}>Finish & Back to Course</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
