@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Plus, Package, Trash2, Edit3, Globe, 
   DollarSign, Users, Award, BookOpen, FileText,
-  PlusCircle, XCircle, CheckCircle, TrendingUp, HelpCircle
+  PlusCircle, XCircle, CheckCircle, TrendingUp, HelpCircle, Image as ImageIcon,
+  Upload, Download
 } from 'lucide-react';
 import { useToast } from './Toast';
 import { createCourse, subscribeTutorCourses, deleteCourse, createCourseExam, uploadFileToStorage } from '../db.service';
@@ -18,9 +19,12 @@ export default function TutorCourseManager({ tutorId }) {
   const [price, setPrice] = useState('');
   const [originalPrice, setOriginalPrice] = useState('');
   const [tag, setTag] = useState('Top Seller');
+  const [courseImage, setCourseImage] = useState('');
   const [curriculum, setCurriculum] = useState([{ title: '', items: [''], exam: null }]);
   const [activeExamModule, setActiveExamModule] = useState(null); // module index for exam creation
   const [examQuestions, setExamQuestions] = useState([{ question: '', options: ['', '', '', ''], correct: 0 }]);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [subject, setSubject] = useState('');
 
   useEffect(() => {
     return subscribeTutorCourses(tutorId, setCourses);
@@ -94,6 +98,20 @@ export default function TutorCourseManager({ tutorId }) {
     setCurriculum(newCur);
   };
 
+  const handleCourseImage = async (file) => {
+    if (!file) return;
+    setIsPublishing(true);
+    try {
+      const url = await uploadFileToStorage(file, `courses/${tutorId}/covers`, (pct) => console.log(`Image Upload: ${pct}%`));
+      setCourseImage(url);
+      toast.success("Course cover uploaded! 🖼️");
+    } catch (err) {
+      toast.error("Image upload failed: " + err.message);
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
   const handleModulePDF = async (mIdx, file) => {
     if (!file) return;
     setIsPublishing(true);
@@ -117,14 +135,18 @@ export default function TutorCourseManager({ tutorId }) {
       await createCourse({
         title,
         category,
+        subject,
         price: Number(price),
         originalPrice: Number(originalPrice || price),
         tag,
+        image: courseImage,
         curriculum,
         tutorId,
-        tutorName: "Dr. Aryan Sharma", // Replace with real auth name
-        students: 0,
-        rating: 5.0
+        tutorName: "Super Admin", // Or use currentUser.name if available
+        sales_count: 0,
+        rating: 5.0,
+        reviewCount: 0,
+        created_at: new Date().toISOString()
       });
       toast.success("Elite Course Published! 🚀");
       setShowModal(false);
@@ -213,7 +235,7 @@ export default function TutorCourseManager({ tutorId }) {
             <button className="close-modal" onClick={() => setShowModal(false)}><XCircle /></button>
             <h2 className="cinematic-title mb-8">Course Creator</h2>
             
-            <div className="grid grid-cols-2 gap-6 mb-8">
+            <div className="grid grid-cols-2 gap-6 mb-6">
               <div className="flex-col gap-2">
                 <label className="text-xs font-bold uppercase">Course Title</label>
                 <input 
@@ -227,8 +249,17 @@ export default function TutorCourseManager({ tutorId }) {
                 <select className="premium-select w-full" value={category} onChange={e => setCategory(e.target.value)}>
                   <option value="Medical">Medical (NEET)</option>
                   <option value="Engineering">Engineering (JEE)</option>
-                  <option value="Foundation">Foundation</option>
+                  <option value="Board">Board Exams</option>
+                  <option value="Other">Other</option>
                 </select>
+              </div>
+              <div className="flex-col gap-2">
+                <label className="text-xs font-bold uppercase">Subject</label>
+                <input type="text" placeholder="e.g. Organic Chemistry" className="premium-input w-full" value={subject} onChange={e => setSubject(e.target.value)} />
+              </div>
+              <div className="flex-col gap-2">
+                <label className="text-xs font-bold uppercase">Course Tag</label>
+                <input type="text" placeholder="Top Seller" className="premium-input w-full" value={tag} onChange={e => setTag(e.target.value)} />
               </div>
               <div className="flex-col gap-2">
                 <label className="text-xs font-bold uppercase">Market Price (₹)</label>
@@ -246,6 +277,32 @@ export default function TutorCourseManager({ tutorId }) {
                   value={originalPrice} onChange={e => setOriginalPrice(e.target.value)}
                 />
               </div>
+            </div>
+
+            {/* Course Cover Image */}
+            <div className="glass-panel p-6 bg-white/5 border-dashed border-2 border-white/10 rounded-2xl flex-col items-center justify-center text-center gap-4 mb-8">
+              {courseImage ? (
+                <div className="relative w-full h-40 rounded-xl overflow-hidden group">
+                  <img src={courseImage} className="w-full h-full object-cover" alt="Course Cover" />
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+                    <label htmlFor="course-img" className="text-white cursor-pointer font-bold">Replace Image</label>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
+                    <ImageIcon className="text-muted" size={32} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm">Upload Course Cover Picture</p>
+                    <p className="text-[10px] text-muted">Recommended: 1200x800px (JPG/PNG)</p>
+                  </div>
+                  <label htmlFor="course-img" className="hp-btn-outline py-2 px-6 text-xs cursor-pointer">
+                    Select Cover Art
+                  </label>
+                </>
+              )}
+              <input type="file" id="course-img" accept="image/*" onChange={(e) => handleCourseImage(e.target.files[0])} hidden />
             </div>
 
             <div className="mb-8">
