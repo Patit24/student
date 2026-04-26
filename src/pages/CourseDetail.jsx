@@ -41,40 +41,14 @@ export default function CourseDetail() {
     // to show off the "NEET Organic Chemistry Masterclass" design.
     const fetchCourse = async () => {
       try {
-        // const docRef = doc(db, 'courses', courseId);
-        // const docSnap = await getDoc(docRef);
-        // if (docSnap.exists()) setCourse(docSnap.data());
-        
-        // MOCK DATA FOR THE ELITE DEMO
-        setTimeout(() => {
-          setCourse({
-            id: courseId,
-            title: "NEET Organic Chemistry Masterclass 2026",
-            category: "Medical",
-            subject: "Chemistry",
-            tutorName: "Dr. Aryan Sharma",
-            tutorRole: "Ex-Aakash Senior Faculty",
-            tutorAvatar: "https://ui-avatars.com/api/?name=Aryan+Sharma&background=FFD700&color=000&bold=true",
-            price: 1499,
-            originalPrice: 2999,
-            enrolledCount: 1248,
-            rating: 4.9,
-            reviewCount: 450,
-            lastUpdated: "April 2026",
-            tag: "Top Seller",
-            curriculum: [
-              { title: "Module 1: General Organic Chemistry (GOC)", items: ["Electronic Effects Deep Dive", "Stability of Intermediates", "Acidity & Basicity Logic", "GOC Mock Test #1"] },
-              { title: "Module 2: Hydrocarbons & Isomerism", items: ["Alkanes/Alkenes Synthesis", "Stereoisomerism Visualized", "NTA-Pattern Practice Sheet"] },
-              { title: "Module 3: Reaction Mechanisms", items: ["SN1 vs SN2 Masterclass", "E1/E2 Elimination Logic", "Naming Reactions Cheat Sheet"] }
-            ],
-            offerings: [
-              { title: "Weekly Mock Exams", desc: "NTA-pattern tests with detailed PDF solutions.", icon: <FileText /> },
-              { title: "Last Minute Suggestions", desc: "High-yield topics curated by top tutors.", icon: <Zap /> },
-              { title: "Personal Mentorship", desc: "Direct connection to tutor after verification.", icon: <MessageCircle /> }
-            ]
-          });
-          setLoading(false);
-        }, 800);
+        const docRef = doc(db, 'courses', courseId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setCourse({ id: docSnap.id, ...docSnap.data() });
+        } else {
+          toast.error("Course not found");
+        }
+        setLoading(false);
       } catch (err) {
         toast.error("Failed to load course details");
         setLoading(false);
@@ -220,7 +194,7 @@ export default function CourseDetail() {
               
               <div className="course-meta-row">
                 <div className="tutor-mini-profile">
-                  <img src={course.tutorAvatar} alt={course.tutorName} />
+                  <img src={course.tutorAvatar || `https://ui-avatars.com/api/?name=${course.tutorName}&background=FFD700&color=000&bold=true`} alt={course.tutorName} />
                   <div>
                     <span className="tutor-label">Instructor</span>
                     <span className="tutor-name">{course.tutorName} <CheckCircle size={12} className="text-blue-500 inline" /></span>
@@ -229,14 +203,14 @@ export default function CourseDetail() {
                 <div className="meta-divider" />
                 <div className="rating-block">
                   <div className="stars">
-                    {[1,2,3,4,5].map(s => <Star key={s} size={14} fill={s <= 4 ? "#FFD700" : "none"} stroke="#FFD700" />)}
-                    <span className="rating-val">{course.rating}</span>
+                    {[1,2,3,4,5].map(s => <Star key={s} size={14} fill={s <= (course.rating || 4.9) ? "#FFD700" : "none"} stroke="#FFD700" />)}
+                    <span className="rating-val">{course.rating || 4.9}</span>
                   </div>
-                  <span className="review-count">({course.reviewCount} reviews)</span>
+                  <span className="review-count">({course.reviewCount || 10}+ reviews)</span>
                 </div>
                 <div className="meta-divider" />
                 <div className="social-proof">
-                  <Users size={16} /> <span>{course.enrolledCount.toLocaleString()}+ Aspirants Joined</span>
+                  <Users size={16} /> <span>{(course.sales_count || 0).toLocaleString()}+ Aspirants Joined</span>
                 </div>
               </div>
             </div>
@@ -257,7 +231,11 @@ export default function CourseDetail() {
           <section className="modular-section animate-reveal" style={{ animationDelay: '0.2s' }}>
             <h2 className="section-title">What you will Master</h2>
             <div className="offerings-grid">
-              {course.offerings.map((off, i) => (
+              {(course.offerings || [
+                { title: "Weekly Mock Exams", desc: "NTA-pattern tests with detailed PDF solutions.", icon: <FileText /> },
+                { title: "Last Minute Suggestions", desc: "High-yield topics curated by top tutors.", icon: <Zap /> },
+                { title: "Personal Mentorship", desc: "Direct connection to tutor after verification.", icon: <MessageCircle /> }
+              ]).map((off, i) => (
                 <div key={i} className="offering-card glass-card">
                   <div className="offering-icon">{off.icon}</div>
                   <h3>{off.title}</h3>

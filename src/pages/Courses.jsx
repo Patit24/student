@@ -1,51 +1,31 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, Star, Users, ArrowRight, Zap, Award, ShieldCheck } from 'lucide-react';
+import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
+import { db } from '../firebase';
 import './Courses.css';
 
-const MOCK_COURSES = [
-  {
-    id: 'neet-organic-chemistry',
-    title: 'NEET Organic Chemistry Masterclass',
-    tutor: 'Dr. Aryan Sharma',
-    subject: 'Chemistry',
-    category: 'Medical',
-    price: 1499,
-    originalPrice: 2999,
-    rating: 4.9,
-    students: 1248,
-    image: 'https://images.unsplash.com/photo-1532187875605-2fe3587b1c0d?auto=format&fit=crop&q=80&w=800',
-    tag: 'Top Seller'
-  },
-  {
-    id: 'jee-physics-visualized',
-    title: 'JEE Physics: Electromagnetism Visualized',
-    tutor: 'Er. S.K. Singh',
-    subject: 'Physics',
-    category: 'Engineering',
-    price: 1299,
-    originalPrice: 2499,
-    rating: 4.8,
-    students: 850,
-    image: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&q=80&w=800',
-    tag: 'Trending'
-  },
-  {
-    id: 'neet-biology-bullet',
-    title: 'Biology Bullet: Complete Human Physiology',
-    tutor: 'Dr. Neha Verma',
-    subject: 'Biology',
-    category: 'Medical',
-    price: 999,
-    originalPrice: 1999,
-    rating: 4.9,
-    students: 2100,
-    image: 'https://images.unsplash.com/photo-1576086213369-97a306d36557?auto=format&fit=crop&q=80&w=800',
-    tag: 'Elite Choice'
-  }
-];
+const MOCK_COURSES = []; // Cleared for real-time data
 
 export default function Courses() {
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const q = query(collection(db, 'courses'), orderBy('created_at', 'desc'));
+    const unsub = onSnapshot(q, snap => {
+      setCourses(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      setLoading(false);
+    });
+    return unsub;
+  }, []);
+
+  if (loading) return (
+    <div className="p-20 text-center animate-pulse">
+      <h2 className="text-2xl font-bold text-yellow-500">Syncing Elite Marketplace...</h2>
+    </div>
+  );
+
   return (
     <div className="courses-gallery-root">
       {/* Header Section */}
@@ -63,7 +43,7 @@ export default function Courses() {
       <section className="gallery-grid-section">
         <div className="container">
           <div className="courses-grid">
-            {MOCK_COURSES.map((course, idx) => (
+            {courses.map((course, idx) => (
               <Link 
                 to={`/course/${course.id}`} 
                 key={course.id} 
@@ -71,7 +51,7 @@ export default function Courses() {
                 style={{ animationDelay: `${idx * 0.1}s` }}
               >
                 <div className="card-image-wrap">
-                  <img src={course.image} alt={course.title} />
+                  <img src={course.image || 'https://images.unsplash.com/photo-1532187875605-2fe3587b1c0d?auto=format&fit=crop&q=80&w=800'} alt={course.title} />
                   <div className="card-tag">{course.tag}</div>
                   <div className="card-overlay">
                     <span className="view-details">Explore Curriculum <ArrowRight size={16} /></span>
@@ -80,10 +60,10 @@ export default function Courses() {
                 
                 <div className="card-body">
                   <div className="card-meta">
-                    <span className={`cat-pill ${course.category.toLowerCase()}`}>{course.category}</span>
+                    <span className={`cat-pill ${course.category?.toLowerCase() || 'general'}`}>{course.category}</span>
                     <div className="rating">
                       <Star size={12} fill="#FFD700" stroke="#FFD700" />
-                      <span>{course.rating}</span>
+                      <span>{course.rating || 4.9}</span>
                     </div>
                   </div>
                   
@@ -91,7 +71,7 @@ export default function Courses() {
                   
                   <div className="tutor-info">
                     <ShieldCheck size={14} className="text-blue-400" />
-                    <span>{course.tutor}</span>
+                    <span>{course.tutorName || 'Elite Faculty'}</span>
                   </div>
                   
                   <div className="card-footer">
@@ -101,7 +81,7 @@ export default function Courses() {
                     </div>
                     <div className="student-count">
                       <Users size={14} />
-                      <span>{course.students.toLocaleString()}</span>
+                      <span>{(course.sales_count || 0).toLocaleString()}</span>
                     </div>
                   </div>
                 </div>

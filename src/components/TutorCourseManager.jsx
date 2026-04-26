@@ -52,6 +52,32 @@ export default function TutorCourseManager({ tutorId }) {
   };
 
   const addQuestion = () => setExamQuestions([...examQuestions, { question: '', options: ['', '', '', ''], correct: 0 }]);
+  
+  const handleBulkUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target.result;
+        const lines = text.split('\n').filter(l => l.trim());
+        const newQuestions = lines.map(line => {
+          const [q, o1, o2, o3, o4, correct] = line.split(',');
+          return {
+            question: q?.trim(),
+            options: [o1?.trim(), o2?.trim(), o3?.trim(), o4?.trim()],
+            correct: parseInt(correct?.trim()) || 0
+          };
+        });
+        setExamQuestions(newQuestions);
+        toast.success(`Parsed ${newQuestions.length} questions successfully! ⚡`);
+      } catch (err) {
+        toast.error("Format error: Use Question,Option1,Option2,Option3,Option4,CorrectIndex(0-3)");
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const updateQuestion = (qIdx, field, val) => {
     const newQ = [...examQuestions];
     newQ[qIdx][field] = val;
@@ -255,8 +281,19 @@ export default function TutorCourseManager({ tutorId }) {
         <div className="verification-overlay animate-reveal" style={{ zIndex: 1100 }}>
           <div className="glass-card verification-card" style={{ maxWidth: '900px', padding: '3rem' }}>
             <button className="close-modal" onClick={() => setActiveExamModule(null)}><XCircle /></button>
-            <h2 className="cinematic-title mb-2">Module Exam Creator</h2>
-            <p className="text-muted mb-8">Creating assessment for: <span className="text-yellow-500 font-bold">{curriculum[activeExamModule].title}</span></p>
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="cinematic-title mb-2">Module Exam Creator</h2>
+                <p className="text-muted">Assessment for: <span className="text-yellow-500 font-bold">{curriculum[activeExamModule].title}</span></p>
+              </div>
+              <div className="flex flex-col items-end gap-2">
+                <input type="file" id="bulk-mcq" accept=".csv,.txt" onChange={handleBulkUpload} hidden />
+                <label htmlFor="bulk-mcq" className="hp-btn-outline py-2 px-4 text-xs cursor-pointer flex items-center gap-2">
+                  <Upload size={14} /> One-Click Bulk Upload
+                </label>
+                <span className="text-[10px] text-muted">Format: Question,A,B,C,D,CorrectIdx</span>
+              </div>
+            </div>
 
             <div className="flex-col gap-6 overflow-y-auto pr-2" style={{ maxHeight: '500px' }}>
               {examQuestions.map((q, qIdx) => (
