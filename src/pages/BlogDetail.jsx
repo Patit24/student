@@ -116,7 +116,7 @@ export default function BlogDetail() {
                     .blog-content-render h1 { font-size: 2.5rem; color: #fff; margin-bottom: 2rem; margin-top: 3rem; font-weight: 900; letter-spacing: -1px; }
                     .blog-content-render h2 { font-size: 2rem; color: #fff; margin-bottom: 1.5rem; margin-top: 2.5rem; font-weight: 850; letter-spacing: -0.5px; }
                     .blog-content-render h3 { font-size: 1.6rem; color: #fff; margin-bottom: 1.2rem; margin-top: 2rem; font-weight: 800; }
-                    .blog-content-render p { margin-bottom: 1.8rem; }
+                    .blog-content-render p, .blog-content-render div { margin-bottom: 1.8rem; min-height: 1em; }
                     .blog-content-render ul, .blog-content-render ol { margin-bottom: 2rem; padding-left: 1.5rem; }
                     .blog-content-render li { margin-bottom: 0.8rem; }
                     .blog-content-render strong { color: #fff; font-weight: 700; }

@@ -5,6 +5,9 @@ export default function RichTextEditor({ value, onChange, placeholder }) {
 
   // Sync external value to editor (only if it's different to prevent cursor jumps)
   useEffect(() => {
+    // Force P tags for new lines
+    document.execCommand('defaultParagraphSeparator', false, 'p');
+    
     if (editorRef.current && value !== editorRef.current.innerHTML) {
       editorRef.current.innerHTML = value || '';
     }
@@ -92,11 +95,11 @@ export default function RichTextEditor({ value, onChange, placeholder }) {
             color: rgba(255,255,255,0.3);
             pointer-events: none;
           }
-          .rich-editor-surface h1 { font-size: 2rem; font-weight: 900; margin-bottom: 1rem; }
-          .rich-editor-surface h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.8rem; }
-          .rich-editor-surface p { margin-bottom: 1rem; }
-          .rich-editor-surface ul { padding-left: 1.5rem; margin-bottom: 1rem; }
-          .rich-editor-surface b, .rich-editor-surface strong { font-weight: 900; }
+                    .rich-editor-surface h1 { font-size: 2rem; font-weight: 900; margin-bottom: 1rem; color: #fff; }
+                    .rich-editor-surface h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.8rem; color: #fff; }
+                    .rich-editor-surface p, .rich-editor-surface div { margin-bottom: 1.5rem; min-height: 1em; }
+                    .rich-editor-surface ul { padding-left: 1.5rem; margin-bottom: 1rem; }
+                    .rich-editor-surface b, .rich-editor-surface strong { font-weight: 900; color: #fff; }
         `}
       </style>
     </div>
