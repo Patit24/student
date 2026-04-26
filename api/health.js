@@ -1,4 +1,4 @@
-import { initFirebase } from './lib/firebase.js';
+import { initFirebase, lastFirebaseError } from './lib/firebase.js';
 
 export default async function handler(req, res) {
   const app = initFirebase();
@@ -7,6 +7,7 @@ export default async function handler(req, res) {
   const statusInfo = {
     status: app && razorpayReady ? 'ok' : 'error',
     firebase_initialized: !!app,
+    init_error: lastFirebaseError,
     firebase_key_exists: !!process.env.FIREBASE_KEY_JSON,
     firebase_key_length: process.env.FIREBASE_KEY_JSON?.length || 0,
     razorpay: razorpayReady,
