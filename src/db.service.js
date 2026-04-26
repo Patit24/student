@@ -3,10 +3,9 @@
  * Central Firestore service layer for Antigravity Tuition OS.
  * All reads/writes go through here — never raw Firestore calls in components.
  */
-import {
-  doc, getDoc, setDoc, updateDoc,
-  collection, query, where,
-  onSnapshot, addDoc, serverTimestamp, getDocs, deleteDoc
+import { 
+  collection, addDoc, query, where, onSnapshot, doc, getDoc, 
+  updateDoc, deleteDoc, setDoc, orderBy, serverTimestamp 
 } from 'firebase/firestore';
 import { ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { db, storage } from './firebase';
