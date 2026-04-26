@@ -5,7 +5,7 @@ import {
   PlusCircle, XCircle, CheckCircle, TrendingUp, HelpCircle
 } from 'lucide-react';
 import { useToast } from './Toast';
-import { createCourse, subscribeTutorCourses, deleteCourse, createCourseExam } from '../db.service';
+import { createCourse, subscribeTutorCourses, deleteCourse, createCourseExam, uploadFileToStorage } from '../db.service';
 
 export default function TutorCourseManager({ tutorId }) {
   const [courses, setCourses] = useState([]);
@@ -92,6 +92,23 @@ export default function TutorCourseManager({ tutorId }) {
     const newCur = [...curriculum];
     newCur[mIdx].items[iIdx] = val;
     setCurriculum(newCur);
+  };
+
+  const handleModulePDF = async (mIdx, file) => {
+    if (!file) return;
+    setIsPublishing(true);
+    try {
+      const url = await uploadFileToStorage(file, `courses/${tutorId}/modules`, (pct) => console.log(`PDF Upload: ${pct}%`));
+      const newCur = [...curriculum];
+      newCur[mIdx].pdfUrl = url;
+      newCur[mIdx].pdfName = file.name;
+      setCurriculum(newCur);
+      toast.success("Module PDF uploaded successfully! 📄");
+    } catch (err) {
+      toast.error("PDF upload failed: " + err.message);
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   const handleCreate = async () => {
@@ -263,6 +280,13 @@ export default function TutorCourseManager({ tutorId }) {
                       >
                         <HelpCircle size={10} /> {mod.exam ? 'Edit Exam' : 'Attach MCQ Exam'}
                       </button>
+                      
+                      <div className="mt-3 pt-2 border-t border-white/5">
+                        <input type="file" id={`pdf-${mIdx}`} accept=".pdf" onChange={(e) => handleModulePDF(mIdx, e.target.files[0])} hidden />
+                        <label htmlFor={`pdf-${mIdx}`} className={`text-[10px] flex items-center gap-1 cursor-pointer ${mod.pdfUrl ? 'text-green-500' : 'text-blue-400'}`}>
+                          <Download size={10} /> {mod.pdfUrl ? `Replace: ${mod.pdfName}` : 'Upload Module PDF (Notes)'}
+                        </label>
+                      </div>
                     </div>
                   </div>
                 ))}

@@ -269,17 +269,34 @@ export default function CourseDetail() {
                           <BookOpen size={16} className="text-muted" />
                           <span>{item}</span>
                         </div>
-                        <Lock size={14} className="text-muted opacity-50" />
                       </div>
                     ))}
-                    {module.exam && (
-                      <button 
-                        className="mt-4 w-full py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-500 text-xs font-bold hover:bg-yellow-500 hover:text-black transition-all flex items-center justify-center gap-2"
-                        onClick={() => handleStartExam(module)}
-                      >
-                        <Zap size={14} /> Attend Module Assessment
-                      </button>
-                    )}
+                    <div className="module-actions flex gap-2 mt-4">
+                      {module.pdfUrl && (
+                        <a 
+                          href={isEnrolled ? module.pdfUrl : '#'} 
+                          target={isEnrolled ? "_blank" : "_self"}
+                          rel="noopener noreferrer"
+                          className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-2 ${isEnrolled ? 'bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white' : 'bg-white/5 border border-white/5 text-muted cursor-not-allowed'}`}
+                          onClick={(e) => {
+                            if (!isEnrolled) {
+                              e.preventDefault();
+                              toast.info("Please enroll to download premium study materials! 🔒");
+                            }
+                          }}
+                        >
+                          <Download size={14} /> {isEnrolled ? 'Download Study Material' : 'Module PDF Locked'}
+                        </a>
+                      )}
+                      {module.exam && (
+                        <button 
+                          className="flex-1 py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-yellow-500 text-xs font-bold hover:bg-yellow-500 hover:text-black transition-all flex items-center justify-center gap-2"
+                          onClick={() => handleStartExam(module)}
+                        >
+                          <Zap size={14} /> Attend Module Assessment
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
