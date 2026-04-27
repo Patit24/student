@@ -882,8 +882,8 @@ export default function StudentDashboard() {
             </div>
           </div>
         </div>
-
-      )}
+      </div>
+    )}
 
       <style>{`
         .dashboard-grid {
