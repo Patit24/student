@@ -20,6 +20,7 @@ import BlogDetail from './pages/BlogDetail';
 import CourseDetail from './pages/CourseDetail';
 import Courses from './pages/Courses';
 import Footer from './components/Footer';
+import { AlertTriangle, Lock } from 'lucide-react';
 import './index.css';
 
 function AppRoutes() {
@@ -81,11 +82,45 @@ function AppRoutes() {
   );
 }
 
+function GlobalFeeBanner() {
+  const { currentUser } = useAppContext();
+  
+  // Only show for students
+  if (!currentUser || currentUser.role !== 'student') return null;
+
+  // Simple enrollment check (in a real app, this would be more robust)
+  const isOverdue = currentUser.payment_status?.toLowerCase() === 'overdue';
+  const isRestricted = currentUser.payment_status?.toLowerCase() === 'restricted';
+
+  if (!isOverdue && !isRestricted) return null;
+
+  const bg = isRestricted ? '#EF4444' : '#F5C518';
+  const text = isRestricted ? '#fff' : '#000';
+  const label = isRestricted ? 'ACCESS RESTRICTED' : 'PAYMENT OVERDUE';
+  const msg = isRestricted 
+    ? 'Your access is locked. Please clear your dues immediately.' 
+    : 'Your monthly fees are overdue. Pay now to avoid restriction on the 5th.';
+
+  return (
+    <div style={{ 
+      background: bg, color: text, padding: '0.75rem 1rem', 
+      textAlign: 'center', fontSize: '0.9rem', fontWeight: 800,
+      position: 'sticky', top: 0, zIndex: 1000, 
+      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+      boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
+    }}>
+      {isRestricted ? <Lock size={16} /> : <AlertTriangle size={16} />}
+      <span>{label}: {msg}</span>
+    </div>
+  );
+}
+
 function App() {
   return (
     <AppProvider>
       <ToastProvider>
         <Router>
+          <GlobalFeeBanner />
           <Navbar />
           <AppRoutes />
           <Footer />

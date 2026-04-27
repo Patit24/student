@@ -742,7 +742,7 @@ export default function StudentDashboard() {
             <h3 className="mb-6 flex items-center gap-3"><FileText size={24} color="var(--primary)"/> Batch Library</h3>
             <StudentMaterialsPanel
               batchId={selectedEnrollment?.batch_id}
-              isLocked={isRestricted}
+              isLocked={isOverdue || isRestricted}
             />
           </div>
         </div>
