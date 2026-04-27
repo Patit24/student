@@ -49,7 +49,12 @@ export default function Login() {
         if (role === 'super_admin') navigate('/admin');
         else if (role === 'tutor' && user.subscription_status !== 'active') navigate('/pricing');
         else if (role === 'tutor') navigate('/tutor');
-        else navigate('/student');
+        else {
+          // Student logic: check if enrolled in any batch
+          const hasBatch = (user.enrolled_batches && user.enrolled_batches.length > 0) || user.batch_id;
+          if (hasBatch) navigate('/student');
+          else navigate('/');
+        }
       }, 900);
 
     } catch (err) {
