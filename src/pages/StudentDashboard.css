@@ -1,0 +1,761 @@
+/* ═══════════════════════════════════════════════════════════════════
+   PPREducation · Student Dashboard · 2026 Cinematic Design System
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Animated Background ── */
+.sd-root {
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.sd-root::before {
+  content: '';
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(79, 70, 229, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(245, 197, 24, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
+  animation: sd-aurora 20s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes sd-aurora {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  50%  { transform: translate(-2%, 1%) rotate(1deg); }
+  100% { transform: translate(1%, -1%) rotate(-1deg); }
+}
+
+.sd-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Header ── */
+.sd-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2.5rem;
+  padding-top: 1.5rem;
+}
+
+.sd-header-title {
+  font-size: clamp(1.6rem, 5vw, 2.8rem);
+  font-weight: 900;
+  letter-spacing: -1.5px;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.sd-header-title span {
+  background: linear-gradient(135deg, #F5C518 0%, #FF6B35 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.sd-header-sub {
+  margin: 0.4rem 0 0;
+  font-size: 0.9rem;
+  color: #7A8BA8;
+}
+
+.sd-header-sub strong {
+  color: #F0F4FF;
+}
+
+.sd-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.4rem;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  color: #94A3B8;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sd-logout-btn:hover {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #EF4444;
+  transform: translateY(-2px);
+}
+
+/* ── Tab Navigation ── */
+.sd-tabs {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.35rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 18px;
+  margin-bottom: 2rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.sd-tabs::-webkit-scrollbar { display: none; }
+
+.sd-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.4rem;
+  border-radius: 14px;
+  border: none;
+  background: transparent;
+  color: #64748B;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  position: relative;
+}
+
+.sd-tab:hover {
+  color: #E2E8F0;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.sd-tab.active {
+  background: linear-gradient(135deg, #F5C518 0%, #E8B206 100%);
+  color: #0F172A;
+  box-shadow: 0 4px 20px rgba(245, 197, 24, 0.35), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+.sd-tab.active svg {
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+}
+
+/* ── Glass Card (Premium 2026) ── */
+.sd-card {
+  background: rgba(255, 255, 255, 0.025);
+  backdrop-filter: blur(40px) saturate(150%);
+  -webkit-backdrop-filter: blur(40px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 24px;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.2),
+    0 1px 0 rgba(255, 255, 255, 0.05) inset;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.sd-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+}
+
+.sd-card:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.3),
+    0 1px 0 rgba(255, 255, 255, 0.08) inset;
+  transform: translateY(-2px);
+}
+
+/* ── Stat Cards (Overview) ── */
+.sd-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.2rem;
+}
+
+.sd-stat {
+  padding: 1.8rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.sd-stat::after {
+  content: '';
+  position: absolute;
+  bottom: -30px;
+  right: -30px;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  opacity: 0.08;
+  transition: all 0.5s;
+}
+
+.sd-stat:nth-child(1)::after { background: #818CF8; }
+.sd-stat:nth-child(2)::after { background: #F5C518; }
+.sd-stat:nth-child(3)::after { background: #22C55E; }
+
+.sd-stat:hover::after {
+  opacity: 0.15;
+  transform: scale(1.5);
+}
+
+.sd-stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.sd-stat-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #64748B;
+  margin: 0;
+}
+
+.sd-stat-value {
+  font-size: 2.2rem;
+  font-weight: 900;
+  letter-spacing: -1px;
+  margin: 0.2rem 0 0;
+  line-height: 1;
+}
+
+.sd-stat-value.indigo { color: #818CF8; }
+.sd-stat-value.gold   { color: #F5C518; }
+.sd-stat-value.green  { color: #22C55E; }
+
+/* ── Notice Card ── */
+.sd-notice {
+  padding: 2rem;
+}
+
+.sd-notice-item {
+  background: linear-gradient(135deg, rgba(245, 197, 24, 0.04) 0%, rgba(79, 70, 229, 0.02) 100%);
+  border: 1px solid rgba(245, 197, 24, 0.08);
+  border-radius: 18px;
+  padding: 1.4rem;
+  transition: all 0.3s;
+}
+
+.sd-notice-item:hover {
+  border-color: rgba(245, 197, 24, 0.2);
+  background: linear-gradient(135deg, rgba(245, 197, 24, 0.06) 0%, rgba(79, 70, 229, 0.03) 100%);
+}
+
+.sd-notice-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #F5C518;
+  background: rgba(245, 197, 24, 0.1);
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  margin-bottom: 0.8rem;
+}
+
+/* ── Sidebar ── */
+.sd-sidebar-card {
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.sd-sidebar-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(245, 197, 24, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.sd-batch-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sd-batch-label .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #F5C518;
+  box-shadow: 0 0 8px rgba(245, 197, 24, 0.5);
+  animation: sd-pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes sd-pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.4; }
+}
+
+.sd-batch-name {
+  font-size: 1.6rem;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  margin: 0.6rem 0 0.3rem;
+  line-height: 1.2;
+}
+
+.sd-tutor-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.sd-tutor-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid rgba(245, 197, 24, 0.3);
+}
+
+/* ── Join Button ── */
+.sd-join-btn {
+  width: 100%;
+  padding: 1rem;
+  border-radius: 16px;
+  border: none;
+  font-weight: 800;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.sd-join-btn.live {
+  background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+  color: white;
+  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
+}
+
+.sd-join-btn.live::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  animation: sd-shimmer 3s infinite;
+}
+
+.sd-join-btn.offline {
+  background: rgba(255, 255, 255, 0.04);
+  color: #64748B;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sd-join-btn:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(34, 197, 94, 0.4);
+}
+
+@keyframes sd-shimmer {
+  0%   { left: -100%; }
+  100% { left: 200%; }
+}
+
+/* ── Schedule Card ── */
+.sd-schedule-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  transition: all 0.3s;
+}
+
+.sd-schedule-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(245, 197, 24, 0.1);
+}
+
+.sd-schedule-dot {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(79, 70, 229, 0.1);
+  flex-shrink: 0;
+}
+
+/* ── Fee Management ── */
+.sd-fee-hero {
+  padding: 2.5rem;
+  background:
+    linear-gradient(135deg, rgba(245, 197, 24, 0.06) 0%, rgba(79, 70, 229, 0.03) 50%, transparent 100%);
+  border: 1px solid rgba(245, 197, 24, 0.12);
+  position: relative;
+}
+
+.sd-fee-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(245, 197, 24, 0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.sd-fee-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.sd-fee-box {
+  padding: 1.5rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+.sd-fee-box::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+}
+
+.sd-fee-box.amount::after {
+  background: linear-gradient(90deg, #F5C518, #FF6B35);
+}
+
+.sd-fee-box.status::after {
+  background: linear-gradient(90deg, #22C55E, #10B981);
+}
+
+.sd-fee-box.status.danger::after {
+  background: linear-gradient(90deg, #EF4444, #DC2626);
+}
+
+.sd-fee-amount {
+  font-size: 2.4rem;
+  font-weight: 900;
+  letter-spacing: -1px;
+  margin: 0.3rem 0 0;
+  background: linear-gradient(135deg, #F5C518, #FF6B35);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.sd-pay-btn {
+  width: 100%;
+  padding: 1.2rem;
+  border: none;
+  border-radius: 16px;
+  font-weight: 900;
+  font-size: 1rem;
+  cursor: pointer;
+  background: linear-gradient(135deg, #F5C518 0%, #E8B206 100%);
+  color: #0F172A;
+  box-shadow: 0 4px 20px rgba(245, 197, 24, 0.3);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.sd-pay-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(245, 197, 24, 0.5);
+}
+
+/* ── Banking Modal ── */
+.sd-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(20px);
+  animation: sd-fade-in 0.3s ease;
+}
+
+.sd-modal {
+  width: 100%;
+  max-width: 440px;
+  padding: 2.5rem;
+  border: 1px solid rgba(245, 197, 24, 0.15);
+  animation: sd-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sd-modal-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.03);
+  color: #64748B;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+
+.sd-modal-close:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #EF4444;
+}
+
+.sd-bank-row {
+  padding: 1.2rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  transition: all 0.3s;
+}
+
+.sd-bank-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.sd-bank-row.highlight {
+  background: rgba(245, 197, 24, 0.04);
+  border-color: rgba(245, 197, 24, 0.12);
+}
+
+.sd-bank-label {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #475569;
+  margin: 0 0 0.4rem;
+}
+
+.sd-bank-value {
+  font-weight: 800;
+  font-size: 1rem;
+  margin: 0;
+  color: #F0F4FF;
+}
+
+.sd-bank-value.gold {
+  color: #F5C518;
+  text-shadow: 0 0 20px rgba(245, 197, 24, 0.2);
+}
+
+.sd-bank-value.primary {
+  color: #818CF8;
+}
+
+/* ── Overdue / Restricted Banners ── */
+.sd-banner-overdue {
+  padding: 1.2rem 1.8rem;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: linear-gradient(135deg, rgba(245, 197, 24, 0.06) 0%, rgba(245, 197, 24, 0.02) 100%);
+  border: 1px solid rgba(245, 197, 24, 0.15);
+  margin-bottom: 1.5rem;
+  animation: sd-fade-in 0.5s ease;
+}
+
+.sd-banner-restricted {
+  padding: 3rem 2rem;
+  border-radius: 24px;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.06) 0%, rgba(239, 68, 68, 0.02) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  margin-bottom: 1.5rem;
+  animation: sd-fade-in 0.5s ease;
+}
+
+.sd-banner-restricted .lock-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(239, 68, 68, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.2rem;
+}
+
+/* ── Live Tab (Empty State) ── */
+.sd-empty-state {
+  padding: 4rem 2rem;
+  text-align: center;
+  border: 2px dashed rgba(255, 255, 255, 0.05);
+}
+
+.sd-empty-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(79, 70, 229, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+}
+
+/* ── Grid Layout ── */
+.sd-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 2rem;
+  align-items: start;
+}
+
+/* ── Animations ── */
+@keyframes sd-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes sd-slide-up {
+  from { opacity: 0; transform: translateY(30px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes sd-reveal {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.sd-animate {
+  animation: sd-reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.sd-animate-delay-1 { animation-delay: 0.1s; opacity: 0; }
+.sd-animate-delay-2 { animation-delay: 0.2s; opacity: 0; }
+.sd-animate-delay-3 { animation-delay: 0.3s; opacity: 0; }
+
+/* ── Multi-Tutor Selector ── */
+.sd-tutor-selector {
+  display: flex;
+  gap: 0.8rem;
+  margin-bottom: 2rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scrollbar-width: none;
+}
+.sd-tutor-selector::-webkit-scrollbar { display: none; }
+
+.sd-tutor-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.8rem 1.2rem;
+  min-width: 200px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.02);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.sd-tutor-chip.active {
+  border-color: rgba(245, 197, 24, 0.3);
+  background: rgba(245, 197, 24, 0.05);
+  box-shadow: 0 4px 20px rgba(245, 197, 24, 0.1);
+}
+
+.sd-tutor-chip:not(.active) {
+  opacity: 0.5;
+}
+
+.sd-tutor-chip:hover:not(.active) {
+  opacity: 0.8;
+  border-color: rgba(255,255,255,0.1);
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .sd-grid {
+    grid-template-columns: 1fr;
+  }
+  .sd-stat-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .sd-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .sd-stat-grid {
+    grid-template-columns: 1fr;
+  }
+  .sd-fee-grid {
+    grid-template-columns: 1fr;
+  }
+  .sd-logout-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .sd-banner-overdue {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .sd-root {
+    padding: 0 0.5rem;
+  }
+  .sd-card {
+    border-radius: 18px;
+  }
+  .sd-modal {
+    padding: 1.5rem;
+  }
+}
