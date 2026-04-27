@@ -447,34 +447,61 @@ export default function Homepage() {
       </section>
 
       {/* ── PUBLIC/GLOBAL LIBRARY ── */}
-      <section className="hp-section" style={{ background: '#0a0f1c', padding: '6rem 2rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <div className="container">
-          <div className="hp-section-head">
-            <h2>Global <span className="hp-yellow">Public Library</span></h2>
-            <p>Free resources available for all aspirants.</p>
+      <section className="hp-section" style={{ background: '#0a0f1c', padding: '6rem 2rem', borderTop: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden' }}>
+        {/* Decorative Glows */}
+        <div style={{ position: 'absolute', top: '-20%', left: '10%', width: '500px', height: '500px', background: 'radial-gradient(circle, rgba(245,197,24,0.04) 0%, transparent 70%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: '-20%', right: '10%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(79,70,229,0.04) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
+          <div className="hp-section-head" style={{ marginBottom: '4rem' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(245,197,24,0.08)', border: '1px solid rgba(245,197,24,0.15)', padding: '0.4rem 1rem', borderRadius: '99px', marginBottom: '1.2rem', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', color: '#F5C518' }}>
+              <Globe size={14} /> Free Resources
+            </div>
+            <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', fontWeight: 900, letterSpacing: '-1px' }}>Global <span className="hp-yellow">Public Library</span></h2>
+            <p style={{ color: '#64748B', fontSize: '1.05rem', maxWidth: '500px', margin: '0.8rem auto 0' }}>High-quality study materials curated by top educators — free for all aspirants.</p>
           </div>
           
-          <div className="grid gap-8 mt-12" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))' }}>
-            {globalAssets.filter(a => !a.category || a.category === 'general').map((asset) => (
-              <div key={asset.id} className="glass-card p-8 animate-premium" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '32px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                <div>
-                  <div style={{ background: 'rgba(245,197,24,0.1)', padding: '0.8rem', borderRadius: '16px', width: 'fit-content', marginBottom: '1.5rem' }}>
-                    <Globe size={28} color="#F5C518" />
+          <div className="hp-lib-grid">
+            {globalAssets.filter(a => !a.category || a.category === 'general').map((asset, i) => {
+              const ext = asset.name?.split('.').pop()?.toUpperCase() || 'PDF';
+              const sizeMB = asset.size ? (asset.size / 1024 / 1024).toFixed(1) : '—';
+              return (
+                <div key={asset.id} className="hp-lib-card animate-premium" style={{ animationDelay: `${i * 0.1}s` }}>
+                  {/* Left: Icon + Type Badge */}
+                  <div className="hp-lib-icon-wrap">
+                    <div className="hp-lib-icon">
+                      <FileText size={22} color="#F5C518" />
+                    </div>
+                    <span className="hp-lib-ext">{ext}</span>
                   </div>
-                  <h4 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: '0.75rem', color: '#fff' }}>{asset.title}</h4>
-                  <p style={{ fontSize: '0.95rem', color: '#7a8ba8', lineHeight: 1.6, marginBottom: '2rem' }}>
-                    {asset.description || 'Access high-quality study materials and resources curated by top educators.'}
-                  </p>
+
+                  {/* Center: Info */}
+                  <div className="hp-lib-info">
+                    <h4 className="hp-lib-title">{asset.title || asset.name}</h4>
+                    <p className="hp-lib-desc">{asset.description || 'Premium study resource curated by expert educators.'}</p>
+                    <div className="hp-lib-meta">
+                      <span>{sizeMB} MB</span>
+                      <span className="hp-lib-dot" />
+                      <span>Free</span>
+                      <span className="hp-lib-dot" />
+                      <span>By {asset.uploader || 'Admin'}</span>
+                    </div>
+                  </div>
+
+                  {/* Right: Action */}
+                  <button onClick={() => handleAssetAction(asset)} className="hp-lib-dl-btn">
+                    <Download size={18} />
+                  </button>
                 </div>
-                <button 
-                  onClick={() => handleAssetAction(asset)} 
-                  className="hp-btn-primary" 
-                  style={{ width: '100%', borderRadius: '16px', padding: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                >
-                  <FileText size={18} /> Download Resource
-                </button>
+              );
+            })}
+
+            {globalAssets.filter(a => !a.category || a.category === 'general').length === 0 && (
+              <div className="hp-lib-empty">
+                <Globe size={40} style={{ opacity: 0.15, marginBottom: '1rem' }} />
+                <p style={{ color: '#475569', fontSize: '0.95rem' }}>New resources are coming soon. Stay tuned!</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
