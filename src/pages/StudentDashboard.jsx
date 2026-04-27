@@ -12,6 +12,7 @@ import { useToast } from '../components/Toast';
 
 function PasswordResetGate() {
   const { updateUserPassword } = useAppContext();
+  const toast = useToast();
   const [newPass, setNewPass] = useState('');
   const [confirmPass, setConfirmPass] = useState('');
   const [showPass, setShowPass] = useState(false);
