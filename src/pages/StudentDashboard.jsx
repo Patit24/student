@@ -146,7 +146,9 @@ export default function StudentDashboard() {
   const { roomId } = useParams();
   const [activeParticipants, setActiveParticipants] = useState([]);
 
-  // OTP States
+  const [showBankingModal, setShowBankingModal] = useState(false);
+
+  // ── OTP & UI State ──
   const [otp, setOtp] = useState('');
   const [otpError, setOtpError] = useState('');
 
@@ -639,8 +641,8 @@ export default function StudentDashboard() {
                 </p>
               </div>
             </div>
-            <button className="btn btn-primary mobile-full" style={{ background: '#F5C518', color: '#000', border: 'none', padding: '1rem 2rem', borderRadius: '15px', fontWeight: 800 }} onClick={() => alert('Opening Payment Gateway...')}>
-              <CreditCard size={18}/> Clear Dues
+            <button className="btn btn-primary mobile-full" style={{ background: '#F5C518', color: '#000', border: 'none', padding: '1rem 2rem', borderRadius: '15px', fontWeight: 800 }} onClick={() => setShowBankingModal(true)}>
+              <CreditCard size={18}/> Pay Now
             </button>
           </div>
         </div>
@@ -664,7 +666,7 @@ export default function StudentDashboard() {
             <p style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.8)', maxWidth: '500px', margin: '0 auto 2rem' }}>
               Your account has been locked due to unpaid dues for <strong>{currentTutor?.name}'s</strong> class. Please clear your balance of ₹{selectedEnrollment?.outstanding_balance} to resume learning.
             </p>
-            <button className="btn btn-primary" style={{ background: '#EF4444', border: 'none', padding: '1.2rem 3rem', borderRadius: '18px', fontSize: '1.1rem', fontWeight: 900, boxShadow: '0 10px 30px rgba(239,68,68,0.3)' }} onClick={() => alert('Opening Payment Gateway...')}>
+            <button className="btn btn-primary" style={{ background: '#EF4444', border: 'none', padding: '1.2rem 3rem', borderRadius: '18px', fontSize: '1.1rem', fontWeight: 900, boxShadow: '0 10px 30px rgba(239,68,68,0.3)' }} onClick={() => setShowBankingModal(true)}>
               <CreditCard size={22}/> Unlock Classroom Now
             </button>
           </div>
@@ -854,6 +856,59 @@ export default function StudentDashboard() {
           50% { transform: translateY(-5px); }
         }
       `}</style>
+      {/* ── Direct Payment Modal (Banking Details) ── */}
+      {showBankingModal && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6" style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)' }}>
+          <div className="glass-panel p-8 animate-slide-up" style={{ width: '100%', maxWidth: '450px', border: '1px solid rgba(245,197,24,0.3)', borderRadius: '32px' }}>
+            <div className="flex justify-between items-center mb-8">
+              <div className="flex items-center gap-3">
+                <div style={{ background: 'rgba(245,197,24,0.15)', padding: '0.6rem', borderRadius: '12px' }}>
+                  <CreditCard size={24} color="#F5C518" />
+                </div>
+                <h3 style={{ margin: 0 }}>Direct Tuition Pay</h3>
+              </div>
+              <button onClick={() => setShowBankingModal(false)} style={{ background: 'none', border: 'none', color: '#7A8BA8', cursor: 'pointer' }}>✕</button>
+            </div>
+
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+              Please transfer your monthly fee of <strong>₹{selectedEnrollment?.monthly_fee}</strong> directly to your teacher's account. Access will be restored once payment is verified.
+            </p>
+
+            <div className="flex-col gap-4">
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.2rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <p style={{ fontSize: '0.75rem', color: '#7A8BA8', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Account Holder Name</p>
+                <p style={{ fontSize: '1.1rem', fontWeight: 800, color: '#fff', margin: 0 }}>{currentTutor?.banking?.accountHolderName || currentTutor?.name || 'Tutor Account'}</p>
+              </div>
+
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.2rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <p style={{ fontSize: '0.75rem', color: '#7A8BA8', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Bank Name</p>
+                <p style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', margin: 0 }}>{currentTutor?.banking?.bankName || 'HDFC Bank (Default)'}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.2rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <p style={{ fontSize: '0.75rem', color: '#7A8BA8', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Account Number</p>
+                  <p style={{ fontSize: '1rem', fontWeight: 800, color: '#F5C518', margin: 0 }}>{currentTutor?.banking?.accountNumber || 'XXXXXXXXXXXX'}</p>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.2rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <p style={{ fontSize: '0.75rem', color: '#7A8BA8', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '1px' }}>IFSC Code</p>
+                  <p style={{ fontSize: '1rem', fontWeight: 800, color: '#F5C518', margin: 0 }}>{currentTutor?.banking?.ifscCode || 'HDFC0001234'}</p>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(34,197,94,0.1)', borderRadius: '15px', border: '1px solid rgba(34,197,94,0.2)', textAlign: 'center' }}>
+              <p style={{ fontSize: '0.85rem', color: '#22C55E', margin: 0 }}>
+                After payment, please send the screenshot to <strong>{currentTutor?.phone}</strong> via WhatsApp for instant activation.
+              </p>
+            </div>
+
+            <button className="btn btn-primary w-full mt-6" style={{ padding: '1rem', borderRadius: '15px' }} onClick={() => setShowBankingModal(false)}>
+              Close & Notify Teacher
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
