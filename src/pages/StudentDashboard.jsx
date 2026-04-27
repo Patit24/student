@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppContext } from '../context/AuthContext';
-import { Play, Download, MessageSquare, FileText, Shield, Clock, Calendar as CalendarIcon, CheckCircle, ShieldAlert, CheckSquare, CreditCard, AlertTriangle, LogOut, Phone, Users, Video, Search, Package, Eye, EyeOff, Lock } from 'lucide-react';
+import { Play, Download, MessageSquare, FileText, Shield, Clock, Calendar as CalendarIcon, CheckCircle, ShieldAlert, CheckSquare, CreditCard, AlertTriangle, LogOut, Phone, Users, Video, Search, Package, Eye, EyeOff, Lock, TrendingUp, Zap, DownloadCloud, ChevronRight, XCircle } from 'lucide-react';
 import ChatSidebar from '../components/ChatSidebar';
 import PaymentBanner from '../components/PaymentBanner';
 import TestCenter from '../components/TestCenter';
@@ -110,10 +110,8 @@ export default function StudentDashboard() {
   }, []);
 
   // ── Multi-Teacher Enrollment Logic ──
-  // Get the live student record
   const studentRecord = mockStudents.find(s => s.id === currentUser?.uid) || currentUser;
   
-  // Normalized enrolled batches (support both old 'batch_id' and new 'enrolled_batches')
   const myEnrolledBatches = studentRecord?.enrolled_batches || (studentRecord?.batch_id ? [{
     tutor_id: studentRecord.tutorId,
     batch_id: studentRecord.batch_id,
@@ -124,11 +122,8 @@ export default function StudentDashboard() {
   }] : []);
 
   const isGlobalStudent = myEnrolledBatches.length === 0;
-
-  // Select first batch by default if available
   const [selectedEnrollment, setSelectedEnrollment] = useState(myEnrolledBatches[0] || null);
 
-  // Re-sync selected enrollment if data changes
   useEffect(() => {
     if (!selectedEnrollment && myEnrolledBatches.length > 0) {
       setSelectedEnrollment(myEnrolledBatches[0]);
@@ -144,47 +139,18 @@ export default function StudentDashboard() {
   const isRestricted = paymentStatus === 'restricted' && autoRestrictionOn;
 
   const { roomId } = useParams();
-  const [activeParticipants, setActiveParticipants] = useState([]);
-
   const [showBankingModal, setShowBankingModal] = useState(false);
-
-  // ── OTP & UI State ──
   const [otp, setOtp] = useState('');
   const [otpError, setOtpError] = useState('');
-
-  // Class States
-  const [inClass, setInClass] = useState(false);
-  const [joinState, setJoinState] = useState('idle');
-  const [isClassPrivate, setIsClassPrivate] = useState(true);
-
-  // Exam State
-  const [activeTab, setActiveTab] = useState('overview'); // overview | live | exams | materials | assignments | payments
+  const [activeTab, setActiveTab] = useState('overview'); 
   const [activeExam, setActiveExam] = useState(null);
 
-  // My data filtered by selected enrollment
   const mySessions = mockSessions.filter(s => s.batch_id === selectedEnrollment?.batch_id);
   const liveSession = mySessions.find(s => s.is_live);
-  // Find upcoming scheduled session for today
-  const upcomingSession = mySessions.find(s => {
-    if (!s.start_time) return false;
-    const start = new Date(s.start_time).getTime();
-    const now = new Date().getTime();
-    return start > now && (start - now) < 3600000; // Within next hour
-  });
-
-  const myExams = mockExams.filter(e => e.batchId === selectedEnrollment?.batch_id);
-  const mySubmissions = mockSubmissions.filter(s => s.student_id === currentUser?.uid);
-
 
   useEffect(() => {
-    // Auto-trigger OTP if not verified
     if (currentUser && currentUser.is_verified === false && currentUser.phone) {
-      sendOTP(currentUser.phone, 'recaptcha-container')
-        .then(() => toast.success('Verification code sent to your phone! 📱'))
-        .catch(err => {
-          console.error('Auto-OTP failed:', err);
-          toast.error('Failed to send SMS: ' + (err.message.includes('auth/operation-not-allowed') ? 'Enable Phone Auth in Firebase Console' : err.message));
-        });
+      sendOTP(currentUser.phone, 'recaptcha-container').catch(console.error);
     }
   }, [currentUser]);
 
@@ -194,68 +160,25 @@ export default function StudentDashboard() {
       setOtpError('');
       await verifyOTP(otp);
     } catch (err) {
-      setOtpError('Invalid OTP Code. Please enter 123456.');
+      setOtpError('Invalid OTP Code.');
     }
   };
 
-  const handleJoinClass = async () => {
+  const startStream = (targetRoom = null) => {
     if (isRestricted) {
-      alert('🔒 Access Restricted. Your monthly subscription has expired. Please clear your dues to continue.');
+      toast.error('⚠️ Account Locked due to pending dues.');
       return;
     }
-    if (isOverdue) {
-      // Allow joining but show warning (handled by the banner)
-    }
-    if (isClassPrivate && joinState === 'idle') {
-      setJoinState('knocking');
-      setTimeout(() => { setJoinState('approved'); startStream(); }, 5000);
-    } else {
-      startStream();
-    }
-  };
-
-  const startStream = async (targetRoom = null) => {
-    if (isOverdue) {
-      toast.error('⚠️ Access restricted due to payment.');
-      return;
-    }
-    
-    const cleanTargetRoom = (typeof targetRoom === 'string') ? targetRoom : null;
-    const finalRoom = cleanTargetRoom || roomId || liveSession?.room_id || `ppr-batch-${selectedEnrollment?.batch_id}`;
-    
-    if (!finalRoom || typeof finalRoom !== 'string') {
+    const finalRoom = targetRoom || roomId || liveSession?.room_id || `ppr-batch-${selectedEnrollment?.batch_id}`;
+    if (!finalRoom) {
       toast.error('No active session found.');
       return;
     }
-
     if (finalRoom.includes('meet.google.com')) {
       window.open(finalRoom, '_blank');
-      return;
     }
-
-    setInClass(true);
-    setMeetingRoom(finalRoom);
   };
 
-  const handleLeaveClass = () => {
-    setInClass(false);
-    setJoinState('idle');
-    setActiveParticipants([]);
-    setMeetingRoom(null);
-    setMockSessions(prev => prev.map(s => ({ ...s, is_live: false })));
-  };
-
-  const formatCountdown = (t) => {
-    const now = new Date().getTime();
-    const diff = new Date(t).getTime() - now;
-    if (diff <= 0) return 'Live Now';
-    const h = Math.floor(diff / 3600000);
-    const m = Math.floor((diff % 3600000) / 60000);
-    const s = Math.floor((diff % 60000) / 1000);
-    return `${h}h ${m}m ${s}s`;
-  };
-
-  // ── VIEW: OTP GATE ──
   if (currentUser && currentUser.is_verified === false) {
     return (
       <div className="container flex justify-center items-center animate-fade-in" style={{ height: 'calc(100vh - 80px)' }}>
@@ -263,770 +186,309 @@ export default function StudentDashboard() {
         <div className="glass-panel p-8 text-center" style={{ maxWidth: '400px', border: '1px solid var(--primary)' }}>
           <Shield size={48} color="var(--primary)" style={{ marginBottom: '1rem' }} />
           <h2 className="mb-2">Verify Your Account</h2>
-          <p className="text-muted mb-6">Enter the 6-digit OTP sent to your registered mobile number: <strong>{currentUser.phone}</strong></p>
+          <p className="text-muted mb-6">Enter the 6-digit OTP sent to: <strong>{currentUser.phone}</strong></p>
           <form onSubmit={handleVerifyOTP} className="flex-col gap-4">
             <input 
-              type="text" 
-              className="input-field text-center" 
-              placeholder="Enter OTP (123456)" 
-              value={otp} 
-              onChange={e => setOtp(e.target.value)} 
-              maxLength={6} 
-              required 
-              style={{ fontSize: '1.5rem', letterSpacing: '0.5rem', background: 'rgba(79,70,229,0.05)' }} 
+              type="text" className="input-field text-center" placeholder="123456" 
+              value={otp} onChange={e => setOtp(e.target.value)} maxLength={6} required 
+              style={{ fontSize: '1.5rem', letterSpacing: '0.5rem' }} 
             />
-            {otpError && <p style={{ color: 'var(--danger)', fontSize: '0.85rem' }}>{otpError}</p>}
-            <button type="submit" className="btn btn-primary w-full mt-2" style={{ padding: '1rem' }}>Verify & Activate Account</button>
+            {otpError && <p style={{ color: '#EF4444', fontSize: '0.85rem' }}>{otpError}</p>}
+            <button type="submit" className="btn btn-primary w-full mt-2">Verify Account</button>
           </form>
-          <p className="mt-6" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Didn't receive? <button className="btn-link" onClick={() => sendOTP(currentUser.phone, 'recaptcha-container')}>Resend OTP</button></p>
         </div>
       </div>
     );
   }
 
-  // ── VIEW: PASSWORD RESET GATE (FOR FIRST TIME LOGIN) ──
   if (currentUser && currentUser.needs_password_reset === true) {
     return <PasswordResetGate />;
   }
 
-  // ── VIEW: GLOBAL STUDENT (Tutor Directory + Admin Library) ──
   if (isGlobalStudent) {
     return (
       <div className="container mt-8 animate-fade-in" style={{ paddingBottom: '4rem' }}>
-        
-        {/* Header Section */}
-        <div className="flex justify-between items-end mb-12 mobile-stack animate-slide-up" style={{ animationDelay: '0.1s' }}>
+        <div className="flex justify-between items-end mb-12 mobile-stack">
           <div>
-            <h1 style={{ fontSize: 'clamp(2rem, 6vw, 3.5rem)', fontWeight: 900, letterSpacing: '-2px', lineHeight: 1.1 }}>
-              Discover Your <span className="text-gradient">Ideal Tutor</span>
+            <h1 style={{ fontSize: 'clamp(2rem, 6vw, 3.5rem)', fontWeight: 900, letterSpacing: '-2px' }}>
+              Discover Your <span style={{ color: 'var(--primary)' }}>Ideal Tutor</span>
             </h1>
-            <p className="text-muted mt-2" style={{ fontSize: '1.1rem', maxWidth: '600px' }}>
-              Explore our network of verified expert educators and premium study resources.
-            </p>
+            <p className="text-muted mt-2">Verified expert educators and premium study resources.</p>
           </div>
-          <button onClick={() => logout()} className="btn btn-outline mobile-full" style={{ borderRadius: '14px', padding: '0.8rem 1.5rem', background: 'rgba(255,255,255,0.02)' }}>
-            <LogOut size={16}/> Logout Account
-          </button>
+          <button onClick={() => logout()} className="btn btn-outline mobile-full">Logout</button>
         </div>
 
-        <div className="flex gap-10 mobile-stack">
-          {/* Tutor Directory (Left Side) */}
-          <div style={{ flex: 2, minWidth: '100%' }}>
-            <div className="flex items-center gap-3 mb-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-              <div style={{ background: 'rgba(245,197,24,0.1)', padding: '0.6rem', borderRadius: '12px' }}>
-                <Users size={24} color="#F5C518"/>
+        <div className="grid grid-cols-12 gap-10">
+          <div className="col-span-12 lg:col-span-8 flex-col gap-6">
+            <h3 className="flex items-center gap-2"><Users size={24} color="#F5C518"/> Expert Educators</h3>
+            {mockTutors.filter(t => t.subscription_status === 'active' || t.is_verified).map((tutor) => (
+              <div key={tutor.id} className="glass-panel p-6 flex justify-between items-center hover-scale">
+                <div className="flex gap-6 items-center">
+                  <img 
+                    src={tutor.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(tutor.name)}&background=random&color=fff&size=128`} 
+                    style={{ width: '80px', height: '80px', borderRadius: '22px', border: '2px solid rgba(255,255,255,0.1)' }} 
+                  />
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>{tutor.name}</h4>
+                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#7A8BA8' }}>{tutor.subjects?.join(' • ')}</p>
+                  </div>
+                </div>
+                <button onClick={() => navigate(`/tutor/${tutor.id}`)} className="btn btn-primary">View Profile</button>
               </div>
-              <h3 style={{ margin: 0, fontWeight: 800 }}>Verified Expert Educators</h3>
-            </div>
-            
-            <div className="flex-col gap-6">
-              {mockTutors.filter(t => t.subscription_status === 'active' || t.is_verified).map((tutor, idx) => (
-                <div 
-                  key={tutor.id} 
-                  className="glass-panel p-6 flex justify-between items-center hover-scale animate-slide-up" 
-                  style={{ 
-                    borderRadius: '24px', 
-                    border: '1px solid rgba(255,255,255,0.05)',
-                    background: 'linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
-                    animationDelay: `${0.3 + (idx * 0.1)}s`
-                  }}
-                >
-                  <div className="flex gap-6 items-center">
-                    <div style={{ position: 'relative' }}>
-                      <div className="avatar-glow" />
-                      <img 
-                        src={tutor.photo || `https://ui-avatars.com/api/?name=${encodeURIComponent(tutor.name)}&background=random&color=fff&size=128`} 
-                        alt={tutor.name} 
-                        style={{ width: '80px', height: '80px', borderRadius: '22px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', position: 'relative', zIndex: 1 }} 
-                      />
-                    </div>
-                    <div>
-                      <h4 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#fff' }}>{tutor.name}</h4>
-                      <div className="flex gap-2 mt-1">
-                        {tutor.subjects?.slice(0, 3).map(s => (
-                          <span key={s} style={{ fontSize: '0.7rem', padding: '0.2rem 0.6rem', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.6)' }}>{s}</span>
-                        ))}
-                      </div>
-                    </div>
+            ))}
+          </div>
+
+          <div className="col-span-12 lg:col-span-4 flex-col gap-6">
+            <h3 className="flex items-center gap-2"><Package size={24} color="#F5C518"/> Global Library</h3>
+            <div className="glass-panel p-8">
+              {globalAssets.map((asset) => (
+                <div key={asset.id} className="asset-card flex items-center gap-4 p-4 mb-4" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '20px' }}>
+                  <FileText size={22} color="#F5C518" />
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: '0.9rem', fontWeight: 800, margin: 0 }}>{asset.name}</p>
+                    <p style={{ fontSize: '0.7rem', color: '#7A8BA8', margin: 0 }}>{(asset.size / 1024 / 1024).toFixed(1)} MB</p>
                   </div>
-                  <div className="flex gap-4 mobile-full">
-                    <a href={`tel:${tutor.phone || '0000000000'}`} className="btn btn-outline" style={{ borderRadius: '12px', padding: '0.7rem 1.2rem' }}>
-                      <Phone size={16}/> Contact
-                    </a>
-                    <button 
-                      onClick={() => navigate(`/tutor/${tutor.id}`)} 
-                      className="btn btn-primary" 
-                      style={{ borderRadius: '12px', padding: '0.7rem 1.5rem', boxShadow: '0 8px 20px rgba(79,70,229,0.2)' }}
-                    >
-                      View Profile
-                    </button>
-                  </div>
+                  <a href={asset.url} target="_blank" rel="noopener noreferrer"><Download size={18} /></a>
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Admin Study Materials (Right Side) */}
-          <div className="animate-slide-up" style={{ flex: 1, minWidth: '100%', animationDelay: '0.4s' }}>
-            <div className="flex items-center gap-3 mb-8">
-              <div style={{ background: 'rgba(245,197,24,0.1)', padding: '0.6rem', borderRadius: '12px' }}>
-                <Package size={24} color="#F5C518"/>
-              </div>
-              <h3 style={{ margin: 0, fontWeight: 800 }}>Global Library</h3>
-            </div>
-
-            <div className="glass-panel p-8" style={{ borderRadius: '32px', background: 'linear-gradient(180deg, rgba(10, 14, 26, 0.8) 0%, rgba(10, 14, 26, 0.4) 100%)', border: '1px solid rgba(245,197,24,0.1)' }}>
-              <p className="text-muted mb-8" style={{ fontSize: '0.9rem', lineHeight: 1.5 }}>
-                High-quality learning resources curated by the <strong style={{ color: '#F5C518' }}>PPREducation</strong> team.
-              </p>
-              
-              <div className="flex-col gap-4">
-                {globalAssets.map((asset, idx) => (
-                  <div 
-                    key={asset.id} 
-                    className="asset-card animate-slide-up" 
-                    style={{ 
-                      display: 'flex', alignItems: 'center', gap: '1rem', padding: '1.2rem', 
-                      background: 'rgba(255,255,255,0.02)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)',
-                      animationDelay: `${0.5 + (idx * 0.1)}s`
-                    }}
-                  >
-                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(245,197,24,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <FileText size={22} color="#F5C518" />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: '0.95rem', fontWeight: 800, margin: 0, color: '#fff' }}>{asset.name}</p>
-                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>{(asset.size / 1024 / 1024).toFixed(1)} MB • PDF</p>
-                    </div>
-                    <a href={asset.url} target="_blank" rel="noopener noreferrer" className="btn btn-outline" style={{ padding: '0.5rem', minWidth: 'auto', borderRadius: '10px' }}>
-                      <Download size={18}/>
-                    </a>
-                  </div>
-                ))}
-                
-                {globalAssets.length === 0 && (
-                  <div className="text-center py-10" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '20px', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                    <Package size={40} color="rgba(255,255,255,0.05)" style={{ marginBottom: '1rem' }} />
-                    <p className="text-muted" style={{ fontSize: '0.85rem' }}>No public resources available.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <style>{`
-          .avatar-glow {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 90%; height: 90%;
-            background: var(--primary);
-            filter: blur(20px);
-            opacity: 0.15;
-            border-radius: 22px;
-          }
-          .hover-scale {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-          }
-          .hover-scale:hover {
-            transform: translateY(-8px) scale(1.01);
-            background: rgba(255,255,255,0.07) !important;
-            border-color: rgba(255,255,255,0.15) !important;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-          }
-          .asset-card:hover {
-            background: rgba(255,255,255,0.05) !important;
-            transform: translateX(5px);
-            transition: all 0.3s ease;
-          }
-          @media (max-width: 768px) {
-            .mobile-stack { flex-direction: column; }
-            .mobile-full { width: 100%; margin-top: 1rem; justify-content: center; }
-          }
-        `}</style>
-      </div>
-    );
-  }
-
-  // ── VIEW: ENROLLED STUDENT CLASSROOM ──
-  if (inClass) {
-    return (
-      <div className="flex" style={{ height: 'calc(100vh - 73px)', overflow: 'hidden', background: '#000' }}>
-        <div style={{ flex: 1, position: 'relative', display: 'flex', flexDirection: 'column' }}>
-          {/* Top Info Bar */}
-          <div style={{ position: 'absolute', top: '1rem', left: '1rem', zIndex: 10, display: 'flex', gap: '1rem' }}>
-            <div className="glass-panel" style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderRadius: 'var(--radius-lg)', background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <div style={{ width: '8px', height: '8px', background: '#EF4444', borderRadius: '50%', animation: 'pulse 1.5s infinite' }}></div>
-              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>LIVE</span>
-            </div>
-            <div className="glass-panel" style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderRadius: 'var(--radius-lg)', background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <Users size={16} color="var(--primary)"/>
-              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>{activeParticipants.length + 1} Online</span>
-            </div>
-          </div>
-
-        {/* Google Meet Redirect Container */}
-        <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#0a0e1a' }}>
-          <div className="glass-panel p-10 text-center" style={{ maxWidth: '600px', border: '1px solid var(--primary)' }}>
-            <div className="flex justify-center mb-6">
-              <div className="pulse-red" style={{ width: '80px', height: '80px', background: 'rgba(79,70,229,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Video size={40} color="var(--primary)"/>
-              </div>
-            </div>
-            <h2 className="mb-4">Class is Live! 🔴</h2>
-            <p className="text-muted mb-8">Your tutor is hosting the class on Google Meet. Click below to join the session.</p>
-            
-            <div className="flex-col gap-4">
-              <a href={meetingRoom} target="_blank" rel="noopener noreferrer" className="btn btn-primary w-full" style={{ padding: '1rem' }}>
-                Enter Google Meet Class
-              </a>
-              <button onClick={handleLeaveClass} className="btn btn-outline w-full" style={{ padding: '1rem' }}>
-                Exit Dashboard View
-              </button>
-            </div>
-          </div>
-        </div>
-
-          {/* Bottom Control Bar */}
-          <div className="flex justify-center items-center p-4" style={{ background: 'linear-gradient(transparent, rgba(0,0,0,0.8))', position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 10 }}>
-            <button className="btn btn-danger" style={{ padding: '0.75rem 2rem', borderRadius: '12px' }} onClick={handleLeaveClass}>Leave Classroom</button>
-          </div>
         </div>
       </div>
     );
-  }
-
-  if (activeExam) {
-    return <TestCenter exam={activeExam} studentId={currentUser?.uid} onFinish={() => setActiveExam(null)} />;
   }
 
   return (
     <div className="container mt-6 animate-fade-in" style={{ paddingBottom: '4rem' }}>
       
       {/* ── Dashboard Header ── */}
-      <div className="flex justify-between items-end mb-10 mobile-stack animate-slide-up" style={{ animationDelay: '0.1s' }}>
+      <div className="flex justify-between items-end mb-10 mobile-stack">
         <div>
-          <h1 style={{ fontSize: 'clamp(1.8rem, 5vw, 2.8rem)', fontWeight: 900, letterSpacing: '-1.5px', marginBottom: '0.5rem' }}>
-            Student <span className="text-gradient">Classroom</span>
+          <h1 style={{ fontWeight: 900, letterSpacing: '-1.5px', margin: 0, fontSize: 'clamp(1.5rem, 4vw, 2.8rem)' }}>
+            My <span style={{ color: 'var(--primary)' }}>Academic Hub</span>
           </h1>
-          <div className="flex items-center gap-3">
-            <div className="avatar-sm" style={{ background: 'var(--primary)', color: '#fff', fontSize: '0.8rem', fontWeight: 700 }}>
-              {currentUser?.name?.charAt(0) || 'S'}
-            </div>
-            <p className="text-muted" style={{ fontSize: '1rem' }}>
-              Welcome back, <strong style={{ color: '#fff' }}>{currentUser?.name}</strong>
-            </p>
-          </div>
+          <p className="text-muted" style={{ margin: '0.3rem 0 0' }}>Welcome back, <strong>{currentUser?.name}</strong>. Keep learning!</p>
         </div>
-        <button onClick={() => logout()} className="btn btn-outline mobile-full" style={{ borderRadius: '14px', padding: '0.8rem 1.5rem', background: 'rgba(255,255,255,0.02)' }}>
-          <LogOut size={16}/> Logout Account
-        </button>
+        <button onClick={() => logout()} className="btn btn-outline mobile-full"><LogOut size={16}/> Logout</button>
       </div>
-      
-      {/* Live Class Notification Banner */}
-      {(liveSession || upcomingSession) && !inClass && (
-        <div className="animate-bounce-subtle" style={{ 
-          background: liveSession ? 'linear-gradient(90deg, #ef4444 0%, #4f46e5 100%)' : 'linear-gradient(90deg, #4f46e5 0%, #06b6d4 100%)', 
-          padding: '1.2rem', 
-          textAlign: 'center', 
-          color: 'white', 
-          fontWeight: 'bold', 
-          borderRadius: '24px',
-          marginBottom: '2.5rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          boxShadow: liveSession ? '0 15px 35px rgba(239, 68, 68, 0.3)' : '0 15px 35px rgba(79, 70, 229, 0.2)',
-          border: '1px solid rgba(255,255,255,0.2)',
-          position: 'relative',
-          overflow: 'hidden'
-        }}>
-          <div className="flex items-center gap-4">
-            <div className={liveSession ? "pulse-red" : "pulse-blue"} style={{ width: '16px', height: '16px', background: '#fff', borderRadius: '50%' }}></div>
-            <div style={{ textAlign: 'left' }}>
-              <span style={{ fontSize: '1.2rem', display: 'block' }}>
-                {liveSession ? '🔴 LIVE NOW: Sir class starting!' : `🕒 Upcoming: Class Starting In ${formatCountdown(upcomingSession.start_time)}`}
-              </span>
-              <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>
-                {liveSession ? 'Join immediately to avoid missing anything.' : 'Get your materials ready!'}
-              </span>
-            </div>
-          </div>
-          <button 
-            disabled={!liveSession}
-            onClick={() => startStream(liveSession?.room_id || `ppr-batch-${liveSession?.batch_id}`)}
-            className="btn hover-scale"
-            style={{ 
-              background: liveSession ? 'white' : 'rgba(255,255,255,0.1)', 
-              color: liveSession ? '#ef4444' : 'white', 
-              padding: '0.8rem 2rem', 
-              borderRadius: '16px', 
-              fontWeight: 900, 
-              border: liveSession ? 'none' : '1px solid rgba(255,255,255,0.3)',
-              boxShadow: liveSession ? '0 8px 15px rgba(0,0,0,0.1)' : 'none',
-              cursor: liveSession ? 'pointer' : 'not-allowed',
-              opacity: liveSession ? 1 : 0.7
-            }}
-          >
-            {liveSession ? 'JOIN FAST' : 'WAITING...'}
-          </button>
-        </div>
-      )}
 
-      {/* ── Teacher & Batch Switcher ── */}
-      <div className="mb-12 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-        <p style={{ fontSize: '0.7rem', color: 'var(--primary)', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.2em', marginBottom: '1rem' }}>
-          My Active Batches
-        </p>
-        <div className="flex gap-4 overflow-x-auto pb-6 custom-scrollbar no-scrollbar-mobile" style={{ scrollSnapType: 'x mandatory', padding: '0.5rem' }}>
+      {/* ── Multi-Tutor Selector ── */}
+      {myEnrolledBatches.length > 1 && (
+        <div className="flex gap-4 mb-10 overflow-x-auto pb-4 no-scrollbar">
           {myEnrolledBatches.map((enr, idx) => {
             const tutor = mockTutors.find(t => t.id === enr.tutor_id);
-            const batch = mockBatches.find(b => b.id === enr.batch_id);
-            const isActive = selectedEnrollment?.batch_id === enr.batch_id;
-            const liveSession = mockSessions.find(s => s.batch_id === enr.batch_id && s.status === 'live');
-            
+            const isActive = selectedEnrollment?.tutor_id === enr.tutor_id;
             return (
               <button 
-                key={enr.batch_id}
-                onClick={() => setSelectedEnrollment(enr)}
-                className={`glass-panel ${isActive ? 'active-glow' : 'hover-scale'}`}
-                style={{
-                  padding: '1.2rem', borderRadius: '24px',
-                  minWidth: '220px', textAlign: 'left',
-                  border: isActive ? '2.5px solid var(--primary)' : '1px solid rgba(255,255,255,0.08)',
-                  background: isActive ? 'rgba(79,70,229,0.12)' : 'rgba(255,255,255,0.03)',
-                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                  display: 'flex', alignItems: 'center', gap: '1rem',
-                  scrollSnapAlign: 'start', position: 'relative'
-                }}
+                key={idx} onClick={() => setSelectedEnrollment(enr)}
+                className={`glass-panel p-4 flex items-center gap-4 transition-all ${isActive ? 'active-glow' : 'opacity-60'}`}
+                style={{ minWidth: '220px', border: isActive ? '1px solid var(--primary)' : '1px solid transparent' }}
               >
-                <div style={{ position: 'relative' }}>
-                  <img 
-                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(tutor?.name||'T')}&background=random&color=fff&size=64`} 
-                    style={{ width: '48px', height: '48px', borderRadius: '16px', border: '2px solid rgba(255,255,255,0.1)' }}
-                  />
-                  {liveSession && (
-                    <div style={{ position: 'absolute', top: -5, right: -5, width: '14px', height: '14px', background: '#EF4444', borderRadius: '50%', border: '2px solid #0a0e1a', boxShadow: '0 0 10px #EF4444' }} className="animate-pulse" />
-                  )}
+                <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(tutor?.name||'T')}&background=random&color=fff&size=64`} style={{ width: '40px', height: '40px', borderRadius: '12px' }} />
+                <div style={{ textAlign: 'left' }}>
+                  <p style={{ fontSize: '0.9rem', fontWeight: 800, margin: 0 }}>{tutor?.name}</p>
+                  <p style={{ fontSize: '0.7rem', color: '#7A8BA8', margin: 0 }}>{enr.batch_name}</p>
                 </div>
-                <div style={{ overflow: 'hidden' }}>
-                  <p style={{ fontSize: '0.95rem', fontWeight: 800, margin: 0, color: isActive ? '#fff' : 'rgba(255,255,255,0.7)', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{tutor?.name || 'Teacher'}</p>
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>{batch?.name || 'Class'}</p>
-                </div>
-                {isActive && <div style={{ position: 'absolute', bottom: -12, left: '50%', transform: 'translateX(-50%)', width: '20px', height: '4px', background: 'var(--primary)', borderRadius: '2px' }} />}
               </button>
             );
           })}
         </div>
-      </div>
-
-      {/* ── Fee Overdue Alert (Phase 1: Yellow Warning) ── */}
-      {isOverdue && (
-        <div className="animate-slide-up mb-10" style={{ animationDelay: '0.25s' }}>
-          <div style={{ 
-            background: 'linear-gradient(135deg, rgba(245,197,24,0.15) 0%, rgba(245,197,24,0.05) 100%)', 
-            border: '1px solid rgba(245,197,24,0.3)', 
-            padding: '1.5rem', borderRadius: '24px',
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1.5rem',
-            backdropFilter: 'blur(10px)', flexWrap: 'wrap'
-          }}>
-            <div className="flex gap-4 items-center">
-              <div style={{ background: 'rgba(245,197,24,0.2)', padding: '0.75rem', borderRadius: '15px' }}>
-                <AlertTriangle size={24} color="#F5C518" />
-              </div>
-              <div>
-                <h4 style={{ color: '#F5C518', margin: 0, fontWeight: 800 }}>Restricted: Overdue Payment</h4>
-                <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-                  Hi {currentUser?.name}, your Monthly Fees for {currentTutor?.name} is overdue. <strong>Access to Note Materials is currently locked.</strong> Clear dues to resume.
-                </p>
-              </div>
-            </div>
-            <button className="btn btn-primary mobile-full" style={{ background: '#F5C518', color: '#000', border: 'none', padding: '1rem 2rem', borderRadius: '15px', fontWeight: 800 }} onClick={() => setShowBankingModal(true)}>
-              <CreditCard size={18}/> Pay Now
-            </button>
-          </div>
-        </div>
       )}
 
-      {/* ── Fee Restricted Alert (Phase 2: Lockdown) ── */}
-      {isRestricted && (
-        <div className="animate-slide-up mb-10" style={{ animationDelay: '0.25s' }}>
-          <div style={{ 
-            background: 'linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(239,68,68,0.1) 100%)', 
-            border: '2px solid #EF4444', 
-            padding: '2rem', borderRadius: '32px',
-            textAlign: 'center',
-            backdropFilter: 'blur(15px)',
-            boxShadow: '0 20px 40px rgba(239,68,68,0.1)'
-          }}>
-            <div style={{ background: 'rgba(239,68,68,0.1)', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
-              <Lock size={32} color="#EF4444" />
-            </div>
-            <h2 style={{ color: '#EF4444', marginBottom: '1rem', fontWeight: 900 }}>ACCESS RESTRICTED</h2>
-            <p style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.8)', maxWidth: '500px', margin: '0 auto 2rem' }}>
-              Your account has been locked due to unpaid dues for <strong>{currentTutor?.name}'s</strong> class. Please clear your balance of ₹{selectedEnrollment?.outstanding_balance} to resume learning.
-            </p>
-            <button className="btn btn-primary" style={{ background: '#EF4444', border: 'none', padding: '1.2rem 3rem', borderRadius: '18px', fontSize: '1.1rem', fontWeight: 900, boxShadow: '0 10px 30px rgba(239,68,68,0.3)' }} onClick={() => setShowBankingModal(true)}>
-              <CreditCard size={22}/> Unlock Classroom Now
-            </button>
-          </div>
-        </div>
-      )}
-
-        {/* ── Payments & Fees Tab ── */}
-        {activeTab === 'payments' && (
-          <div className="animate-reveal">
-            <div className="grid grid-cols-12 gap-8">
-              <div className="col-span-12 lg:col-span-7 flex-col gap-6">
-                <div className="glass-panel p-10" style={{ borderRadius: '32px', border: '1px solid rgba(245,197,24,0.1)', background: 'linear-gradient(135deg, rgba(245,197,24,0.05) 0%, transparent 100%)' }}>
-                  <div className="flex justify-between items-start mb-8">
-                    <div>
-                      <h2 style={{ marginBottom: '0.5rem' }}>Fee Management</h2>
-                      <p style={{ color: '#7A8BA8', margin: 0 }}>Review your dues and pay directly to your teacher.</p>
-                    </div>
-                    <div style={{ background: 'rgba(245,197,24,0.1)', padding: '0.8rem', borderRadius: '15px' }}>
-                      <CreditCard size={28} color="#F5C518" />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-6 mb-10">
-                    <div className="glass-panel p-6" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '24px' }}>
-                      <p style={{ fontSize: '0.75rem', color: '#7A8BA8', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '1px' }}>Monthly Fee</p>
-                      <h1 style={{ margin: 0, fontSize: '2.5rem' }}>₹{selectedEnrollment?.monthly_fee}</h1>
-                    </div>
-                    <div className="glass-panel p-6" style={{ background: isOverdue || isRestricted ? 'rgba(239,68,68,0.05)' : 'rgba(34,197,94,0.05)', borderRadius: '24px', border: `1px solid ${isOverdue || isRestricted ? 'rgba(239,68,68,0.2)' : 'rgba(34,197,94,0.2)'}` }}>
-                      <p style={{ fontSize: '0.75rem', color: isOverdue || isRestricted ? '#EF4444' : '#22C55E', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '1px' }}>Current Status</p>
-                      <h3 style={{ margin: 0, color: isOverdue || isRestricted ? '#EF4444' : '#22C55E', textTransform: 'uppercase' }}>{paymentStatus}</h3>
-                    </div>
-                  </div>
-
-                  <div style={{ background: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <h4 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Shield size={20} color="#F5C518" /> Tuition Fee Policy</h4>
-                    <ul style={{ paddingLeft: '1.2rem', color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      <li>Fees are due on the <strong>1st of every month</strong>.</li>
-                      <li>Overdue payments (after the 1st) will result in <strong>Batch Library restrictions</strong>.</li>
-                      <li>Unpaid dues beyond the <strong>5th</strong> will lead to full classroom lockdown.</li>
-                      <li>Payments must be transferred <strong>directly</strong> to the teacher's account.</li>
-                    </ul>
-                    
-                    <button 
-                      className="btn btn-primary w-full mt-10" 
-                      style={{ padding: '1.2rem', borderRadius: '18px', fontSize: '1.1rem', fontWeight: 900, background: 'var(--primary)', color: '#000' }}
-                      onClick={() => setShowBankingModal(true)}
-                    >
-                      <CreditCard size={20} /> Direct Pay to Teacher
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="col-span-12 lg:col-span-5 flex-col gap-6">
-                <div className="glass-panel p-8" style={{ borderRadius: '32px' }}>
-                  <h4 style={{ marginBottom: '1.5rem' }}>Teacher Profile</h4>
-                  <div className="flex items-center gap-4 p-4" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '20px' }}>
-                    <div style={{ width: '56px', height: '56px', borderRadius: '15px', overflow: 'hidden' }}>
-                      <img 
-                        src={currentTutor?.profile_image || `https://ui-avatars.com/api/?name=${currentTutor?.name}&background=f5c518&color=000&bold=true`} 
-                        alt="Tutor"
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                    </div>
-                    <div>
-                      <div style={{ fontWeight: 800 }}>{currentTutor?.name}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#7A8BA8' }}>{currentTutor?.subjects?.join(' • ') || 'Expert Faculty'}</div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-8 flex-col gap-4">
-                    <div className="flex justify-between items-center py-3 border-b border-white/5">
-                      <span style={{ color: '#7A8BA8', fontSize: '0.9rem' }}>Contact Number</span>
-                      <span style={{ fontWeight: 700 }}>{currentTutor?.phone}</span>
-                    </div>
-                    <div className="flex justify-between items-center py-3 border-b border-white/5">
-                      <span style={{ color: '#7A8BA8', fontSize: '0.9rem' }}>Teaching Batch</span>
-                      <span style={{ fontWeight: 700 }}>{currentBatch?.name || 'N/A'}</span>
-                    </div>
-                    <div className="flex justify-between items-center py-3">
-                      <span style={{ color: '#7A8BA8', fontSize: '0.9rem' }}>Outstanding Dues</span>
-                      <span style={{ fontWeight: 800, color: (selectedEnrollment?.outstanding_balance > 0) ? '#EF4444' : '#22C55E' }}>₹{selectedEnrollment?.outstanding_balance || 0}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="glass-panel p-8" style={{ borderRadius: '32px', background: 'rgba(34,197,94,0.03)', border: '1px solid rgba(34,197,94,0.1)' }}>
-                  <div className="flex items-center gap-3 mb-4">
-                    <ShieldCheck size={24} color="#22C55E" />
-                    <h4 style={{ margin: 0, color: '#22C55E' }}>Verified Payouts</h4>
-                  </div>
-                  <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.6 }}>
-                    All payments transferred via this portal are recorded by Super Admin. After payment, your access will be restored within 30 minutes of verification.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-      {/* ── Sub-Navigation Tabs ── */}
-      <div className="tab-nav mb-8 overflow-x-auto pb-2" style={{ display: 'flex', gap: '0.5rem' }}>
-        <button onClick={() => setActiveTab('overview')} className={`nav-btn ${activeTab === 'overview' ? 'active' : ''}`}><Activity size={18} /> Overview</button>
-        <button onClick={() => setActiveTab('live')} className={`nav-btn ${activeTab === 'live' ? 'active' : ''}`}><Video size={18} /> Live Classes</button>
-        <button onClick={() => setActiveTab('exams')} className={`nav-btn ${activeTab === 'exams' ? 'active' : ''}`}><Zap size={18} /> Online Exams</button>
-        <button onClick={() => setActiveTab('materials')} className={`nav-btn ${activeTab === 'materials' ? 'active' : ''}`}><FileText size={18} /> Batch Library</button>
-        <button onClick={() => setActiveTab('assignments')} className={`nav-btn ${activeTab === 'assignments' ? 'active' : ''}`}><CheckSquare size={18} /> Assignments</button>
-        <button onClick={() => setActiveTab('payments')} className={`nav-btn ${activeTab === 'payments' ? 'active' : ''}`}><CreditCard size={18} /> Payments & Fees</button>
-      </div>
-
-      {/* ── Dashboard Content Switching ── */}
-      {activeTab === 'overview' && (
-        <div className="dashboard-grid">
+      {/* ── Dashboard Grid ── */}
+      <div className="grid grid-cols-12 gap-8">
         
-        {/* Live Status Card */}
-        <div className="animate-slide-up" style={{ animationDelay: '0.3s' }}>
-          <div className="glass-panel p-8 h-full" style={{ borderRadius: '32px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '300px', border: '1px solid rgba(255,255,255,0.05)', background: 'linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)' }}>
-            <div>
-              <div className="flex justify-between items-start mb-6">
-                <div style={{ background: 'rgba(79,70,229,0.1)', padding: '0.8rem', borderRadius: '16px' }}>
-                  <Video size={28} color="var(--primary)" />
+        {/* Main Content Column */}
+        <div className="col-span-12 lg:col-span-8 flex-col gap-8">
+          
+          {/* Global Tab Nav */}
+          <div className="tab-nav mb-8 overflow-x-auto pb-2" style={{ display: 'flex', gap: '0.5rem' }}>
+            <button onClick={() => setActiveTab('overview')} className={`nav-btn ${activeTab === 'overview' ? 'active' : ''}`}><Activity size={18} /> Overview</button>
+            <button onClick={() => setActiveTab('live')} className={`nav-btn ${activeTab === 'live' ? 'active' : ''}`}><Video size={18} /> Live</button>
+            <button onClick={() => setActiveTab('materials')} className={`nav-btn ${activeTab === 'materials' ? 'active' : ''}`}><FileText size={18} /> Library</button>
+            <button onClick={() => setActiveTab('payments')} className={`nav-btn ${activeTab === 'payments' ? 'active' : ''}`}><CreditCard size={18} /> Fees</button>
+          </div>
+
+          {/* Overdue/Restricted Banners */}
+          {isOverdue && (
+            <div className="glass-panel p-6 border-l-4 border-yellow-500 mb-8" style={{ background: 'rgba(245,197,24,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className="flex items-center gap-4">
+                <AlertTriangle color="#F5C518" />
+                <div>
+                  <h4 style={{ margin: 0, color: '#F5C518' }}>Payment Overdue</h4>
+                  <p style={{ margin: 0, fontSize: '0.85rem' }}>Your fee for {currentTutor?.name} is pending. Library restricted.</p>
                 </div>
-                {mockSessions.find(s => s.batch_id === selectedEnrollment?.batch_id && s.status === 'live') ? (
-                  <span className="badge-live animate-pulse">LIVE NOW</span>
-                ) : (
-                  <span className="badge-offline">OFFLINE</span>
-                )}
               </div>
-              <h3 className="mb-2">Virtual Classroom</h3>
-              <p className="text-muted" style={{ fontSize: '0.95rem' }}>Join the high-fidelity interactive session with {currentTutor?.name || 'your teacher'}.</p>
+              <button className="btn btn-primary" onClick={() => setActiveTab('payments')}>Pay Now</button>
             </div>
-            <div className="mt-8">
-              {mockSessions.find(s => s.batch_id === selectedEnrollment?.batch_id && s.status === 'live') ? (
-                <button className="btn btn-primary w-full p-4" style={{ borderRadius: '18px', fontSize: '1rem', fontWeight: 800, boxShadow: '0 10px 25px rgba(79,70,229,0.3)' }} onClick={handleJoinClass}>
-                  Enter Live Classroom
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '18px', textAlign: 'center', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                  <p className="text-muted" style={{ fontSize: '0.85rem', margin: 0 }}>No live session currently active</p>
+          )}
+
+          {isRestricted && (
+            <div className="glass-panel p-10 border-l-4 border-red-500 text-center mb-8" style={{ background: 'rgba(239,68,68,0.05)' }}>
+              <Lock size={48} color="#EF4444" style={{ marginBottom: '1rem' }} />
+              <h2 style={{ color: '#EF4444', margin: 0 }}>ACCOUNT LOCKED</h2>
+              <p>Please clear your dues of ₹{selectedEnrollment?.outstanding_balance} to unlock your classroom.</p>
+              <button className="btn btn-primary" onClick={() => setActiveTab('payments')} style={{ background: '#EF4444' }}>Unlock Now</button>
+            </div>
+          )}
+
+          {/* Tab Contents */}
+          {activeTab === 'overview' && (
+            <div className="animate-reveal flex-col gap-8">
+              <div className="grid grid-cols-3 gap-6 mobile-grid-1">
+                <div className="glass-panel p-6 border-l-4 border-indigo-500">
+                  <p style={{ fontSize: '0.7rem', color: '#7A8BA8', textTransform: 'uppercase' }}>Attendance</p>
+                  <h2 style={{ margin: 0 }}>94%</h2>
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Upcoming Schedule Card */}
-        <div className="animate-slide-up" style={{ animationDelay: '0.4s' }}>
-          <div className="glass-panel p-8 h-full" style={{ borderRadius: '32px', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <h3 className="mb-6 flex items-center gap-3"><CalendarIcon size={24} color="var(--primary)"/> Upcoming Sessions</h3>
-            {mySessions.length === 0 && <p className="text-muted py-10 text-center">No upcoming sessions scheduled.</p>}
-            <div className="flex-col gap-4">
-              {mySessions.slice(0, 3).map(session => {
-                const isReady = new Date(session.scheduled_time).getTime() - Date.now() <= 0;
-                return (
-                  <div key={session.id} className="session-card" style={{ padding: '1.2rem', background: 'rgba(255,255,255,0.02)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                     <div className="flex justify-between items-center">
-                       <div>
-                         <h4 style={{ fontSize: '1rem', marginBottom: '0.2rem' }}>{session.title}</h4>
-                         <p className="text-muted" style={{ fontSize: '0.75rem' }}>{new Date(session.scheduled_time).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' })}</p>
-                       </div>
-                       <button 
-                         className={`btn ${isReady ? 'btn-primary' : 'btn-outline'}`} 
-                         style={{ padding: '0.5rem 1rem', borderRadius: '12px', fontSize: '0.8rem' }}
-                         disabled={!isReady || isRestricted} 
-                         onClick={() => handleJoinClass()}
-                       >
-                         {isRestricted ? <Lock size={14}/> : isReady ? 'Join' : 'Waiting'}
-                       </button>
-                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* Study Materials Grid Card */}
-        <div className="animate-slide-up" style={{ animationDelay: '0.5s', gridColumn: 'span 1' }}>
-          <div className="glass-panel p-8" style={{ borderRadius: '32px', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <h3 className="mb-6 flex items-center gap-3">
-              <FileText size={24} color="var(--primary)"/> 
-              Batch Library {(isOverdue || isRestricted) && <Lock size={18} color="#EF4444" style={{ marginLeft: 'auto' }} />}
-            </h3>
-            <StudentMaterialsPanel
-              batchId={selectedEnrollment?.batch_id}
-              isLocked={isOverdue || isRestricted}
-            />
-          </div>
-        </div>
-
-        {/* Admin Library Card */}
-        <div className="animate-slide-up" style={{ animationDelay: '0.6s' }}>
-          <div className="glass-panel p-8" style={{ borderRadius: '32px', border: '1px solid rgba(245,197,24,0.1)', background: 'linear-gradient(135deg, rgba(245,197,24,0.05) 0%, transparent 100%)' }}>
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="flex items-center gap-3">
-                <Package size={24} color="#F5C518"/> 
-                Global Assets {(isOverdue || isRestricted) && <Lock size={18} color="#EF4444" style={{ marginLeft: 'auto' }} />}
-              </h3>
-              <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#F5C518', background: 'rgba(245,197,24,0.1)', padding: '0.3rem 0.6rem', borderRadius: '8px' }}>ADMIN RESOURCES</span>
-            </div>
-            <div className="flex-col gap-3" style={{ opacity: (isOverdue || isRestricted) ? 0.4 : 1, pointerEvents: (isOverdue || isRestricted) ? 'none' : 'auto', filter: (isOverdue || isRestricted) ? 'grayscale(1)' : 'none' }}>
-              {globalAssets.map(asset => (
-                <div key={asset.id} className="asset-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(245,197,24,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <FileText size={20} color="#F5C518" />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: '0.9rem', fontWeight: 700, margin: 0 }}>{asset.name}</p>
-                    <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', margin: 0 }}>{(asset.size / 1024 / 1024).toFixed(1)} MB</p>
-                  </div>
-                  <a href={asset.url} target="_blank" rel="noopener noreferrer" className="btn btn-outline" style={{ padding: '0.5rem', minWidth: 'auto', borderRadius: '10px' }}>
-                    <Download size={16}/>
-                  </a>
+                <div className="glass-panel p-6 border-l-4 border-yellow-500">
+                  <p style={{ fontSize: '0.7rem', color: '#7A8BA8', textTransform: 'uppercase' }}>Test Avg</p>
+                  <h2 style={{ margin: 0 }}>88.5</h2>
                 </div>
-              ))}
-              {globalAssets.length === 0 && <p className="text-muted text-center py-6" style={{ fontSize: '0.85rem' }}>No global resources yet.</p>}
+                <div className="glass-panel p-6 border-l-4 border-green-500">
+                  <p style={{ fontSize: '0.7rem', color: '#7A8BA8', textTransform: 'uppercase' }}>Assignments</p>
+                  <h2 style={{ margin: 0 }}>12/14</h2>
+                </div>
+              </div>
+
+              <div className="glass-panel p-8">
+                <h3 className="flex items-center gap-2 mb-4"><MessageSquare size={20} color="var(--primary)" /> Notice Board</h3>
+                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.2rem', borderRadius: '15px' }}>
+                  <p style={{ fontWeight: 700, margin: '0 0 0.5rem' }}>Sunday Unit Test Reminder</p>
+                  <p style={{ fontSize: '0.9rem', color: '#7A8BA8', margin: 0 }}>Syllabus covers Human Physiology. Study materials are available in the Library tab.</p>
+                </div>
+              </div>
             </div>
+          )}
+
+          {activeTab === 'materials' && (
+            <div className="glass-panel p-8 animate-reveal">
+              <h3 className="flex items-center gap-2 mb-6"><FileText size={20} color="var(--primary)" /> Batch Library</h3>
+              <StudentMaterialsPanel batchId={selectedEnrollment?.batch_id} isLocked={isRestricted || isOverdue} />
+            </div>
+          )}
+
+          {activeTab === 'payments' && (
+            <div className="animate-reveal flex-col gap-8">
+              <div className="glass-panel p-10" style={{ border: '1px solid rgba(245,197,24,0.2)', background: 'linear-gradient(135deg, rgba(245,197,24,0.05) 0%, transparent 100%)' }}>
+                <div className="flex justify-between items-start mb-8">
+                  <div>
+                    <h2 style={{ margin: 0 }}>Fee Management</h2>
+                    <p style={{ color: '#7A8BA8', margin: 0 }}>Pay your monthly tuition directly to your teacher.</p>
+                  </div>
+                  <CreditCard size={32} color="#F5C518" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-6 mb-10">
+                  <div className="glass-panel p-6">
+                    <p style={{ fontSize: '0.7rem', color: '#7A8BA8' }}>MONTHLY FEE</p>
+                    <h1 style={{ margin: 0 }}>₹{selectedEnrollment?.monthly_fee}</h1>
+                  </div>
+                  <div className="glass-panel p-6" style={{ background: (isOverdue || isRestricted) ? 'rgba(239,68,68,0.05)' : 'rgba(34,197,94,0.05)' }}>
+                    <p style={{ fontSize: '0.7rem', color: '#7A8BA8' }}>STATUS</p>
+                    <h3 style={{ margin: 0, color: (isOverdue || isRestricted) ? '#EF4444' : '#22C55E' }}>{paymentStatus.toUpperCase()}</h3>
+                  </div>
+                </div>
+
+                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: '24px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                   <p style={{ fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '2rem' }}>
+                     Transfer ₹{selectedEnrollment?.outstanding_balance || selectedEnrollment?.monthly_fee} to <strong>{currentTutor?.name}</strong> using the details provided. Upload Transaction ID for approval.
+                   </p>
+                   <button className="btn btn-primary w-full" style={{ padding: '1.2rem', fontWeight: 900 }} onClick={() => setShowBankingModal(true)}>
+                     Get Bank & UPI Details
+                   </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'live' && (
+            <div className="glass-panel p-20 text-center opacity-40">
+               <Video size={48} style={{ marginBottom: '1rem' }} />
+               <h3>Live Classes</h3>
+               <p>No active sessions. Check the schedule in the sidebar.</p>
+            </div>
+          )}
+        </div>
+
+        {/* Sidebar Column */}
+        <div className="col-span-12 lg:col-span-4 flex-col gap-8">
+          <div className="glass-panel p-8">
+            <p style={{ fontSize: '0.7rem', color: 'var(--primary)', fontWeight: 800, textTransform: 'uppercase' }}>Active Batch</p>
+            <h2 style={{ fontSize: '1.8rem', margin: '0.5rem 0' }}>{selectedEnrollment?.batch_name}</h2>
+            <div className="flex items-center gap-2 mb-6">
+              <Users size={16} color="#7A8BA8" />
+              <span style={{ fontSize: '0.85rem' }}>Tutor: <strong>{currentTutor?.name}</strong></span>
+            </div>
+            <button className="btn btn-primary w-full p-4" disabled={!liveSession || isRestricted} onClick={() => startStream()}>
+              {liveSession ? 'Join Live Now' : 'Class Offline'}
+            </button>
+          </div>
+
+          <div className="glass-panel p-8">
+             <h4 className="flex items-center gap-2 mb-6"><CalendarIcon size={18} color="var(--primary)"/> Schedule</h4>
+             <div className="flex-col gap-4">
+                {mySessions.length > 0 ? mySessions.slice(0, 3).map(s => (
+                  <div key={s.id} className="p-4" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '15px' }}>
+                    <p style={{ margin: 0, fontWeight: 700 }}>Regular Session</p>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#7A8BA8' }}>{new Date(s.scheduled_time).toLocaleString()}</p>
+                  </div>
+                )) : <p className="text-muted text-center py-6">No sessions found.</p>}
+             </div>
           </div>
         </div>
       </div>
-    )}
 
-      <style>{`
-        .dashboard-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-          gap: 2rem;
-        }
-        @media (max-width: 768px) {
-          .dashboard-grid {
-            grid-template-columns: 1fr;
-          }
-          .mobile-full { width: 100%; }
-          .mobile-stack { flex-direction: column; align-items: flex-start !important; }
-        }
-        .text-gradient {
-          background: linear-gradient(135deg, var(--primary) 0%, #a78bfa 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-        }
-        .avatar-sm {
-          width: 32px; height: 32px; border-radius: 10px;
-          display: flex; align-items: center; justify-content: center;
-        }
-        .badge-live {
-          font-size: 0.65rem; font-weight: 900; color: #fff;
-          background: #EF4444; padding: 0.3rem 0.8rem; border-radius: 10px;
-          box-shadow: 0 0 15px rgba(239,68,68,0.4);
-        }
-        .badge-offline {
-          font-size: 0.65rem; font-weight: 900; color: rgba(255,255,255,0.4);
-          background: rgba(255,255,255,0.05); padding: 0.3rem 0.8rem; border-radius: 10px;
-        }
-        .active-glow {
-          box-shadow: 0 10px 40px rgba(79,70,229,0.2) !important;
-          transform: translateY(-5px);
-        }
-        .hover-scale:hover {
-          transform: translateY(-5px);
-          background: rgba(255,255,255,0.06) !important;
-          border-color: rgba(255,255,255,0.15) !important;
-        }
-        .asset-card:hover {
-          background: rgba(255,255,255,0.06) !important;
-          transform: scale(1.02);
-          transition: all 0.3s ease;
-        }
-        .no-scrollbar-mobile::-webkit-scrollbar { display: none; }
-        .pulse-red {
-          box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
-          animation: pulse-red-anim 2s infinite;
-        }
-        .pulse-blue {
-          box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
-          animation: pulse-blue-anim 2s infinite;
-        }
-        @keyframes pulse-red-anim {
-          0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
-          70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
-          100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
-        }
-        @keyframes pulse-blue-anim {
-          0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
-          70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(79, 70, 229, 0); }
-          100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
-        }
-        .animate-bounce-subtle {
-          animation: bounce-subtle 3s ease-in-out infinite;
-        }
-        @keyframes bounce-subtle {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-5px); }
-        }
-      `}</style>
-      {/* ── Direct Payment Modal (Banking Details) ── */}
+      {/* ── Banking Modal ── */}
       {showBankingModal && (
         <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6" style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)' }}>
-          <div className="glass-panel p-8 animate-slide-up" style={{ width: '100%', maxWidth: '450px', border: '1px solid rgba(245,197,24,0.3)', borderRadius: '32px' }}>
+          <div className="glass-panel p-10 animate-slide-up" style={{ width: '100%', maxWidth: '450px', border: '1px solid rgba(245,197,24,0.3)', borderRadius: '32px' }}>
             <div className="flex justify-between items-center mb-8">
-              <div className="flex items-center gap-3">
-                <div style={{ background: 'rgba(245,197,24,0.15)', padding: '0.6rem', borderRadius: '12px' }}>
-                  <CreditCard size={24} color="#F5C518" />
-                </div>
-                <h3 style={{ margin: 0 }}>Direct Tuition Pay</h3>
-              </div>
-              <button onClick={() => setShowBankingModal(false)} style={{ background: 'none', border: 'none', color: '#7A8BA8', cursor: 'pointer' }}>✕</button>
+               <h3 style={{ margin: 0 }}>Transfer Details</h3>
+               <button onClick={() => setShowBankingModal(false)} style={{ background: 'none', border: 'none', color: '#7A8BA8' }}>✕</button>
             </div>
-
-            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', marginBottom: '1.5rem', lineHeight: 1.6 }}>
-              Please transfer your monthly fee of <strong>₹{selectedEnrollment?.monthly_fee}</strong> directly to your teacher's account. Access will be restored once payment is verified.
-            </p>
 
             <div className="flex-col gap-4">
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.2rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <p style={{ fontSize: '0.75rem', color: '#7A8BA8', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Account Holder Name</p>
-                <p style={{ fontSize: '1.1rem', fontWeight: 800, color: '#fff', margin: 0 }}>{currentTutor?.banking?.accountHolderName || currentTutor?.name || 'Tutor Account'}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.2rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <p style={{ fontSize: '0.75rem', color: '#7A8BA8', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Bank Account</p>
-                  <p style={{ fontSize: '0.95rem', fontWeight: 800, color: '#F5C518', margin: 0 }}>{currentTutor?.banking?.accountNumber || 'XXXXXXXXXXXX'}</p>
-                </div>
-                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.2rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <p style={{ fontSize: '0.75rem', color: '#7A8BA8', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '1px' }}>IFSC Code</p>
-                  <p style={{ fontSize: '0.95rem', fontWeight: 800, color: '#F5C518', margin: 0 }}>{currentTutor?.banking?.ifscCode || 'HDFC0001234'}</p>
-                </div>
-              </div>
-
-              <div style={{ background: 'rgba(79,70,229,0.05)', padding: '1.2rem', borderRadius: '20px', border: '1px solid rgba(79,70,229,0.2)' }}>
-                <p style={{ fontSize: '0.75rem', color: '#7A8BA8', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '1px' }}>UPI ID (Direct Pay)</p>
-                <p style={{ fontSize: '1.1rem', fontWeight: 900, color: 'var(--primary)', margin: 0 }}>{currentTutor?.banking?.upiId || `${currentTutor?.phone}@upi`}</p>
-              </div>
+               <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.2rem', borderRadius: '15px' }}>
+                 <p style={{ fontSize: '0.7rem', color: '#7A8BA8', margin: '0 0 0.3rem' }}>ACCOUNT HOLDER</p>
+                 <p style={{ fontWeight: 800, margin: 0 }}>{currentTutor?.name}</p>
+               </div>
+               <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.2rem', borderRadius: '15px' }}>
+                 <p style={{ fontSize: '0.7rem', color: '#7A8BA8', margin: '0 0 0.3rem' }}>BANK ACCOUNT NUMBER</p>
+                 <p style={{ fontWeight: 900, color: '#F5C518', margin: 0 }}>{currentTutor?.banking?.accountNumber || 'XXXXXXXXXXXX'}</p>
+               </div>
+               <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.2rem', borderRadius: '15px' }}>
+                 <p style={{ fontSize: '0.7rem', color: '#7A8BA8', margin: '0 0 0.3rem' }}>IFSC CODE</p>
+                 <p style={{ fontWeight: 800, margin: 0 }}>{currentTutor?.banking?.ifscCode || 'IFSC00123'}</p>
+               </div>
+               <div style={{ background: 'rgba(79,70,229,0.05)', padding: '1.2rem', borderRadius: '15px', border: '1px solid rgba(79,70,229,0.2)' }}>
+                 <p style={{ fontSize: '0.7rem', color: '#7A8BA8', margin: '0 0 0.3rem' }}>UPI ID</p>
+                 <p style={{ fontWeight: 900, color: 'var(--primary)', margin: 0 }}>{currentTutor?.banking?.upiId || `${currentTutor?.phone}@upi`}</p>
+               </div>
             </div>
 
-            <div style={{ marginTop: '2rem' }}>
-              <label style={{ fontSize: '0.75rem', color: '#7A8BA8', display: 'block', marginBottom: '0.5rem', fontWeight: 700 }}>ENTER TRANSACTION ID / UTR</label>
-              <input 
-                type="text" 
-                className="input-field" 
-                placeholder="e.g. 123456789012"
-                style={{ padding: '1rem', borderRadius: '15px' }}
-              />
-              <button className="btn btn-primary w-full mt-4" style={{ padding: '1rem', borderRadius: '15px', fontWeight: 900 }} onClick={() => {
-                alert('Verification Request Sent to Admin! Please wait 30 minutes.');
-                setShowBankingModal(false);
-              }}>
-                Verify via Admin
-              </button>
-            </div>
-
-            <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(34,197,94,0.1)', borderRadius: '15px', border: '1px solid rgba(34,197,94,0.2)', textAlign: 'center' }}>
-              <p style={{ fontSize: '0.8rem', color: '#22C55E', margin: 0 }}>
-                Verification usually takes <strong>30 minutes</strong> during working hours.
-              </p>
+            <div className="mt-8">
+               <label style={{ fontSize: '0.7rem', color: '#7A8BA8', display: 'block', marginBottom: '0.5rem' }}>TRANSACTION ID / UTR</label>
+               <input type="text" className="input-field mb-4" placeholder="e.g. 1234567890" />
+               <button className="btn btn-primary w-full p-4" onClick={() => { alert('Verification Request Sent!'); setShowBankingModal(false); }}>
+                 Verify Payment
+               </button>
             </div>
           </div>
         </div>
       )}
+
+      <style>{`
+        .nav-btn {
+          background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+          padding: 0.8rem 1.5rem; border-radius: 12px; color: #7A8BA8;
+          display: flex; align-items: center; gap: 0.6rem; transition: all 0.3s;
+          white-space: nowrap; font-weight: 700; cursor: pointer;
+        }
+        .nav-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .nav-btn.active { background: var(--primary); color: #000; border-color: var(--primary); }
+        .active-glow { box-shadow: 0 0 20px rgba(79,70,229,0.2); }
+        .hover-scale:hover { transform: translateY(-3px); background: rgba(255,255,255,0.05); }
+      `}</style>
     </div>
   );
 }
