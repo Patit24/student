@@ -739,7 +739,10 @@ export default function StudentDashboard() {
         {/* Study Materials Grid Card */}
         <div className="animate-slide-up" style={{ animationDelay: '0.5s', gridColumn: 'span 1' }}>
           <div className="glass-panel p-8" style={{ borderRadius: '32px', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <h3 className="mb-6 flex items-center gap-3"><FileText size={24} color="var(--primary)"/> Batch Library</h3>
+            <h3 className="mb-6 flex items-center gap-3">
+              <FileText size={24} color="var(--primary)"/> 
+              Batch Library {(isOverdue || isRestricted) && <Lock size={18} color="#EF4444" style={{ marginLeft: 'auto' }} />}
+            </h3>
             <StudentMaterialsPanel
               batchId={selectedEnrollment?.batch_id}
               isLocked={isOverdue || isRestricted}
@@ -751,10 +754,13 @@ export default function StudentDashboard() {
         <div className="animate-slide-up" style={{ animationDelay: '0.6s' }}>
           <div className="glass-panel p-8" style={{ borderRadius: '32px', border: '1px solid rgba(245,197,24,0.1)', background: 'linear-gradient(135deg, rgba(245,197,24,0.05) 0%, transparent 100%)' }}>
             <div className="flex justify-between items-center mb-6">
-              <h3 className="flex items-center gap-3"><Package size={24} color="#F5C518"/> Global Assets</h3>
+              <h3 className="flex items-center gap-3">
+                <Package size={24} color="#F5C518"/> 
+                Global Assets {(isOverdue || isRestricted) && <Lock size={18} color="#EF4444" style={{ marginLeft: 'auto' }} />}
+              </h3>
               <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#F5C518', background: 'rgba(245,197,24,0.1)', padding: '0.3rem 0.6rem', borderRadius: '8px' }}>ADMIN RESOURCES</span>
             </div>
-            <div className="flex-col gap-3">
+            <div className="flex-col gap-3" style={{ opacity: (isOverdue || isRestricted) ? 0.4 : 1, pointerEvents: (isOverdue || isRestricted) ? 'none' : 'auto', filter: (isOverdue || isRestricted) ? 'grayscale(1)' : 'none' }}>
               {globalAssets.map(asset => (
                 <div key={asset.id} className="asset-card" style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.03)', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(245,197,24,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
