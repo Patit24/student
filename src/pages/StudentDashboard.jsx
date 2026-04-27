@@ -30,6 +30,7 @@ function PasswordResetGate() {
     setLoading(true);
     try {
       await updateUserPassword(newPass);
+      toast.success('Account secured successfully! Welcome to your classroom. 🚀');
     } catch (err) {
       console.error(err);
       alert('Failed to update password');

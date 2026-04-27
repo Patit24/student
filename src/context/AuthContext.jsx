@@ -241,7 +241,6 @@ export function AppProvider({ children }) {
   async function updateUserPassword(newPassword) {
     if (isMockMode) {
       setCurrentUser(prev => ({ ...prev, needs_password_reset: false }));
-      toast.success('Password updated (Mock mode)');
       return;
     }
     try {
@@ -252,7 +251,6 @@ export function AppProvider({ children }) {
       await updateDoc(userRef, { needs_password_reset: false });
       
       setCurrentUser(prev => ({ ...prev, needs_password_reset: false }));
-      toast.success('Password updated successfully! ✅');
     } catch (error) {
       console.error('Password update failed:', error);
       throw error;
@@ -541,7 +539,7 @@ export function AppProvider({ children }) {
   // ─────────────────────────────────────────────────────────────────────────
   const value = {
     currentUser,
-    signup, login, logout, sendOTP, verifyOTP, forgotPassword,
+    signup, login, logout, sendOTP, verifyOTP, forgotPassword, updateUserPassword,
     purchasedAssets,
     updateTutorSubscription, updateBranding, updateTutorProfile,
     updatePaymentStatus, updateBankingDetails, setAutoRestriction,
