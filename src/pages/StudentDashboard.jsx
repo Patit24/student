@@ -901,7 +901,7 @@ export default function StudentDashboard() {
             grid-template-columns: 1fr;
           }
           .mobile-full { width: 100%; }
-          .mobile-stack { flex-direction: column; align-items: flex-start ! from; }
+          .mobile-stack { flex-direction: column; align-items: flex-start !important; }
         }
         .text-gradient {
           background: linear-gradient(135deg, var(--primary) 0%, #a78bfa 100%);
