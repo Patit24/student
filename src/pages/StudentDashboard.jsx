@@ -760,9 +760,12 @@ export default function StudentDashboard() {
                     <h4 style={{ margin: 0, color: '#22C55E' }}>Verified Payouts</h4>
                   </div>
                   <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.6 }}>
-                    All payments transferred via this portal are recorded by Super Admin. After payment, your access will be restored within 30 minutes of verification.
-                  </p>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
       {/* ── Sub-Navigation Tabs ── */}
       <div className="tab-nav mb-8 overflow-x-auto pb-2" style={{ display: 'flex', gap: '0.5rem' }}>
         <button onClick={() => setActiveTab('overview')} className={`nav-btn ${activeTab === 'overview' ? 'active' : ''}`}><Activity size={18} /> Overview</button>
