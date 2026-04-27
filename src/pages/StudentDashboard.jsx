@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppContext } from '../context/AuthContext';
-import { Play, Download, MessageSquare, FileText, Shield, Clock, Calendar as CalendarIcon, CheckCircle, ShieldAlert, CheckSquare, CreditCard, AlertTriangle, LogOut, Phone, Users, Video, Search, Package, Eye, EyeOff, Lock, TrendingUp, Zap, DownloadCloud, ChevronRight, XCircle } from 'lucide-react';
+import { Play, Download, MessageSquare, FileText, Shield, Clock, Calendar as CalendarIcon, CheckCircle, ShieldAlert, CheckSquare, CreditCard, AlertTriangle, LogOut, Phone, Users, Video, Search, Package, Eye, EyeOff, Lock, TrendingUp, Zap, DownloadCloud, ChevronRight, XCircle, Activity } from 'lucide-react';
 import ChatSidebar from '../components/ChatSidebar';
 import PaymentBanner from '../components/PaymentBanner';
 import TestCenter from '../components/TestCenter';
