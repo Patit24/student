@@ -633,9 +633,9 @@ export default function StudentDashboard() {
                 <AlertTriangle size={24} color="#F5C518" />
               </div>
               <div>
-                <h4 style={{ color: '#F5C518', margin: 0, fontWeight: 800 }}>Monthly subscription overdue</h4>
+                <h4 style={{ color: '#F5C518', margin: 0, fontWeight: 800 }}>Restricted: Overdue Payment</h4>
                 <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-                  Please pay your dues of ₹{selectedEnrollment?.outstanding_balance} to avoid restriction on the 5th.
+                  Hi {currentUser?.name}, your Monthly Fees for {currentTutor?.name} is overdue. <strong>Access to Note Materials is currently locked.</strong> Clear dues to resume.
                 </p>
               </div>
             </div>

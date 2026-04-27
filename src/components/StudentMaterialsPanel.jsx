@@ -51,15 +51,25 @@ export default function StudentMaterialsPanel({ batchId, isLocked }) {
   if (isLocked) {
     return (
       <div style={{
-        textAlign: 'center', padding: '2.5rem',
-        border: '1px dashed rgba(239,68,68,0.3)',
-        borderRadius: '12px',
-        background: 'rgba(239,68,68,0.04)',
+        textAlign: 'center', padding: '3rem 2rem',
+        border: '1px solid rgba(245,197,24,0.2)',
+        borderRadius: '24px',
+        background: 'linear-gradient(135deg, rgba(245,197,24,0.08) 0%, rgba(245,197,24,0.03) 100%)',
+        backdropFilter: 'blur(10px)',
+        position: 'relative',
+        overflow: 'hidden'
       }}>
-        <Lock size={32} color="#EF4444" style={{ marginBottom: '0.75rem' }} />
-        <h4 style={{ color: '#EF4444', marginBottom: '0.3rem' }}>Notes Locked</h4>
-        <p style={{ color: '#7A8BA8', fontSize: '0.82rem' }}>
-          Your access is restricted due to overdue fees. Pay your fees to unlock all study materials.
+        <div style={{ 
+          position: 'absolute', top: '-20px', right: '-20px', 
+          width: '100px', height: '100px', 
+          background: 'rgba(245,197,24,0.1)', borderRadius: '50%', blur: '40px' 
+        }} />
+        <div style={{ background: 'rgba(245,197,24,0.2)', width: '56px', height: '56px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+          <Lock size={28} color="#F5C518" />
+        </div>
+        <h4 style={{ color: '#F5C518', marginBottom: '0.5rem', fontWeight: 800, fontSize: '1.1rem' }}>Notes & Materials Locked</h4>
+        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.88rem', maxWidth: '300px', margin: '0 auto', lineHeight: 1.5 }}>
+          Hi student, your monthly access to <strong>High-Yield Notes</strong> has been suspended due to overdue fees. Clear your dues to instantly unlock.
         </p>
       </div>
     );
