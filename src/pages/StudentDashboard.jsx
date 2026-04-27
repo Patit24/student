@@ -880,32 +880,44 @@ export default function StudentDashboard() {
                 <p style={{ fontSize: '1.1rem', fontWeight: 800, color: '#fff', margin: 0 }}>{currentTutor?.banking?.accountHolderName || currentTutor?.name || 'Tutor Account'}</p>
               </div>
 
-              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.2rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <p style={{ fontSize: '0.75rem', color: '#7A8BA8', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Bank Name</p>
-                <p style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', margin: 0 }}>{currentTutor?.banking?.bankName || 'HDFC Bank (Default)'}</p>
-              </div>
-
               <div className="grid grid-cols-2 gap-4">
                 <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.2rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <p style={{ fontSize: '0.75rem', color: '#7A8BA8', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Account Number</p>
-                  <p style={{ fontSize: '1rem', fontWeight: 800, color: '#F5C518', margin: 0 }}>{currentTutor?.banking?.accountNumber || 'XXXXXXXXXXXX'}</p>
+                  <p style={{ fontSize: '0.75rem', color: '#7A8BA8', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Bank Account</p>
+                  <p style={{ fontSize: '0.95rem', fontWeight: 800, color: '#F5C518', margin: 0 }}>{currentTutor?.banking?.accountNumber || 'XXXXXXXXXXXX'}</p>
                 </div>
                 <div style={{ background: 'rgba(255,255,255,0.03)', padding: '1.2rem', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
                   <p style={{ fontSize: '0.75rem', color: '#7A8BA8', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '1px' }}>IFSC Code</p>
-                  <p style={{ fontSize: '1rem', fontWeight: 800, color: '#F5C518', margin: 0 }}>{currentTutor?.banking?.ifscCode || 'HDFC0001234'}</p>
+                  <p style={{ fontSize: '0.95rem', fontWeight: 800, color: '#F5C518', margin: 0 }}>{currentTutor?.banking?.ifscCode || 'HDFC0001234'}</p>
                 </div>
+              </div>
+
+              <div style={{ background: 'rgba(79,70,229,0.05)', padding: '1.2rem', borderRadius: '20px', border: '1px solid rgba(79,70,229,0.2)' }}>
+                <p style={{ fontSize: '0.75rem', color: '#7A8BA8', marginBottom: '0.3rem', textTransform: 'uppercase', letterSpacing: '1px' }}>UPI ID (Direct Pay)</p>
+                <p style={{ fontSize: '1.1rem', fontWeight: 900, color: 'var(--primary)', margin: 0 }}>{currentTutor?.banking?.upiId || `${currentTutor?.phone}@upi`}</p>
               </div>
             </div>
 
-            <div style={{ marginTop: '2rem', padding: '1rem', background: 'rgba(34,197,94,0.1)', borderRadius: '15px', border: '1px solid rgba(34,197,94,0.2)', textAlign: 'center' }}>
-              <p style={{ fontSize: '0.85rem', color: '#22C55E', margin: 0 }}>
-                After payment, please send the screenshot to <strong>{currentTutor?.phone}</strong> via WhatsApp for instant activation.
-              </p>
+            <div style={{ marginTop: '2rem' }}>
+              <label style={{ fontSize: '0.75rem', color: '#7A8BA8', display: 'block', marginBottom: '0.5rem', fontWeight: 700 }}>ENTER TRANSACTION ID / UTR</label>
+              <input 
+                type="text" 
+                className="input-field" 
+                placeholder="e.g. 123456789012"
+                style={{ padding: '1rem', borderRadius: '15px' }}
+              />
+              <button className="btn btn-primary w-full mt-4" style={{ padding: '1rem', borderRadius: '15px', fontWeight: 900 }} onClick={() => {
+                alert('Verification Request Sent to Admin! Please wait 30 minutes.');
+                setShowBankingModal(false);
+              }}>
+                Verify via Admin
+              </button>
             </div>
 
-            <button className="btn btn-primary w-full mt-6" style={{ padding: '1rem', borderRadius: '15px' }} onClick={() => setShowBankingModal(false)}>
-              Close & Notify Teacher
-            </button>
+            <div style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(34,197,94,0.1)', borderRadius: '15px', border: '1px solid rgba(34,197,94,0.2)', textAlign: 'center' }}>
+              <p style={{ fontSize: '0.8rem', color: '#22C55E', margin: 0 }}>
+                Verification usually takes <strong>30 minutes</strong> during working hours.
+              </p>
+            </div>
           </div>
         </div>
       )}

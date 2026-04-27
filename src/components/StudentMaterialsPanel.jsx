@@ -49,27 +49,25 @@ export default function StudentMaterialsPanel({ batchId, isLocked }) {
   }
 
   if (isLocked) {
+    // Phase 2: Restricted (5th onwards) — Full Cinematic Lockdown
     return (
       <div style={{
-        textAlign: 'center', padding: '3rem 2rem',
-        border: '1px solid rgba(245,197,24,0.2)',
-        borderRadius: '24px',
-        background: 'linear-gradient(135deg, rgba(245,197,24,0.08) 0%, rgba(245,197,24,0.03) 100%)',
-        backdropFilter: 'blur(10px)',
+        textAlign: 'center', padding: '4rem 2rem',
+        border: '1px solid rgba(245,197,24,0.3)',
+        borderRadius: '32px',
+        background: 'linear-gradient(135deg, rgba(10,10,10,0.8) 0%, rgba(20,20,20,0.9) 100%)',
+        backdropFilter: 'blur(20px)',
         position: 'relative',
         overflow: 'hidden'
       }}>
-        <div style={{ 
-          position: 'absolute', top: '-20px', right: '-20px', 
-          width: '100px', height: '100px', 
-          background: 'rgba(245,197,24,0.1)', borderRadius: '50%', blur: '40px' 
-        }} />
-        <div style={{ background: 'rgba(245,197,24,0.2)', width: '56px', height: '56px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
-          <Lock size={28} color="#F5C518" />
+        <div style={{ position: 'absolute', inset: 0, background: 'url(https://www.transparenttextures.com/patterns/carbon-fibre.png)', opacity: 0.05 }} />
+        <div style={{ background: 'linear-gradient(135deg, #F5C518 0%, #D4A706 100%)', width: '72px', height: '72px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', boxShadow: '0 10px 30px rgba(245,197,24,0.3)' }}>
+          <Lock size={32} color="#000" />
         </div>
-        <h4 style={{ color: '#F5C518', marginBottom: '0.5rem', fontWeight: 800, fontSize: '1.1rem' }}>Notes & Materials Locked</h4>
-        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.88rem', maxWidth: '300px', margin: '0 auto', lineHeight: 1.5 }}>
-          Hi student, your monthly access to <strong>High-Yield Notes</strong> has been suspended due to overdue fees. Clear your dues to instantly unlock.
+        <h3 style={{ color: '#F5C518', marginBottom: '0.5rem', fontWeight: 900, fontSize: '1.4rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Library Locked</h3>
+        <p style={{ color: '#fff', fontSize: '1rem', fontWeight: 700, marginBottom: '1rem' }}>Tuition Fee Pending</p>
+        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.88rem', maxWidth: '320px', margin: '0 auto 2rem', lineHeight: 1.6 }}>
+          Please transfer the amount to your teacher's account and upload the Transaction ID for 30-minute verification.
         </p>
       </div>
     );
@@ -88,46 +86,60 @@ export default function StudentMaterialsPanel({ batchId, isLocked }) {
     );
   }
 
+  // Phase 1: Overdue (1st - 4th) — Show with Watermark
+  const isOverdue = !isLocked && materials.length > 0; // In Dashboard we pass isLocked only for Restricted
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', position: 'relative' }}>
       {materials.map(m => (
-        <a
-          key={m.id}
-          href={m.file_url}
-          target="_blank"
-          rel="noreferrer"
-          style={{
-            display: 'flex', alignItems: 'center', gap: '0.85rem',
-            padding: '0.85rem 1rem',
-            background: 'rgba(255,255,255,0.03)',
-            border: '1px solid rgba(255,255,255,0.07)',
-            borderRadius: '10px',
-            textDecoration: 'none',
-            transition: 'background 0.15s, border-color 0.15s',
-          }}
-          onMouseEnter={e => {
-            e.currentTarget.style.background = 'rgba(245,197,24,0.06)';
-            e.currentTarget.style.borderColor = 'rgba(245,197,24,0.2)';
-          }}
-          onMouseLeave={e => {
-            e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
-            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)';
-          }}
-        >
-          <FileText size={20} color="#F5C518" style={{ flexShrink: 0 }} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontWeight: 600, fontSize: '0.88rem', color: '#F0F4FF', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {m.file_name}
-            </p>
-            <p style={{ fontSize: '0.72rem', color: '#7A8BA8', margin: 0 }}>
-              {m.created_at?.toDate
-                ? new Date(m.created_at.toDate()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-                : '—'
-              }
-            </p>
-          </div>
-          <ExternalLink size={14} color="#7A8BA8" style={{ flexShrink: 0 }} />
-        </a>
+        <div key={m.id} style={{ position: 'relative' }}>
+          <a
+            href={m.file_url}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.85rem',
+              padding: '0.85rem 1rem',
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.07)',
+              borderRadius: '10px',
+              textDecoration: 'none',
+              transition: 'background 0.15s, border-color 0.15s',
+              filter: isOverdue ? 'sepia(0.2) contrast(0.9)' : 'none'
+            }}
+          >
+            <FileText size={20} color="#F5C518" style={{ flexShrink: 0 }} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontWeight: 600, fontSize: '0.88rem', color: '#F0F4FF', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {m.file_name}
+              </p>
+              <p style={{ fontSize: '0.72rem', color: '#7A8BA8', margin: 0 }}>
+                {m.created_at?.toDate
+                  ? new Date(m.created_at.toDate()).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                  : '—'
+                }
+              </p>
+            </div>
+            <ExternalLink size={14} color="#7A8BA8" style={{ flexShrink: 0 }} />
+          </a>
+          
+          {/* Overdue Watermark Overlay */}
+          {isOverdue && (
+            <div style={{
+              position: 'absolute', inset: 0, pointerEvents: 'none',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              overflow: 'hidden'
+            }}>
+              <span style={{ 
+                transform: 'rotate(-15deg)', fontSize: '2rem', fontWeight: 900, 
+                color: 'rgba(245,197,24,0.15)', whiteSpace: 'nowrap',
+                letterSpacing: '10px', textTransform: 'uppercase'
+              }}>
+                FEE DUE • FEE DUE
+              </span>
+            </div>
+          )}
+        </div>
       ))}
     </div>
   );

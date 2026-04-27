@@ -261,6 +261,12 @@ export default function AdminDashboard() {
                 <Users size={18} /> Tutor Management
               </button>
               <button 
+                className={`tab-btn ${activeTab === 'tutor-profiles' ? 'active' : ''}`}
+                onClick={() => setActiveTab('tutor-profiles')}
+              >
+                <ShieldCheck size={18} /> Tutor Profiles & Payouts
+              </button>
+              <button 
                 className={`tab-btn ${activeTab === 'materials' ? 'active' : ''}`}
                 onClick={() => setActiveTab('materials')}
               >
@@ -340,6 +346,115 @@ export default function AdminDashboard() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            ) : activeTab === 'tutor-profiles' ? (
+              <div className="flex-col gap-8 animate-reveal">
+                <div className="glass-card p-8">
+                  <div className="flex justify-between items-center mb-8">
+                    <h3 className="flex items-center gap-3">
+                      <ShieldCheck size={22} color="#f5c518" />
+                      Tutor Profile Configuration
+                    </h3>
+                    <p style={{ fontSize: '0.8rem', color: '#7a8ba8', margin: 0 }}>Configure direct payment routing & commission logic.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6">
+                    {tutors.map(tutor => (
+                      <div key={tutor.id} className="glass-card p-6" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div className="flex justify-between items-start mb-6 mobile-stack" style={{ gap: '1rem' }}>
+                          <div className="flex items-center gap-4">
+                            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(245,197,24,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <Users size={24} color="#f5c518" />
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: 800, fontSize: '1.1rem' }}>{tutor.name}</div>
+                              <div style={{ fontSize: '0.75rem', color: '#7a8ba8' }}>ID: {tutor.id} • {tutor.phone}</div>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <div className="glass-card px-3 py-1 text-xs font-bold" style={{ color: '#22c55e', background: 'rgba(34,197,94,0.1)' }}>COMMISSION: ACTIVE</div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 mobile-grid-1 gap-6">
+                          <div className="input-group">
+                            <label className="input-label" style={{ fontSize: '0.7rem' }}>BANK ACCOUNT NUMBER</label>
+                            <input 
+                              type="text" className="input-field" 
+                              placeholder="Account No"
+                              value={tutor.banking?.accountNumber || ''}
+                              onChange={(e) => {
+                                const newBanking = { ...(tutor.banking || {}), accountNumber: e.target.value };
+                                updateDoc(doc(db, 'users', tutor.id), { banking: newBanking });
+                              }}
+                            />
+                          </div>
+                          <div className="input-group">
+                            <label className="input-label" style={{ fontSize: '0.7rem' }}>IFSC CODE</label>
+                            <input 
+                              type="text" className="input-field" 
+                              placeholder="IFSC"
+                              value={tutor.banking?.ifscCode || ''}
+                              onChange={(e) => {
+                                const newBanking = { ...(tutor.banking || {}), ifscCode: e.target.value };
+                                updateDoc(doc(db, 'users', tutor.id), { banking: newBanking });
+                              }}
+                            />
+                          </div>
+                          <div className="input-group">
+                            <label className="input-label" style={{ fontSize: '0.7rem' }}>UPI ID (DIRECT PAY)</label>
+                            <input 
+                              type="text" className="input-field" 
+                              placeholder="teacher@upi"
+                              value={tutor.banking?.upiId || ''}
+                              onChange={(e) => {
+                                const newBanking = { ...(tutor.banking || {}), upiId: e.target.value };
+                                updateDoc(doc(db, 'users', tutor.id), { banking: newBanking });
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 mobile-grid-1 gap-6 mt-6 p-4" style={{ background: 'rgba(245,197,24,0.05)', borderRadius: '15px', border: '1px solid rgba(245,197,24,0.1)' }}>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div style={{ fontWeight: 800, fontSize: '0.85rem' }}>Direct Payment Commission</div>
+                              <div style={{ fontSize: '0.7rem', color: '#7a8ba8' }}>Platform fee for direct-to-teacher transfers</div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input 
+                                type="number" 
+                                step="0.1"
+                                className="input-field" 
+                                style={{ width: '80px', textAlign: 'center', padding: '0.5rem' }}
+                                value={tutor.direct_commission || 0.1}
+                                onChange={(e) => updateDoc(doc(db, 'users', tutor.id), { direct_commission: parseFloat(e.target.value) })}
+                              />
+                              <span style={{ fontWeight: 800 }}>%</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div style={{ fontWeight: 800, fontSize: '0.85rem' }}>Online Class Commission</div>
+                              <div style={{ fontSize: '0.7rem', color: '#7a8ba8' }}>Platform fee for live teaching sessions</div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input 
+                                type="number" 
+                                step="1"
+                                className="input-field" 
+                                style={{ width: '80px', textAlign: 'center', padding: '0.5rem' }}
+                                value={tutor.class_commission || 2}
+                                onChange={(e) => updateDoc(doc(db, 'users', tutor.id), { class_commission: parseFloat(e.target.value) })}
+                              />
+                              <span style={{ fontWeight: 800 }}>%</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             ) : activeTab === 'materials' ? (
