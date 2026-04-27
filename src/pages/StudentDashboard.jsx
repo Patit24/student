@@ -158,6 +158,7 @@ export default function StudentDashboard() {
   const [isClassPrivate, setIsClassPrivate] = useState(true);
 
   // Exam State
+  const [activeTab, setActiveTab] = useState('overview'); // overview | live | exams | materials | assignments | payments
   const [activeExam, setActiveExam] = useState(null);
 
   // My data filtered by selected enrollment
@@ -673,8 +674,108 @@ export default function StudentDashboard() {
         </div>
       )}
 
-      {/* ── Main Dashboard Grid ── */}
-      <div className="dashboard-grid">
+        {/* ── Payments & Fees Tab ── */}
+        {activeTab === 'payments' && (
+          <div className="animate-reveal">
+            <div className="grid grid-cols-12 gap-8">
+              <div className="col-span-12 lg:col-span-7 flex-col gap-6">
+                <div className="glass-panel p-10" style={{ borderRadius: '32px', border: '1px solid rgba(245,197,24,0.1)', background: 'linear-gradient(135deg, rgba(245,197,24,0.05) 0%, transparent 100%)' }}>
+                  <div className="flex justify-between items-start mb-8">
+                    <div>
+                      <h2 style={{ marginBottom: '0.5rem' }}>Fee Management</h2>
+                      <p style={{ color: '#7A8BA8', margin: 0 }}>Review your dues and pay directly to your teacher.</p>
+                    </div>
+                    <div style={{ background: 'rgba(245,197,24,0.1)', padding: '0.8rem', borderRadius: '15px' }}>
+                      <CreditCard size={28} color="#F5C518" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-6 mb-10">
+                    <div className="glass-panel p-6" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '24px' }}>
+                      <p style={{ fontSize: '0.75rem', color: '#7A8BA8', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '1px' }}>Monthly Fee</p>
+                      <h1 style={{ margin: 0, fontSize: '2.5rem' }}>₹{selectedEnrollment?.monthly_fee}</h1>
+                    </div>
+                    <div className="glass-panel p-6" style={{ background: isOverdue || isRestricted ? 'rgba(239,68,68,0.05)' : 'rgba(34,197,94,0.05)', borderRadius: '24px', border: `1px solid ${isOverdue || isRestricted ? 'rgba(239,68,68,0.2)' : 'rgba(34,197,94,0.2)'}` }}>
+                      <p style={{ fontSize: '0.75rem', color: isOverdue || isRestricted ? '#EF4444' : '#22C55E', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '1px' }}>Current Status</p>
+                      <h3 style={{ margin: 0, color: isOverdue || isRestricted ? '#EF4444' : '#22C55E', textTransform: 'uppercase' }}>{paymentStatus}</h3>
+                    </div>
+                  </div>
+
+                  <div style={{ background: 'rgba(255,255,255,0.03)', padding: '2rem', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <h4 style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Shield size={20} color="#F5C518" /> Tuition Fee Policy</h4>
+                    <ul style={{ paddingLeft: '1.2rem', color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <li>Fees are due on the <strong>1st of every month</strong>.</li>
+                      <li>Overdue payments (after the 1st) will result in <strong>Batch Library restrictions</strong>.</li>
+                      <li>Unpaid dues beyond the <strong>5th</strong> will lead to full classroom lockdown.</li>
+                      <li>Payments must be transferred <strong>directly</strong> to the teacher's account.</li>
+                    </ul>
+                    
+                    <button 
+                      className="btn btn-primary w-full mt-10" 
+                      style={{ padding: '1.2rem', borderRadius: '18px', fontSize: '1.1rem', fontWeight: 900, background: 'var(--primary)', color: '#000' }}
+                      onClick={() => setShowBankingModal(true)}
+                    >
+                      <CreditCard size={20} /> Direct Pay to Teacher
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-span-12 lg:col-span-5 flex-col gap-6">
+                <div className="glass-panel p-8" style={{ borderRadius: '32px' }}>
+                  <h4 style={{ marginBottom: '1.5rem' }}>Teacher Profile</h4>
+                  <div className="flex items-center gap-4 p-4" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '20px' }}>
+                    <div style={{ width: '56px', height: '56px', borderRadius: '15px', overflow: 'hidden' }}>
+                      <img 
+                        src={currentTutor?.profile_image || `https://ui-avatars.com/api/?name=${currentTutor?.name}&background=f5c518&color=000&bold=true`} 
+                        alt="Tutor"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 800 }}>{currentTutor?.name}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#7A8BA8' }}>{currentTutor?.subjects?.join(' • ') || 'Expert Faculty'}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-8 flex-col gap-4">
+                    <div className="flex justify-between items-center py-3 border-b border-white/5">
+                      <span style={{ color: '#7A8BA8', fontSize: '0.9rem' }}>Contact Number</span>
+                      <span style={{ fontWeight: 700 }}>{currentTutor?.phone}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-3 border-b border-white/5">
+                      <span style={{ color: '#7A8BA8', fontSize: '0.9rem' }}>Teaching Batch</span>
+                      <span style={{ fontWeight: 700 }}>{currentBatch?.name || 'N/A'}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-3">
+                      <span style={{ color: '#7A8BA8', fontSize: '0.9rem' }}>Outstanding Dues</span>
+                      <span style={{ fontWeight: 800, color: (selectedEnrollment?.outstanding_balance > 0) ? '#EF4444' : '#22C55E' }}>₹{selectedEnrollment?.outstanding_balance || 0}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="glass-panel p-8" style={{ borderRadius: '32px', background: 'rgba(34,197,94,0.03)', border: '1px solid rgba(34,197,94,0.1)' }}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <ShieldCheck size={24} color="#22C55E" />
+                    <h4 style={{ margin: 0, color: '#22C55E' }}>Verified Payouts</h4>
+                  </div>
+                  <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', margin: 0, lineHeight: 1.6 }}>
+                    All payments transferred via this portal are recorded by Super Admin. After payment, your access will be restored within 30 minutes of verification.
+                  </p>
+                </div>
+      {/* ── Sub-Navigation Tabs ── */}
+      <div className="tab-nav mb-8 overflow-x-auto pb-2" style={{ display: 'flex', gap: '0.5rem' }}>
+        <button onClick={() => setActiveTab('overview')} className={`nav-btn ${activeTab === 'overview' ? 'active' : ''}`}><Activity size={18} /> Overview</button>
+        <button onClick={() => setActiveTab('live')} className={`nav-btn ${activeTab === 'live' ? 'active' : ''}`}><Video size={18} /> Live Classes</button>
+        <button onClick={() => setActiveTab('exams')} className={`nav-btn ${activeTab === 'exams' ? 'active' : ''}`}><Zap size={18} /> Online Exams</button>
+        <button onClick={() => setActiveTab('materials')} className={`nav-btn ${activeTab === 'materials' ? 'active' : ''}`}><FileText size={18} /> Batch Library</button>
+        <button onClick={() => setActiveTab('assignments')} className={`nav-btn ${activeTab === 'assignments' ? 'active' : ''}`}><CheckSquare size={18} /> Assignments</button>
+        <button onClick={() => setActiveTab('payments')} className={`nav-btn ${activeTab === 'payments' ? 'active' : ''}`}><CreditCard size={18} /> Payments & Fees</button>
+      </div>
+
+      {/* ── Dashboard Content Switching ── */}
+      {activeTab === 'overview' && (
+        <div className="dashboard-grid">
         
         {/* Live Status Card */}
         <div className="animate-slide-up" style={{ animationDelay: '0.3s' }}>
@@ -782,7 +883,7 @@ export default function StudentDashboard() {
           </div>
         </div>
 
-      </div>
+      )}
 
       <style>{`
         .dashboard-grid {
