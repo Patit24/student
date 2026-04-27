@@ -169,6 +169,81 @@ app.post('/api/webhook', async (req, res) => {
   res.json({ received: true });
 });
 
+/**
+ * 4. FEE GUARD CRON (Triggered on 1st and 5th of every month)
+ * This handles the batch update of student payment statuses.
+ */
+app.get('/api/cron/process-fees', async (req, res) => {
+  // Security: Check for a secret key to prevent unauthorized triggers
+  const cronSecret = req.headers['x-cron-secret'];
+  if (process.env.CRON_SECRET && cronSecret !== process.env.CRON_SECRET) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  if (!firebaseReady) return res.status(500).json({ error: 'Firebase not ready' });
+
+  try {
+    const today = new Date();
+    const dayOfMonth = today.getDate();
+    const db = admin.firestore();
+    const batch = db.batch();
+    
+    // Fetch all students (non-prepaid)
+    // We assume students have a 'payment_type' field. If not, we process all.
+    const studentsSnap = await db.collection('users').where('role', '==', 'student').get();
+    
+    let updatedCount = 0;
+    const notifications = [];
+
+    studentsSnap.forEach(doc => {
+      const student = doc.data();
+      const studentRef = db.collection('users').doc(doc.id);
+
+      // Skip students who are prepaid or already paid for the month
+      if (student.payment_type === 'prepaid' || student.current_month_paid === true) return;
+
+      if (dayOfMonth === 1) {
+        // Phase 1: Overdue on the 1st
+        batch.update(studentRef, { 
+          payment_status: 'overdue',
+          status_updated_at: admin.firestore.FieldValue.serverTimestamp()
+        });
+        updatedCount++;
+        
+        // Prepare SMS/WhatsApp Notification
+        notifications.push({
+          to: student.phone,
+          template: `Hi ${student.name}, your Monthly Fees for ${student.tutor_name || 'your teacher'} is now overdue. Please clear your dues to continue uninterrupted learning.`
+        });
+      } else if (dayOfMonth === 5) {
+        // Phase 2: Restricted on the 5th if still overdue
+        if (student.payment_status === 'overdue') {
+          batch.update(studentRef, { 
+            payment_status: 'restricted',
+            status_updated_at: admin.firestore.FieldValue.serverTimestamp()
+          });
+          updatedCount++;
+        }
+      }
+    });
+
+    if (updatedCount > 0) {
+      await batch.commit();
+      // Logic for sending notifications (Placeholder for SMS Service)
+      console.log(`✅ Processed ${updatedCount} student fee status updates.`);
+    }
+
+    res.json({ 
+      success: true, 
+      processed: updatedCount, 
+      day: dayOfMonth,
+      notified: notifications.length
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Vercel handles the listening, but for local testing:
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 4000;

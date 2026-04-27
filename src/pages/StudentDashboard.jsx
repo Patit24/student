@@ -137,7 +137,9 @@ export default function StudentDashboard() {
   const currentBatch = mockBatches?.find(b => b.id === selectedEnrollment?.batch_id);
   
   const autoRestrictionOn = currentTutor?.auto_restriction_enabled ?? true;
-  const isOverdue = selectedEnrollment?.payment_status === 'overdue' && autoRestrictionOn;
+  const paymentStatus = selectedEnrollment?.payment_status?.toLowerCase() || 'paid';
+  const isOverdue = paymentStatus === 'overdue' && autoRestrictionOn;
+  const isRestricted = paymentStatus === 'restricted' && autoRestrictionOn;
 
   const { roomId } = useParams();
   const [activeParticipants, setActiveParticipants] = useState([]);
@@ -192,9 +194,12 @@ export default function StudentDashboard() {
   };
 
   const handleJoinClass = async () => {
-    if (isOverdue) {
-      alert('⚠️ Your access is restricted due to an overdue payment for this batch.');
+    if (isRestricted) {
+      alert('🔒 Access Restricted. Your monthly subscription has expired. Please clear your dues to continue.');
       return;
+    }
+    if (isOverdue) {
+      // Allow joining but show warning (handled by the banner)
     }
     if (isClassPrivate && joinState === 'idle') {
       setJoinState('knocking');
@@ -611,29 +616,54 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* ── Fee Overdue Alert ── */}
+      {/* ── Fee Overdue Alert (Phase 1: Yellow Warning) ── */}
       {isOverdue && (
         <div className="animate-slide-up mb-10" style={{ animationDelay: '0.25s' }}>
           <div style={{ 
-            background: 'linear-gradient(135deg, rgba(239,68,68,0.15) 0%, rgba(239,68,68,0.05) 100%)', 
-            border: '1px solid rgba(239,68,68,0.3)', 
+            background: 'linear-gradient(135deg, rgba(245,197,24,0.15) 0%, rgba(245,197,24,0.05) 100%)', 
+            border: '1px solid rgba(245,197,24,0.3)', 
             padding: '1.5rem', borderRadius: '24px',
             display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1.5rem',
             backdropFilter: 'blur(10px)', flexWrap: 'wrap'
           }}>
             <div className="flex gap-4 items-center">
-              <div style={{ background: 'rgba(239,68,68,0.2)', padding: '0.75rem', borderRadius: '15px' }}>
-                <ShieldAlert size={24} color="#EF4444" />
+              <div style={{ background: 'rgba(245,197,24,0.2)', padding: '0.75rem', borderRadius: '15px' }}>
+                <AlertTriangle size={24} color="#F5C518" />
               </div>
               <div>
-                <h4 style={{ color: '#EF4444', margin: 0, fontWeight: 800 }}>Payment Overdue</h4>
+                <h4 style={{ color: '#F5C518', margin: 0, fontWeight: 800 }}>Monthly subscription overdue</h4>
                 <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-                  ₹{selectedEnrollment?.outstanding_balance} due for {currentTutor?.name}'s batch. Access is restricted.
+                  Please pay your dues of ₹{selectedEnrollment?.outstanding_balance} to avoid restriction on the 5th.
                 </p>
               </div>
             </div>
-            <button className="btn btn-primary mobile-full" style={{ background: '#EF4444', border: 'none', padding: '1rem 2rem', borderRadius: '15px', fontWeight: 800 }} onClick={() => alert('Opening Payment Gateway...')}>
-              <CreditCard size={18}/> Pay Now
+            <button className="btn btn-primary mobile-full" style={{ background: '#F5C518', color: '#000', border: 'none', padding: '1rem 2rem', borderRadius: '15px', fontWeight: 800 }} onClick={() => alert('Opening Payment Gateway...')}>
+              <CreditCard size={18}/> Clear Dues
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Fee Restricted Alert (Phase 2: Lockdown) ── */}
+      {isRestricted && (
+        <div className="animate-slide-up mb-10" style={{ animationDelay: '0.25s' }}>
+          <div style={{ 
+            background: 'linear-gradient(135deg, rgba(239,68,68,0.2) 0%, rgba(239,68,68,0.1) 100%)', 
+            border: '2px solid #EF4444', 
+            padding: '2rem', borderRadius: '32px',
+            textAlign: 'center',
+            backdropFilter: 'blur(15px)',
+            boxShadow: '0 20px 40px rgba(239,68,68,0.1)'
+          }}>
+            <div style={{ background: 'rgba(239,68,68,0.1)', width: '64px', height: '64px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+              <Lock size={32} color="#EF4444" />
+            </div>
+            <h2 style={{ color: '#EF4444', marginBottom: '1rem', fontWeight: 900 }}>ACCESS RESTRICTED</h2>
+            <p style={{ fontSize: '1.1rem', color: 'rgba(255,255,255,0.8)', maxWidth: '500px', margin: '0 auto 2rem' }}>
+              Your account has been locked due to unpaid dues for <strong>{currentTutor?.name}'s</strong> class. Please clear your balance of ₹{selectedEnrollment?.outstanding_balance} to resume learning.
+            </p>
+            <button className="btn btn-primary" style={{ background: '#EF4444', border: 'none', padding: '1.2rem 3rem', borderRadius: '18px', fontSize: '1.1rem', fontWeight: 900, boxShadow: '0 10px 30px rgba(239,68,68,0.3)' }} onClick={() => alert('Opening Payment Gateway...')}>
+              <CreditCard size={22}/> Unlock Classroom Now
             </button>
           </div>
         </div>
@@ -691,10 +721,10 @@ export default function StudentDashboard() {
                        <button 
                          className={`btn ${isReady ? 'btn-primary' : 'btn-outline'}`} 
                          style={{ padding: '0.5rem 1rem', borderRadius: '12px', fontSize: '0.8rem' }}
-                         disabled={!isReady || isOverdue} 
+                         disabled={!isReady || isRestricted} 
                          onClick={() => handleJoinClass()}
                        >
-                         {isOverdue ? <Lock size={14}/> : isReady ? 'Join' : 'Waiting'}
+                         {isRestricted ? <Lock size={14}/> : isReady ? 'Join' : 'Waiting'}
                        </button>
                      </div>
                   </div>
@@ -710,7 +740,7 @@ export default function StudentDashboard() {
             <h3 className="mb-6 flex items-center gap-3"><FileText size={24} color="var(--primary)"/> Batch Library</h3>
             <StudentMaterialsPanel
               batchId={selectedEnrollment?.batch_id}
-              isLocked={isOverdue}
+              isLocked={isRestricted}
             />
           </div>
         </div>
