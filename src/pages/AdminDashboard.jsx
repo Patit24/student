@@ -105,6 +105,18 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteTutor = async (tutorId) => {
+    if (window.confirm('Are you sure you want to completely remove this tutor? This action cannot be undone.')) {
+      try {
+        await deleteDoc(doc(db, 'users', tutorId));
+        toast.success('Tutor removed successfully');
+      } catch (err) {
+        toast.error('Failed to remove tutor');
+        console.error(err);
+      }
+    }
+  };
+
   const handleQuickUpload = async (e, category, title, materialType, description) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -195,21 +207,35 @@ export default function AdminDashboard() {
                       <tr>
                         <th>Tutor</th>
                         <th>TXN ID</th>
+                        <th>Stats</th>
                         <th>Status</th>
                         <th style={{ textAlign: 'right' }}>Action</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {tutors.map(t => (
-                        <tr key={t.id}>
-                          <td><strong>{t.name}</strong><br/><small className="text-muted">{t.phone}</small></td>
-                          <td><code>{t.txn_id}</code></td>
-                          <td>{t.subscription_status === 'active' ? <span className="badge-active">Live</span> : <span className="badge-pending">Review</span>}</td>
-                          <td style={{ textAlign: 'right' }}>
-                            <button className="btn-approve" onClick={() => { setVerifyingTutor(t); setSelectedPlan(t.pending_plan || 'growth'); }}>Verify</button>
-                          </td>
-                        </tr>
-                      ))}
+                      {tutors.map(t => {
+                        const batchCount = batches.filter(b => b.tutorId === t.id).length;
+                        const studentCount = allStudents.filter(s => s.tutorId === t.id || (s.enrolled_batches && s.enrolled_batches.some(eb => eb.tutor_id === t.id))).length;
+                        return (
+                          <tr key={t.id}>
+                            <td><strong>{t.name}</strong><br/><small className="text-muted">{t.phone}</small></td>
+                            <td><code>{t.txn_id}</code></td>
+                            <td>
+                              <div style={{ fontSize: '0.8rem', color: '#7a8ba8', display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                                <span><Package size={12} style={{ display:'inline', verticalAlign:'text-bottom', marginRight: '4px' }} /> {batchCount} Batches</span>
+                                <span><Users size={12} style={{ display:'inline', verticalAlign:'text-bottom', marginRight: '4px' }} /> {studentCount} Students</span>
+                              </div>
+                            </td>
+                            <td>{t.subscription_status === 'active' ? <span className="badge-active">Live</span> : <span className="badge-pending">Review</span>}</td>
+                            <td style={{ textAlign: 'right' }}>
+                              <div style={{ display: 'inline-flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                <button className="btn-approve" onClick={() => { setVerifyingTutor(t); setSelectedPlan(t.pending_plan || 'growth'); }}>Verify</button>
+                                <button className="btn-remove" onClick={() => handleDeleteTutor(t.id)} title="Remove Tutor" style={{ padding: '0.4rem 0.6rem', minWidth: 'auto' }}><Trash2 size={16} /></button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
