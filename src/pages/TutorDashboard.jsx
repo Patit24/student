@@ -21,7 +21,7 @@ import FinancialAnalytics from '../components/FinancialAnalytics';
 import FileUploadVercel from '../components/FileUploadVercel';
 import { useToast } from '../components/Toast';
 import { db } from '../firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
 
 const PLAN_LIMITS = {
   free:   { batches: 1,        students: 5,   pdf: false, recording: false },
@@ -248,6 +248,57 @@ export default function TutorDashboard() {
   const [waitingRoom, setWaitingRoom] = useState([]);
   const [googleMeetLink, setGoogleMeetLink] = useState('');
   const [selectedBatchForLive, setSelectedBatchForLive] = useState('');
+
+  const [currentBill, setCurrentBill] = useState(null);
+  const [isBillOverdue, setIsBillOverdue] = useState(false);
+  const billCheckedRef = useRef(false);
+
+  useEffect(() => {
+    if (!currentUser?.uid || billCheckedRef.current || myStudents.length === 0) return;
+    
+    const checkAndGenerateBill = async () => {
+      billCheckedRef.current = true;
+      const today = new Date();
+      const monthStr = today.toISOString().slice(0, 7); // YYYY-MM
+      const billId = `${currentUser.uid}_${monthStr}`;
+      const amount = myStudents.length * 1; // 1 Rs per student
+
+      if (isMockMode) {
+        const mockBill = { month: monthStr, amount, status: amount > 0 ? 'unpaid' : 'paid', generatedAt: today.toISOString() };
+        setCurrentBill(mockBill);
+        if (mockBill.status === 'unpaid' && today.getDate() > 5) setIsBillOverdue(true);
+        return;
+      }
+
+      try {
+        const billRef = doc(db, 'tutor_bills', billId);
+        const snap = await getDoc(billRef);
+        if (!snap.exists()) {
+          const newBill = {
+            tutorId: currentUser.uid,
+            month: monthStr,
+            amount: amount,
+            status: amount > 0 ? 'unpaid' : 'paid',
+            generatedAt: today.toISOString(),
+          };
+          await setDoc(billRef, newBill);
+          setCurrentBill(newBill);
+          if (newBill.status === 'unpaid' && today.getDate() > 5) {
+            setIsBillOverdue(true);
+          }
+        } else {
+          const data = snap.data();
+          setCurrentBill(data);
+          if (data.status === 'unpaid' && today.getDate() > 5) {
+            setIsBillOverdue(true);
+          }
+        }
+      } catch (err) {
+        console.error("Error checking bill", err);
+      }
+    };
+    checkAndGenerateBill();
+  }, [currentUser?.uid, isMockMode, myStudents.length]);
   const [liveStartTime, setLiveStartTime] = useState('');
   const [showGoLiveModal, setShowGoLiveModal] = useState(false);
 
@@ -596,6 +647,54 @@ export default function TutorDashboard() {
               </button>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── VIEW: BILLING RESTRICTION GATE ──
+  if (isBillOverdue && currentBill) {
+    return (
+      <div className="container mt-12 mb-12 flex-center flex-col animate-fade-in" style={{ padding: '2rem', textAlign: 'center' }}>
+        <div className="glass-card" style={{ padding: '3rem 2rem', maxWidth: '500px', width: '100%', border: '1px solid rgba(239, 68, 68, 0.4)', background: 'rgba(239, 68, 68, 0.05)' }}>
+          <AlertOctagon size={48} color="#ef4444" style={{ margin: '0 auto 1.5rem' }} />
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#ef4444', marginBottom: '1rem' }}>Dashboard Locked</h2>
+          <p style={{ color: '#f0f4ff', fontSize: '1.1rem', marginBottom: '1.5rem' }}>
+            Your platform bill for <strong>{new Date(currentBill.month + '-01').toLocaleString('default', { month: 'long', year: 'numeric' })}</strong> is overdue.
+          </p>
+          <div style={{ background: 'rgba(0,0,0,0.3)', padding: '1.5rem', borderRadius: '12px', marginBottom: '2rem' }}>
+            <div className="flex justify-between items-center mb-2">
+              <span style={{ color: '#7a8ba8' }}>Total Students</span>
+              <span style={{ fontWeight: 800 }}>{myStudents.length}</span>
+            </div>
+            <div className="flex justify-between items-center mb-4 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+              <span style={{ color: '#7a8ba8' }}>Rate per Student</span>
+              <span style={{ fontWeight: 800 }}>₹1.00</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span style={{ fontSize: '1.1rem' }}>Total Amount Due</span>
+              <span style={{ fontSize: '1.8rem', fontWeight: 900, color: '#f5c518' }}>₹{currentBill.amount}</span>
+            </div>
+          </div>
+          <p style={{ color: '#7a8ba8', fontSize: '0.9rem', marginBottom: '2rem', lineHeight: '1.5' }}>
+            Please clear your pending dues before the 5th of the month to restore full access to your batches, students, and live classes.
+          </p>
+          <button 
+            className="btn-primary" 
+            style={{ width: '100%', padding: '1rem', fontSize: '1.1rem', justifyContent: 'center' }} 
+            onClick={() => {
+              if (isMockMode) {
+                setCurrentBill(prev => ({ ...prev, status: 'paid' }));
+                setIsBillOverdue(false);
+                toast.success('Mock Payment Successful! Access restored.');
+              } else {
+                toast.info('Redirecting to payment gateway...');
+                // Payment Gateway logic would go here
+              }
+            }}
+          >
+            <CreditCard size={20} style={{ marginRight: '8px' }} /> Pay ₹{currentBill.amount} Now
+          </button>
         </div>
       </div>
     );
