@@ -267,6 +267,7 @@ export default function TutorDashboard() {
   const [studentName, setStudentName] = useState('');
   const [studentPhone, setStudentPhone] = useState('');
   const [studentBatchId, setStudentBatchId] = useState('');
+  const [admissionDate, setAdmissionDate] = useState(new Date().toISOString().split('T')[0]);
 
   const [sessionTitle, setSessionTitle] = useState('');
   const [sessionBatchId, setSessionBatchId] = useState('');
@@ -551,7 +552,7 @@ export default function TutorDashboard() {
           return;
         }
       } else {
-        const linked = { id: existingId || `student-${Date.now()}`, name: studentName, phone: studentPhone, is_verified: false, needs_password_reset: true, tutorId: currentUser.uid, batch_id: studentBatchId, payment_status: 'active' };
+        const linked = { id: existingId || `student-${Date.now()}`, name: studentName, phone: studentPhone, is_verified: false, needs_password_reset: true, tutorId: currentUser.uid, batch_id: studentBatchId, payment_status: 'unpaid', admission_date: admissionDate, payment_history: {} };
         if (!mockStudents.find(s => s.id === linked.id)) {
           setMockStudents(prev => [...prev, linked]);
         }
@@ -576,12 +577,12 @@ export default function TutorDashboard() {
         return;
       }
     } else {
-      const newStudent = { id: `student-${Date.now()}`, name: studentName, phone: studentPhone, batch_id: studentBatchId, is_verified: false, needs_password_reset: true, tutorId: currentUser.uid, payment_status: 'active' };
+      const newStudent = { id: `student-${Date.now()}`, name: studentName, phone: studentPhone, batch_id: studentBatchId, is_verified: false, needs_password_reset: true, tutorId: currentUser.uid, payment_status: 'unpaid', admission_date: admissionDate, payment_history: {} };
       setMockStudents(prev => [...prev, newStudent]);
       setCredentialModal({ name: studentName, phone: studentPhone, password: tempPassword });
       toast.success(`Account created!`);
     }
-    setStudentName(''); setStudentPhone(''); setStudentBatchId('');
+    setStudentName(''); setStudentPhone(''); setStudentBatchId(''); setAdmissionDate(new Date().toISOString().split('T')[0]);
     setPhoneLookup(null);
   };
 
@@ -807,11 +808,16 @@ export default function TutorDashboard() {
                 <option value="" disabled>Assign to Batch...</option>
                 {myBatches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
+              <div className="input-group">
+                <label className="input-label" style={{ fontSize: '0.78rem', color: '#94A3B8' }}>Admission Date</label>
+                <input type="date" className="input-field mb-2" value={admissionDate} onChange={e => setAdmissionDate(e.target.value)} required />
+              </div>
+              <p style={{ fontSize: '0.7rem', color: '#F5C518', margin: '0 0 0.5rem' }}>⚡ Students start as <strong>Unpaid</strong> for the current month.</p>
               <button type="submit" className="btn btn-primary w-full">Create Student Account</button>
             </form>
           </div>
           <div className="glass-panel p-8" style={{ flex: 2, minWidth: '320px' }}>
-            <StudentManagePanel myStudents={myStudents} myBatches={myBatches} />
+            <StudentManagePanel myStudents={myStudents} myBatches={myBatches} tutorName={currentUser?.name || 'Your Tutor'} />
           </div>
         </div>
       )}
