@@ -217,6 +217,7 @@ export default function TutorDashboard() {
     mockBatches, setMockBatches,
     mockStudents, setMockStudents,
     mockSessions, setMockSessions,
+    mockNotices, setMockNotices,
     mockLeads,
     updateBranding,
     updatePaymentStatus,
