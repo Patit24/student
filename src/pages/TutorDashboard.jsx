@@ -783,7 +783,7 @@ export default function TutorDashboard() {
         <Tab id="exams"      label="Exams"       icon={CheckSquare} />
         <Tab id="leads"      label="Leads"      icon={TrendingUp} />
         <Tab id="notices"    label="Notices"    icon={MessageSquare} />
-        <Tab id="defaulters" label="Overdue"     icon={AlertOctagon} />
+        <Tab id="defaulters" label="Past Dues"   icon={AlertOctagon} />
         <Tab id="banking"    label="Banking"     icon={CreditCard} />
         <Tab id="profile"    label="Public Profile" icon={Layout} />
       </div>
@@ -864,13 +864,55 @@ export default function TutorDashboard() {
       {activeTab === 'leads' && <TutorLeadsPanel />}
       {activeTab === 'defaulters' && (
         <div className="glass-panel p-8">
-          <h3>Overdue Payments</h3>
-          {myStudents.filter(s => s.payment_status === 'overdue').map(s => (
-            <div key={s.id} className="p-4 glass-panel mb-2 flex justify-between items-center">
-              <span>{s.name}</span>
-              <button className="btn btn-danger" onClick={() => alert('Reminder Sent')}>Remind</button>
-            </div>
-          ))}
+          <h3 className="mb-4 flex items-center gap-2"><AlertOctagon size={20} color="#EF4444" /> Past Dues — Previous Months</h3>
+          <p style={{ fontSize: '0.8rem', color: '#7A8BA8', marginBottom: '1.5rem' }}>Students with unpaid fees from previous months. Current month dues are shown on the Students tab.</p>
+          {(() => {
+            const now = new Date();
+            const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+            const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            const overdueStudents = myStudents.filter(s => {
+              const history = s.payment_history || {};
+              return Object.entries(history).some(([k, v]) => k < currentMonthKey && v !== 'paid');
+            }).map(s => {
+              const history = s.payment_history || {};
+              const dueMonths = Object.entries(history)
+                .filter(([k, v]) => k < currentMonthKey && v !== 'paid')
+                .map(([k]) => { const [y,m] = k.split('-'); return `${monthNames[parseInt(m)-1]} ${y}`; });
+              return { ...s, dueMonths };
+            });
+            if (overdueStudents.length === 0) {
+              return <div style={{ textAlign: 'center', padding: '3rem', color: '#7A8BA8' }}><CheckSquare size={32} style={{ marginBottom: '0.5rem', opacity: 0.4 }} /><p>All clear! No past dues.</p></div>;
+            }
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                {overdueStudents.map(s => (
+                  <div key={s.id} className="p-4 glass-panel flex justify-between items-center" style={{ background: 'rgba(239,68,68,0.04)', border: '1px solid rgba(239,68,68,0.15)', borderRadius: '12px' }}>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ margin: 0, fontWeight: 700, color: '#F0F4FF' }}>{s.name}</p>
+                      <p style={{ margin: '0.2rem 0 0', fontSize: '0.78rem', color: '#7A8BA8' }}>{s.phone || 'No phone'}</p>
+                      <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+                        {s.dueMonths.map(m => (
+                          <span key={m} style={{ fontSize: '0.65rem', padding: '0.15rem 0.5rem', borderRadius: '6px', background: 'rgba(239,68,68,0.12)', color: '#EF4444', fontWeight: 700 }}>{m}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <button
+                      className="btn btn-danger"
+                      style={{ flexShrink: 0, fontSize: '0.8rem', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                      onClick={() => {
+                        const phone = (s.phone || '').replace(/\D/g, '');
+                        const num = phone.startsWith('91') ? phone : `91${phone}`;
+                        const msg = `Hi ${s.name}, this is a reminder from ${currentUser?.name || 'your tutor'} regarding overdue tuition fees for: ${s.dueMonths.join(', ')}. Please clear your dues to restore full access. — PPR Education`;
+                        window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
+                      }}
+                    >
+                      <MessageSquare size={14} /> WhatsApp
+                    </button>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
         </div>
       )}
 

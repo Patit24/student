@@ -86,7 +86,7 @@ export default function StudentDashboard() {
   const currentTutor = mockTutors?.find(t => t.id === selectedEnrollment?.tutor_id);
   const autoRestrictionOn = currentTutor?.auto_restriction_enabled ?? true;
   const paymentStatus = selectedEnrollment?.payment_status?.toLowerCase() || 'paid';
-  const isOverdue = paymentStatus === 'overdue' && autoRestrictionOn;
+  const isOverdue = (paymentStatus === 'overdue' || paymentStatus === 'unpaid') && autoRestrictionOn;
   const isRestricted = paymentStatus === 'restricted' && autoRestrictionOn;
 
   const { roomId } = useParams();

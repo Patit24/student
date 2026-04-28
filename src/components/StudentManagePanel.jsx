@@ -72,13 +72,24 @@ function PaymentHistoryGrid({ student, tutorName }) {
 
   async function toggleMonth(monthKey, currentStatus) {
     const newStatus = currentStatus === 'paid' ? 'unpaid' : 'paid';
-    const newHistory = { ...history, [monthKey]: newStatus };
+    const newHistory = { ...history };
+
+    if (newStatus === 'paid') {
+      // Mark this month AND all previous months as paid
+      months.forEach(m => {
+        if (m.key <= monthKey) newHistory[m.key] = 'paid';
+      });
+    } else {
+      newHistory[monthKey] = 'unpaid';
+    }
     
-    // Update overdue status based on payment history
+    // Overall status only cares about the CURRENT month
     const now = new Date();
     const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-    const hasOverdue = Object.entries(newHistory).some(([k, v]) => v !== 'paid' && k < currentMonthKey);
-    const overallStatus = hasOverdue ? 'overdue' : (newHistory[currentMonthKey] === 'paid' ? 'paid' : 'unpaid');
+    const currentMonthStatus = newHistory[currentMonthKey] || 'unpaid';
+    // Check if any PAST months are still unpaid → overdue
+    const hasPastDue = months.some(m => m.key < currentMonthKey && (newHistory[m.key] || 'unpaid') !== 'paid');
+    const overallStatus = hasPastDue ? 'overdue' : currentMonthStatus;
 
     const payload = { payment_history: newHistory, payment_status: overallStatus };
     setMockStudents(prev => prev.map(s => s.id === student.id ? { ...s, ...payload } : s));

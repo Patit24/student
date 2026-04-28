@@ -66,14 +66,23 @@ const Card = ({ title, amount, color, icon: Icon }) => {
 };
 
 export default function FinancialAnalytics({ myStudents }) {
-  const totalReceived = myStudents
-    .filter(s => s.payment_status === 'paid' || s.payment_status === 'Paid')
-    .reduce((acc, s) => acc + (s.monthly_fee || 2500), 0);
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const monthLabel = now.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
 
-  const totalPending = myStudents
-    .filter(s => s.payment_status !== 'paid' && s.payment_status !== 'Paid')
-    .reduce((acc, s) => acc + (s.monthly_fee || 2500), 0);
+  // Only count CURRENT month — revenue from previous months is excluded
+  const currentMonthPaid = myStudents.filter(s => {
+    const history = s.payment_history || {};
+    return history[currentMonthKey] === 'paid';
+  });
 
+  const currentMonthUnpaid = myStudents.filter(s => {
+    const history = s.payment_history || {};
+    return history[currentMonthKey] !== 'paid';
+  });
+
+  const totalReceived = currentMonthPaid.reduce((acc, s) => acc + (s.monthly_fee || 2500), 0);
+  const totalPending = currentMonthUnpaid.reduce((acc, s) => acc + (s.monthly_fee || 2500), 0);
   const expectedTotal = totalReceived + totalPending;
 
   const handleSendReminder = (student) => {
@@ -85,9 +94,9 @@ export default function FinancialAnalytics({ myStudents }) {
     <div className="animate-fade-in" style={{ padding: '0.5rem 0' }}>
       {/* Bento Grid Analytics */}
       <div className="flex gap-6 mb-8" style={{ flexWrap: 'wrap' }}>
-        <Card title="Total Received" amount={totalReceived} color="#22C55E" icon={TrendingUp} />
-        <Card title="Pending Dues" amount={totalPending} color="#F59E0B" icon={Clock} />
-        <Card title="Expected Revenue" amount={expectedTotal} color="#6366F1" icon={Target} />
+        <Card title={`Received — ${monthLabel}`} amount={totalReceived} color="#22C55E" icon={TrendingUp} />
+        <Card title={`Pending — ${monthLabel}`} amount={totalPending} color="#F59E0B" icon={Clock} />
+        <Card title={`Expected — ${monthLabel}`} amount={expectedTotal} color="#6366F1" icon={Target} />
       </div>
 
       {/* Student Payment Roster */}
@@ -99,10 +108,10 @@ export default function FinancialAnalytics({ myStudents }) {
           </div>
           <div className="flex gap-2">
              <span style={{ fontSize: '0.75rem', background: 'rgba(34,197,94,0.08)', color: '#22C55E', padding: '0.3rem 0.8rem', borderRadius: '1rem', border: '1px solid rgba(34,197,94,0.2)', fontWeight: 600 }}>
-               {myStudents.filter(s => s.payment_status === 'paid' || s.payment_status === 'Paid').length} Paid
+               {currentMonthPaid.length} Paid
              </span>
              <span style={{ fontSize: '0.75rem', background: 'rgba(245,158,11,0.08)', color: '#F59E0B', padding: '0.3rem 0.8rem', borderRadius: '1rem', border: '1px solid rgba(245,158,11,0.2)', fontWeight: 600 }}>
-               {myStudents.filter(s => s.payment_status !== 'paid' && s.payment_status !== 'Paid').length} Pending
+               {currentMonthUnpaid.length} Pending
              </span>
           </div>
         </div>
@@ -120,7 +129,8 @@ export default function FinancialAnalytics({ myStudents }) {
             </thead>
             <tbody>
               {myStudents.map(s => {
-                const isPaid = s.payment_status === 'paid' || s.payment_status === 'Paid';
+                const history = s.payment_history || {};
+                const isPaid = history[currentMonthKey] === 'paid';
                 return (
                   <tr key={s.id} className="hover-row" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', transition: 'background 0.2s' }}>
                     <td style={{ padding: '1.2rem 1rem' }}>
