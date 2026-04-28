@@ -21,7 +21,7 @@ import FinancialAnalytics from '../components/FinancialAnalytics';
 import FileUploadVercel from '../components/FileUploadVercel';
 import { useToast } from '../components/Toast';
 import { db } from '../firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, setDoc } from 'firebase/firestore';
 
 const PLAN_LIMITS = {
   free:   { batches: 1,        students: 5,   pdf: false, recording: false },
