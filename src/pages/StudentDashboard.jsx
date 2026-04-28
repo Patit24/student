@@ -292,9 +292,9 @@ export default function StudentDashboard() {
               <div className="flex-col gap-4 sd-animate">
                 <div className="sd-stat-grid">
                   <div className="sd-card sd-stat sd-animate sd-animate-delay-1">
-                    <div className="sd-stat-icon" style={{ background: 'rgba(129,140,248,0.1)' }}><TrendingUp size={20} color="#818CF8" /></div>
-                    <p className="sd-stat-label">Attendance</p>
-                    <p className="sd-stat-value indigo">94%</p>
+                    <div className="sd-stat-icon" style={{ background: 'rgba(129,140,248,0.1)' }}><Video size={20} color="#818CF8" /></div>
+                    <p className="sd-stat-label">Live Classes</p>
+                    <p className="sd-stat-value indigo">{mySessions.length}</p>
                   </div>
                   <div className="sd-card sd-stat sd-animate sd-animate-delay-2">
                     <div className="sd-stat-icon" style={{ background: 'rgba(245,197,24,0.1)' }}><Zap size={20} color="#F5C518" /></div>
@@ -302,9 +302,9 @@ export default function StudentDashboard() {
                     <p className="sd-stat-value gold">88.5</p>
                   </div>
                   <div className="sd-card sd-stat sd-animate sd-animate-delay-3">
-                    <div className="sd-stat-icon" style={{ background: 'rgba(34,197,94,0.1)' }}><CheckCircle size={20} color="#22C55E" /></div>
-                    <p className="sd-stat-label">Assignments</p>
-                    <p className="sd-stat-value green">12/14</p>
+                    <div className="sd-stat-icon" style={{ background: 'rgba(34,197,94,0.1)' }}><FileText size={20} color="#22C55E" /></div>
+                    <p className="sd-stat-label">Study Materials</p>
+                    <p className="sd-stat-value green">{globalAssets.length}</p>
                   </div>
                 </div>
 
