@@ -24,9 +24,13 @@ import { db } from '../firebase';
 import { doc, updateDoc, setDoc } from 'firebase/firestore';
 
 const PLAN_LIMITS = {
-  free:   { batches: 1,        students: 5,   pdf: false, recording: false },
-  growth: { batches: 5,        students: 50,  pdf: true,  recording: false },
-  pro:    { batches: Infinity, students: Infinity, pdf: true, recording: true },
+  free:   { batches: 1,        students: 5,         pdf: false, recording: false },
+  flex:   { batches: Infinity, students: Infinity,   pdf: false, recording: false },
+  silver: { batches: Infinity, students: Infinity,   pdf: true,  recording: true  },
+  gold:   { batches: Infinity, students: Infinity,   pdf: true,  recording: true  },
+  // Legacy aliases
+  growth: { batches: 5,        students: 50,        pdf: true,  recording: false },
+  pro:    { batches: Infinity, students: Infinity,   pdf: true,  recording: true  },
 };
 
 const PLAN_LABELS = {

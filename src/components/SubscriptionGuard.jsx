@@ -18,13 +18,13 @@ import { useAppContext } from '../context/AuthContext';
 function isSubscriptionActive(user) {
   if (!user) return false;
 
-  // Starter / free plan — always active (limited features)
-  if (user.subscription_tier === 'starter' || user.subscription_tier === 'free') return true;
+  // Free/starter/flex — always active (limited features)
+  if (['starter', 'free', 'flex'].includes(user.subscription_tier)) return true;
 
   // Check is_subscribed flag
   if (!user.is_subscribed && user.subscription_status !== 'active') return false;
 
-  // Check expiry if present
+  // Check expiry if present (for yearly Silver/Gold)
   if (user.subscription_expiry) {
     const expiry = new Date(user.subscription_expiry);
     if (expiry < new Date()) return false;

@@ -72,8 +72,12 @@ export default function AdminDashboard() {
 
   const totalRevenue = tutors.reduce((acc, tutor) => {
     if (tutor.subscription_status === 'active') {
-      if (tutor.subscription_tier === 'pro') return acc + 999;
-      if (tutor.subscription_tier === 'growth') return acc + 499;
+      if (tutor.subscription_tier === 'gold') return acc + 2999;
+      if (tutor.subscription_tier === 'silver') return acc + 1999;
+      if (tutor.subscription_tier === 'flex') {
+        const sc = allStudents.filter(s => s.tutorId === tutor.id).length;
+        return acc + sc; // ₹1 per student
+      }
     }
     return acc;
   }, 0);
@@ -86,12 +90,22 @@ export default function AdminDashboard() {
   const approveTutor = async () => {
     if (!verifyingTutor) return;
     try {
-      await updateDoc(doc(db, 'users', verifyingTutor.id), {
+      const planToActivate = verifyingTutor.pending_plan || selectedPlan;
+      const isYearly = planToActivate === 'silver' || planToActivate === 'gold';
+      const updateData = {
         subscription_status: 'active',
-        subscription_tier: selectedPlan,
-        approved_at: serverTimestamp()
-      });
-      toast.success(`Plan ${selectedPlan.toUpperCase()} Activated! 🚀`);
+        subscription_tier: planToActivate,
+        is_subscribed: true,
+        approved_at: serverTimestamp(),
+        pending_plan: null,
+      };
+      if (isYearly) {
+        const expiry = new Date();
+        expiry.setFullYear(expiry.getFullYear() + 1);
+        updateData.subscription_expiry = expiry.toISOString();
+      }
+      await updateDoc(doc(db, 'users', verifyingTutor.id), updateData);
+      toast.success(`${planToActivate.toUpperCase()} Plan Activated! 🚀`);
       setVerifyingTutor(null);
     } catch (err) {
       toast.error('Activation failed');
@@ -226,7 +240,11 @@ export default function AdminDashboard() {
                                 <span><Users size={12} style={{ display:'inline', verticalAlign:'text-bottom', marginRight: '4px' }} /> {studentCount} Students</span>
                               </div>
                             </td>
-                            <td>{t.subscription_status === 'active' ? <span className="badge-active">Live</span> : <span className="badge-pending">Review</span>}</td>
+                            <td>
+                              {t.subscription_status === 'active' ? <span className="badge-active">Live ({t.subscription_tier?.toUpperCase()})</span> 
+                              : t.subscription_status === 'pending_verification' ? <span className="badge-pending" style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>⏳ Pending ({t.pending_plan?.toUpperCase()})</span>
+                              : <span className="badge-pending">Review</span>}
+                            </td>
                             <td style={{ textAlign: 'right' }}>
                               <div style={{ display: 'inline-flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                                 <button className="btn-approve" onClick={() => { setVerifyingTutor(t); setSelectedPlan(t.pending_plan || 'growth'); }}>Verify</button>
