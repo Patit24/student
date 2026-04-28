@@ -103,6 +103,8 @@
   border-radius: 18px;
   margin-bottom: 2rem;
   overflow-x: auto;
+  flex-wrap: nowrap;
+  -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
 .sd-tabs::-webkit-scrollbar { display: none; }
@@ -121,6 +123,7 @@
   cursor: pointer;
   transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
+  flex-shrink: 0;
   position: relative;
 }
 

@@ -34,6 +34,8 @@ export const useAuth = useAppContext;
 const LS_BATCHES  = 'ag_batches';
 const LS_STUDENTS = 'ag_students';
 const LS_MATERIALS = 'ag_materials';
+const LS_SESSIONS = 'ag_sessions';
+const LS_NOTICES = 'ag_notices';
 
 function lsGet(key, fallback = []) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
@@ -139,7 +141,8 @@ export function AppProvider({ children }) {
       : lsGet(LS_BATCHES, [])
   );
 
-  const [mockSessions,    setMockSessions]    = useState([]);
+  const [mockSessions,    setMockSessions]    = useState(() => lsGet(LS_SESSIONS, []));
+  const [mockNotices,     setMockNotices]     = useState(() => lsGet(LS_NOTICES, []));
   const [mockExams,       setMockExams]       = useState([]);
   const [mockSubmissions, setMockSubmissions] = useState([]);
   const [mockMaterials,   setMockMaterials]   = useState(() =>
@@ -408,29 +411,27 @@ export function AppProvider({ children }) {
       return;
     }
 
-    let unsubAuth, unsubProfile, unsubBatches, unsubStudents, unsubMaterials, unsubPurchases;
+    let unsubAuth, unsubProfile, unsubPurchases;
 
     unsubAuth = onAuthStateChanged(auth, async (user) => {
-      // ── Bypass Check: If we already have a cached/active admin, don't let null auth kick them out ──
+      // ── Bypass Check ──
       const cachedAdmin = localStorage.getItem(LS_ADMIN_SESSION);
       if (!user && cachedAdmin) {
         setLoading(false);
         return;
       }
 
-      // Cleanup previous listeners
-      if (unsubStudents) { unsubStudents(); unsubStudents = null; }
-      if (unsubBatches)  { unsubBatches();  unsubBatches  = null; }
-      if (unsubProfile)  { unsubProfile();  unsubProfile  = null; }
-      if (unsubMaterials) { unsubMaterials(); unsubMaterials = null; }
+      if (unsubProfile) { unsubProfile(); unsubProfile = null; }
       if (unsubPurchases) { unsubPurchases(); unsubPurchases = null; }
 
       if (!user) {
         setCurrentUser(null);
-        lsClear(LS_BATCHES, LS_STUDENTS);
+        lsClear(LS_BATCHES, LS_STUDENTS, LS_SESSIONS, LS_NOTICES);
         setMockBatches([]);
         setMockStudents([]);
         setMockMaterials([]);
+        setMockSessions([]);
+        setMockNotices([]);
         setPurchasedAssets([]);
         setLoading(false);
         return;
@@ -439,60 +440,20 @@ export function AppProvider({ children }) {
       try {
         const docSnap = await getDoc(doc(db, 'users', user.uid));
         const profile = docSnap.exists() ? docSnap.data() : {};
-        const userData = { uid: user.uid, email: user.email, ...profile };
-        setCurrentUser(userData);
-        setLoading(false);
+        setCurrentUser({ uid: user.uid, email: user.email, ...profile });
 
-        // ── Purchase Listener ──
+        // Profile Listener (Reactive to role/enrolled_batches changes)
+        unsubProfile = onSnapshot(doc(db, 'users', user.uid), (snap) => {
+          if (snap.exists()) {
+            setCurrentUser(prev => ({ ...prev, ...snap.data(), uid: user.uid, email: user.email }));
+          }
+          setLoading(false);
+        });
+
+        // Purchase Listener
         const { subscribePurchases } = await import('../db.service');
         unsubPurchases = subscribePurchases(user.uid, setPurchasedAssets);
 
-        if (profile.role === 'tutor') {
-          // Profile Listener
-          unsubProfile = onSnapshot(doc(db, 'users', user.uid), (snap) => {
-            if (snap.exists()) {
-              setCurrentUser(prev => ({ ...prev, ...snap.data(), uid: user.uid }));
-            }
-          });
-
-          // Batches Listener
-          unsubBatches = onSnapshot(
-            query(collection(db, 'batches'), where('tutorId', '==', user.uid)),
-            (snap) => {
-              const batches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-              setMockBatches(batches);
-              lsSet(LS_BATCHES, batches);
-            }
-          );
-
-          // Students Listener
-          unsubStudents = onSnapshot(
-            query(collection(db, 'users'), where('tutorId', '==', user.uid), where('role', '==', 'student')),
-            (snap) => {
-              const students = applyDeadlineRestrictions(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-              setMockStudents(students);
-              lsSet(LS_STUDENTS, students);
-            }
-          );
-
-          // Materials Listener (Tutor view: see ALL their materials)
-          unsubMaterials = onSnapshot(
-            query(collection(db, 'tutor_materials'), where('tutor_id', '==', user.uid)),
-            (snap) => {
-              const materials = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-              setMockMaterials(materials);
-            }
-          );
-        } else if (profile.role === 'student') {
-          // Materials Listener
-          const batchIds = profile.enrolled_batches?.map(b => b.batch_id) || (profile.batch_id ? [profile.batch_id] : []);
-          if (batchIds.length > 0) {
-            unsubMaterials = onSnapshot(
-              query(collection(db, 'tutor_materials'), where('batch_id', 'in', batchIds), where('visibility', '==', 'private')),
-              (snap) => setMockMaterials(snap.docs.map(d => ({ id: d.id, ...d.data() })))
-            );
-          }
-        }
       } catch (err) {
         console.error('Auth sync error:', err);
         setLoading(false);
@@ -500,14 +461,90 @@ export function AppProvider({ children }) {
     });
 
     return () => {
-      if (unsubAuth) unsubAuth();
-      if (unsubStudents) unsubStudents();
-      if (unsubBatches)  unsubBatches();
-      if (unsubProfile)  unsubProfile();
-      if (unsubMaterials) unsubMaterials();
+      unsubAuth();
+      if (unsubProfile) unsubProfile();
       if (unsubPurchases) unsubPurchases();
     };
   }, [isMockMode]);
+
+  // ── REAL-TIME DATA LISTENERS (Reactive to User Profile) ──
+  useEffect(() => {
+    if (isMockMode || !currentUser || !currentUser.uid) return;
+
+    let unsubMaterials, unsubSessions, unsubNotices, unsubStudents, unsubBatches;
+
+    if (currentUser.role === 'tutor') {
+      unsubBatches = onSnapshot(
+        query(collection(db, 'batches'), where('tutorId', '==', currentUser.uid)),
+        (snap) => {
+          const batches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          setMockBatches(batches);
+          lsSet(LS_BATCHES, batches);
+        }
+      );
+      unsubStudents = onSnapshot(
+        query(collection(db, 'users'), where('tutorId', '==', currentUser.uid), where('role', '==', 'student')),
+        (snap) => {
+          const students = applyDeadlineRestrictions(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+          setMockStudents(students);
+          lsSet(LS_STUDENTS, students);
+        }
+      );
+      unsubMaterials = onSnapshot(
+        query(collection(db, 'tutor_materials'), where('tutor_id', '==', currentUser.uid)),
+        (snap) => setMockMaterials(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+      );
+      unsubSessions = onSnapshot(
+        query(collection(db, 'sessions'), where('tutorId', '==', currentUser.uid)),
+        (snap) => {
+          const sessions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          setMockSessions(sessions);
+          lsSet(LS_SESSIONS, sessions);
+        }
+      );
+      unsubNotices = onSnapshot(
+        query(collection(db, 'notices'), where('tutorId', '==', currentUser.uid)),
+        (snap) => {
+          const notices = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          setMockNotices(notices);
+          lsSet(LS_NOTICES, notices);
+        }
+      );
+    } else if (currentUser.role === 'student') {
+      const batchIds = currentUser.enrolled_batches?.map(b => b.batch_id) || (currentUser.batch_id ? [currentUser.batch_id] : []);
+      
+      if (batchIds.length > 0) {
+        unsubMaterials = onSnapshot(
+          query(collection(db, 'tutor_materials'), where('batch_id', 'in', batchIds), where('visibility', '==', 'private')),
+          (snap) => setMockMaterials(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+        );
+        unsubSessions = onSnapshot(
+          query(collection(db, 'sessions'), where('batch_id', 'in', batchIds)),
+          (snap) => {
+            const sessions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            setMockSessions(sessions);
+            lsSet(LS_SESSIONS, sessions);
+          }
+        );
+        unsubNotices = onSnapshot(
+          query(collection(db, 'notices'), where('batch_id', 'in', batchIds)),
+          (snap) => {
+            const notices = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+            setMockNotices(notices);
+            lsSet(LS_NOTICES, notices);
+          }
+        );
+      }
+    }
+
+    return () => {
+      if (unsubMaterials) unsubMaterials();
+      if (unsubSessions) unsubSessions();
+      if (unsubNotices) unsubNotices();
+      if (unsubStudents) unsubStudents();
+      if (unsubBatches) unsubBatches();
+    };
+  }, [isMockMode, currentUser?.uid, JSON.stringify(currentUser?.enrolled_batches), currentUser?.batch_id]);
 
   // ── Global Tutor List Listener (Public) ──
   useEffect(() => {
@@ -548,6 +585,7 @@ export function AppProvider({ children }) {
     mockStudents, setMockStudents,
     mockBatches,  setMockBatches,
     mockSessions, setMockSessions,
+    mockNotices, setMockNotices,
     mockExams,    setMockExams,
     mockSubmissions, setMockSubmissions,
     mockMaterials,   setMockMaterials,

@@ -199,6 +199,7 @@ html, body, #root {
 @media (max-width: 768px) {
   .hide-on-mobile { display: none !important; }
   .show-on-mobile { display: block !important; }
+  .show-on-mobile-flex { display: flex !important; }
 }
 
 /* Typography scale-down */

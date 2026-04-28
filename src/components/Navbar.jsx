@@ -85,26 +85,36 @@ export default function Navbar() {
         <button 
           className="show-on-mobile" 
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}
+          style={{ 
+            background: 'rgba(255,255,255,0.05)', 
+            border: '1px solid rgba(255,255,255,0.2)', 
+            color: '#fff', 
+            cursor: 'pointer',
+            padding: '8px',
+            borderRadius: '10px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
         >
-          {isMenuOpen ? <X size={28} /> : <Menu size={28} />}
+          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
       {/* Mobile Drawer */}
       {isMenuOpen && (
-        <div className="show-on-mobile animate-fade-in" style={{
+        <div className="show-on-mobile-flex animate-fade-in" style={{
           position: 'absolute', top: '100%', left: 0, right: 0,
           background: '#070B18', padding: '2rem',
           borderBottom: '1px solid rgba(255,255,255,0.07)',
           display: 'flex', flexDirection: 'column', gap: '1.5rem',
           boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
         }}>
-          <Link to="/" onClick={() => setIsMenuOpen(false)} style={navLink}>Home</Link>
-          <Link to="/search" onClick={() => setIsMenuOpen(false)} style={navLink}>Find Tutors</Link>
-          <Link to="/courses" onClick={() => setIsMenuOpen(false)} style={navLink}>Courses</Link>
-          <Link to="/about" onClick={() => setIsMenuOpen(false)} style={navLink}>About</Link>
-          <Link to="/blogs" onClick={() => setIsMenuOpen(false)} style={navLink}>Blogs</Link>
+          <Link to="/" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>Home</Link>
+          <Link to="/search" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>Find Tutors</Link>
+          <Link to="/courses" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>Courses</Link>
+          <Link to="/about" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>About</Link>
+          <Link to="/blogs" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>Blogs</Link>
           <hr style={{ borderColor: 'rgba(255,255,255,0.05)' }} />
           {currentUser ? (
             <button onClick={handleLogout} className="btn btn-outline" style={{ justifyContent: 'center' }}>

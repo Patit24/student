@@ -252,6 +252,10 @@ export default function TutorDashboard() {
   const [liveStartTime, setLiveStartTime] = useState('');
   const [showGoLiveModal, setShowGoLiveModal] = useState(false);
 
+  const [noticeTitle, setNoticeTitle] = useState('');
+  const [noticeContent, setNoticeContent] = useState('');
+  const [noticeBatchId, setNoticeBatchId] = useState('');
+
   const [newBatchName, setNewBatchName] = useState('');
   const [newBatchLimit, setNewBatchLimit] = useState('');
 
@@ -282,6 +286,16 @@ export default function TutorDashboard() {
 
   const [credentialModal, setCredentialModal] = useState(null);
 
+  useEffect(() => {
+    if (!currentUser?.uid || isLive) return;
+    const activeSession = mockSessions.find(s => s.tutorId === currentUser.uid && s.is_live);
+    if (activeSession) {
+      setIsLive(true);
+      if (activeSession.meeting_link) setGoogleMeetLink(activeSession.meeting_link);
+    }
+  }, [mockSessions, currentUser?.uid, isLive]);
+
+  const billCheckedRef = useRef(false);
   const videoRef = useRef(null);
   const [stream, setStream] = useState(null);
   const cameraTrackRef = useRef(null);
@@ -390,21 +404,55 @@ export default function TutorDashboard() {
       return;
     }
 
-    // Update session status in mock data (simulating notification)
-    setMockSessions(prev => prev.map(s => 
-      s.batch_id === selectedBatchForLive ? { ...s, is_live: true, room_id: googleMeetLink } : s
-    ));
+    // Update session status
+    const targetSession = mockSessions.find(s => s.batch_id === selectedBatchForLive);
+    if (targetSession) {
+      if (isMockMode) {
+        setMockSessions(prev => prev.map(s => 
+          s.batch_id === selectedBatchForLive ? { ...s, is_live: true, meeting_link: googleMeetLink } : s
+        ));
+      } else {
+        await updateDoc(doc(db, 'sessions', targetSession.id), {
+          is_live: true,
+          meeting_link: googleMeetLink
+        });
+      }
+    } else {
+      // Create a new "instant" session record
+      const newSession = {
+        id: `session-instant-${Date.now()}`,
+        batch_id: selectedBatchForLive,
+        title: 'Instant Live Class',
+        scheduled_time: new Date().toISOString(),
+        meeting_link: googleMeetLink,
+        is_live: true,
+        tutorId: currentUser.uid
+      };
+      if (isMockMode) {
+        setMockSessions([...mockSessions, newSession]);
+      } else {
+        await setDoc(doc(db, 'sessions', newSession.id), newSession);
+      }
+    }
     
     toast.success(`🚀 Link broadcasted to ${myBatches.find(b => b.id === selectedBatchForLive)?.name}!`);
     setIsLive(true);
     setShowGoLiveModal(false);
   };
 
-  const stopStream = () => {
+  const stopStream = async () => {
     setStreamActive(false);
     setIsLive(false);
     // Clear live status
-    setMockSessions(prev => prev.map(s => ({ ...s, is_live: false })));
+    if (isMockMode) {
+      setMockSessions(prev => prev.map(s => ({ ...s, is_live: false })));
+    } else {
+      // Find and update all live sessions for this tutor
+      const liveSessions = mockSessions.filter(s => s.tutorId === currentUser.uid && s.is_live);
+      for (const s of liveSessions) {
+        await updateDoc(doc(db, 'sessions', s.id), { is_live: false });
+      }
+    }
   };
 
   const copyMeetingLink = () => {
@@ -532,7 +580,7 @@ export default function TutorDashboard() {
     setPhoneLookup(null);
   };
 
-  const handleScheduleClass = (e) => {
+  const handleScheduleClass = async (e) => {
     e.preventDefault();
     if (sessionTitle && sessionBatchId && sessionDate) {
       const newSession = {
@@ -540,13 +588,44 @@ export default function TutorDashboard() {
         batch_id: sessionBatchId,
         title: sessionTitle,
         scheduled_time: sessionDate,
-        room_link: `https://antigravity.edu/join/${Math.random().toString(36).substring(7)}`,
+        meeting_link: `https://antigravity.edu/join/${Math.random().toString(36).substring(7)}`,
         is_live: false,
         tutorId: currentUser.uid
       };
-      setMockSessions([...mockSessions, newSession]);
+
+      if (isMockMode) {
+        setMockSessions([...mockSessions, newSession]);
+      } else {
+        await setDoc(doc(db, 'sessions', newSession.id), newSession);
+      }
+
       alert(`Class Scheduled!`);
       setSessionTitle(''); setSessionBatchId(''); setSessionDate('');
+    }
+  };
+
+  const handleSendNotice = async (e) => {
+    e.preventDefault();
+    if (noticeTitle && noticeContent && noticeBatchId) {
+      const newNotice = {
+        id: `notice-${Date.now()}`,
+        batch_id: noticeBatchId,
+        title: noticeTitle,
+        content: noticeContent,
+        tutorId: currentUser.uid,
+        created_at: new Date().toISOString(),
+        tutor_name: currentUser.name
+      };
+
+      if (isMockMode) {
+        setMockNotices([...mockNotices, newNotice]);
+      } else {
+        const { collection: col, addDoc } = await import('firebase/firestore');
+        await addDoc(col(db, 'notices'), newNotice);
+      }
+
+      toast.success('Notice broadcasted! 🚀');
+      setNoticeTitle(''); setNoticeContent(''); setNoticeBatchId('');
     }
   };
 
@@ -688,7 +767,7 @@ export default function TutorDashboard() {
         </button>
       </div>
 
-      <div className="tabs-row mb-6 custom-scrollbar" style={{ display: 'flex', gap: '0.8rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+      <div className="tabs-row mb-6 custom-scrollbar" style={{ display: 'flex', flexWrap: 'nowrap', gap: '0.8rem', overflowX: 'auto', paddingBottom: '0.5rem', WebkitOverflowScrolling: 'touch' }}>
         <Tab id="students"   label="Students"   icon={Users} />
         <Tab id="analytics"  label="Analytics"  icon={TrendingUp} />
         <Tab id="batches"    label="Batches"     icon={Layers} />
@@ -697,6 +776,7 @@ export default function TutorDashboard() {
         <Tab id="marketplace" label="Marketplace" icon={Globe} />
         <Tab id="exams"      label="Exams"       icon={CheckSquare} />
         <Tab id="leads"      label="Leads"      icon={TrendingUp} />
+        <Tab id="notices"    label="Notices"    icon={MessageSquare} />
         <Tab id="defaulters" label="Overdue"     icon={AlertOctagon} />
         <Tab id="banking"    label="Banking"     icon={CreditCard} />
         <Tab id="profile"    label="Public Profile" icon={Layout} />
@@ -881,6 +961,47 @@ export default function TutorDashboard() {
               <button className="btn btn-primary w-full mt-6" onClick={handleSaveProfile} style={{ padding: '1rem', fontWeight: 800 }}>
                 <Check size={20} /> Save & Submit for Verification
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'notices' && (
+        <div className="glass-panel p-8 animate-fade-in">
+          <h3 className="mb-6 flex items-center gap-2"><MessageSquare size={24} color="var(--primary)" /> Broadcast Notice</h3>
+          <form onSubmit={handleSendNotice} className="flex-col gap-4 max-w-2xl">
+            <div className="input-group">
+              <label className="input-label">Notice Title</label>
+              <input className="input-field" placeholder="e.g., Sunday Test Postponed" required value={noticeTitle} onChange={e => setNoticeTitle(e.target.value)} />
+            </div>
+            <div className="input-group">
+              <label className="input-label">Target Batch</label>
+              <select className="input-field" required value={noticeBatchId} onChange={e => setNoticeBatchId(e.target.value)}>
+                <option value="">Select a batch...</option>
+                {myBatches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+              </select>
+            </div>
+            <div className="input-group">
+              <label className="input-label">Content</label>
+              <textarea className="input-field" style={{ minHeight: '120px' }} placeholder="Write your message here..." required value={noticeContent} onChange={e => setNoticeContent(e.target.value)} />
+            </div>
+            <button type="submit" className="btn btn-primary w-full">Broadcast Notice</button>
+          </form>
+
+          <div className="mt-12">
+            <h4 className="mb-4">Recent Notices</h4>
+            <div className="flex-col gap-4">
+              {mockNotices.filter(n => n.tutorId === currentUser.uid).sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).map(notice => (
+                <div key={notice.id} className="glass-panel p-4" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                  <div className="flex justify-between items-start mb-2">
+                    <h5 style={{ margin: 0, color: 'var(--primary)' }}>{notice.title}</h5>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date(notice.created_at).toLocaleDateString()}</span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '0.9rem' }}>{notice.content}</p>
+                  <p style={{ margin: '0.5rem 0 0', fontSize: '0.7rem', color: 'var(--text-muted)' }}>Target: {myBatches.find(b => b.id === notice.batch_id)?.name || 'Unknown Batch'}</p>
+                </div>
+              ))}
+              {mockNotices.filter(n => n.tutorId === currentUser.uid).length === 0 && <p className="text-muted">No notices sent yet.</p>}
             </div>
           </div>
         </div>

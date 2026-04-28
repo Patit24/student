@@ -61,7 +61,7 @@ function PasswordResetGate() {
 }
 
 export default function StudentDashboard() {
-  const { currentUser, verifyOTP, sendOTP, mockSessions, mockStudents, mockBatches, mockTutors, logout } = useAppContext();
+  const { currentUser, verifyOTP, sendOTP, mockSessions, mockNotices, mockStudents, mockBatches, mockTutors, logout } = useAppContext();
   const toast = useToast();
   const navigate = useNavigate();
   const [globalAssets, setGlobalAssets] = useState([]);
@@ -97,6 +97,10 @@ export default function StudentDashboard() {
 
   const mySessions = mockSessions.filter(s => s.batch_id === selectedEnrollment?.batch_id);
   const liveSession = mySessions.find(s => s.is_live);
+  
+  // Find any live sessions across all enrolled batches
+  const enrolledBatchIds = currentUser?.enrolled_batches?.map(b => b.batch_id) || (currentUser?.batch_id ? [currentUser.batch_id] : []);
+  const allLiveSessions = mockSessions.filter(s => s.is_live && enrolledBatchIds.includes(s.batch_id));
 
   useEffect(() => {
     if (currentUser && currentUser.is_verified === false && currentUser.phone)
@@ -110,9 +114,10 @@ export default function StudentDashboard() {
 
   const startStream = (targetRoom = null) => {
     if (isRestricted) { toast.error('⚠️ Account Locked due to pending dues.'); return; }
-    const finalRoom = targetRoom || roomId || liveSession?.room_id || `ppr-batch-${selectedEnrollment?.batch_id}`;
+    const finalRoom = targetRoom || roomId || liveSession?.meeting_link || `ppr-batch-${selectedEnrollment?.batch_id}`;
     if (!finalRoom) { toast.error('No active session found.'); return; }
-    if (finalRoom.includes('meet.google.com')) window.open(finalRoom, '_blank');
+    if (finalRoom.startsWith('http')) window.open(finalRoom, '_blank');
+    else toast.error('Invalid meeting room link.');
   };
 
   // OTP Gate
@@ -193,6 +198,24 @@ export default function StudentDashboard() {
   return (
     <div className="sd-root">
       <div className="sd-content container" style={{ paddingBottom: '4rem' }}>
+
+        {/* Global Live Banner */}
+        {allLiveSessions.length > 0 && (
+          <div className="sd-banner-overdue" style={{ background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0.05) 100%)', borderColor: 'rgba(34, 197, 94, 0.3)', marginTop: '2rem' }}>
+            <div className="flex items-center gap-3">
+              <div className="pulse-red" style={{ width: '12px', height: '12px', background: '#EF4444', borderRadius: '50%' }} />
+              <span style={{ fontWeight: 800, color: '#EF4444' }}>LIVE CLASS IN PROGRESS</span>
+              <span className="hide-on-mobile" style={{ fontSize: '0.9rem', color: '#94A3B8' }}>{allLiveSessions[0].title} is live now!</span>
+            </div>
+            <button 
+              onClick={() => startStream(allLiveSessions[0].meeting_link)}
+              className="btn btn-primary" 
+              style={{ padding: '0.6rem 1.2rem', fontSize: '0.8rem' }}
+            >
+              Join Now
+            </button>
+          </div>
+        )}
 
         {/* Header */}
         <div className="sd-header">
@@ -287,10 +310,18 @@ export default function StudentDashboard() {
 
                 <div className="sd-card sd-notice sd-animate sd-animate-delay-2">
                   <h4 className="flex items-center gap-2 mb-4" style={{ fontWeight: 800 }}><MessageSquare size={18} color="#F5C518" /> Notice Board</h4>
-                  <div className="sd-notice-item">
-                    <div className="sd-notice-badge"><Star size={10} /> New</div>
-                    <p style={{ fontWeight: 800, margin: '0 0 0.4rem', fontSize: '0.95rem', color: '#F0F4FF' }}>Sunday Unit Test Reminder</p>
-                    <p style={{ fontSize: '0.85rem', color: '#64748B', margin: 0, lineHeight: 1.6 }}>Syllabus covers Human Physiology. Study materials available in Library.</p>
+                  <div className="flex-col gap-4">
+                    {mockNotices.filter(n => enrolledBatchIds.includes(n.batch_id)).sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).map(notice => (
+                      <div key={notice.id} className="sd-notice-item">
+                        <div className="sd-notice-badge"><Star size={10} /> {new Date(notice.created_at) > new Date(Date.now() - 86400000) ? 'New' : 'Update'}</div>
+                        <p style={{ fontWeight: 800, margin: '0 0 0.4rem', fontSize: '0.95rem', color: '#F0F4FF' }}>{notice.title}</p>
+                        <p style={{ fontSize: '0.85rem', color: '#64748B', margin: 0, lineHeight: 1.6 }}>{notice.content}</p>
+                        <p style={{ fontSize: '0.7rem', color: 'var(--hp-yellow)', marginTop: '0.5rem', opacity: 0.8 }}>— {notice.tutor_name}</p>
+                      </div>
+                    ))}
+                    {mockNotices.filter(n => enrolledBatchIds.includes(n.batch_id)).length === 0 && (
+                      <p className="text-muted text-center py-4">No notices yet.</p>
+                    )}
                   </div>
                 </div>
               </div>
