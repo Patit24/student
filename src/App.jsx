@@ -19,6 +19,8 @@ import Blogs from './pages/Blogs';
 import BlogDetail from './pages/BlogDetail';
 import CourseDetail from './pages/CourseDetail';
 import Courses from './pages/Courses';
+import NeetAspirant from './pages/NeetAspirant';
+import JeeAspirant from './pages/JeeAspirant';
 import Footer from './components/Footer';
 import { AlertTriangle, Lock } from 'lucide-react';
 import './index.css';
@@ -48,6 +50,8 @@ function AppRoutes() {
       <Route path="/course/:courseId" element={<CourseDetail />} />
       <Route path="/courses" element={<Courses />} />
       <Route path="/pricing" element={<Pricing />} />
+      <Route path="/neet" element={<NeetAspirant />} />
+      <Route path="/jee" element={<JeeAspirant />} />
 
       {!currentUser ? (
         <>

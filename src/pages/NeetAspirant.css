@@ -1,0 +1,285 @@
+/* ═══════════════════════════════════════════════
+   Aspirant Pages — Modern 2026 Design System
+   Shared between NEET & JEE pages
+═══════════════════════════════════════════════ */
+.asp-root { min-height: 100vh; background: #060a14; color: #F0F4FF; }
+
+/* ── Hero ── */
+.asp-hero {
+  position: relative; overflow: hidden;
+  padding: 7rem 2rem 4rem; text-align: center;
+}
+.asp-hero::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, var(--asp-glow) 0%, transparent 65%);
+  opacity: 0.12; pointer-events: none;
+}
+.asp-hero-badge {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.4rem 1.2rem; border-radius: 999px;
+  background: var(--asp-badge-bg); border: 1px solid var(--asp-badge-border);
+  color: var(--asp-accent); font-size: 0.78rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 1.5rem; animation: fadeInUp 0.6s ease;
+}
+.asp-hero h1 {
+  font-size: clamp(2.2rem, 5vw, 3.8rem); font-weight: 900;
+  line-height: 1.15; margin: 0 0 1rem; animation: fadeInUp 0.7s ease;
+}
+.asp-hero h1 span { color: var(--asp-accent); }
+.asp-hero p {
+  font-size: 1.1rem; color: #94A3B8; max-width: 600px;
+  margin: 0 auto 2rem; line-height: 1.7; animation: fadeInUp 0.8s ease;
+}
+.asp-hero-stats {
+  display: flex; justify-content: center; gap: 2rem;
+  flex-wrap: wrap; animation: fadeInUp 0.9s ease;
+}
+.asp-hero-stat {
+  text-align: center; padding: 1rem 1.5rem;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px; min-width: 120px;
+}
+.asp-hero-stat strong {
+  display: block; font-size: 1.6rem; font-weight: 800; color: var(--asp-accent);
+}
+.asp-hero-stat span { font-size: 0.75rem; color: #7A8BA8; }
+
+/* ── Tabs ── */
+.asp-tabs {
+  display: flex; justify-content: center; gap: 0.5rem;
+  padding: 0 2rem; margin: 2rem 0;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+}
+.asp-tab {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.7rem 1.5rem; border-radius: 12px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  color: #7A8BA8; font-size: 0.88rem; font-weight: 600;
+  cursor: pointer; transition: all 0.25s; white-space: nowrap; flex-shrink: 0;
+}
+.asp-tab:hover { background: rgba(255,255,255,0.07); color: #F0F4FF; }
+.asp-tab.active {
+  background: var(--asp-badge-bg); border-color: var(--asp-accent);
+  color: var(--asp-accent); box-shadow: 0 0 20px var(--asp-glow-sm);
+}
+
+/* ── Content Container ── */
+.asp-content { max-width: 1200px; margin: 0 auto; padding: 0 2rem 4rem; }
+
+/* ── Materials Grid ── */
+.asp-materials-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+.asp-mat-card {
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 16px; padding: 1.5rem; transition: all 0.3s;
+  display: flex; flex-direction: column; gap: 0.8rem;
+  position: relative; overflow: hidden;
+}
+.asp-mat-card:hover {
+  border-color: var(--asp-accent); transform: translateY(-4px);
+  box-shadow: 0 12px 40px var(--asp-glow-sm);
+}
+.asp-mat-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, transparent, var(--asp-accent), transparent);
+  opacity: 0; transition: opacity 0.3s;
+}
+.asp-mat-card:hover::before { opacity: 1; }
+.asp-mat-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  background: var(--asp-badge-bg); display: flex;
+  align-items: center; justify-content: center;
+}
+.asp-mat-title { font-weight: 700; font-size: 0.95rem; color: #F0F4FF; margin: 0; }
+.asp-mat-meta { font-size: 0.75rem; color: #7A8BA8; margin: 0; }
+.asp-mat-tags { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+.asp-mat-tag {
+  padding: 0.15rem 0.5rem; border-radius: 6px; font-size: 0.65rem;
+  font-weight: 600; background: rgba(255,255,255,0.06); color: #94A3B8;
+}
+.asp-mat-tag.subject { background: var(--asp-badge-bg); color: var(--asp-accent); }
+.asp-dl-btn {
+  display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+  padding: 0.6rem; border-radius: 10px; border: 1px solid var(--asp-accent);
+  background: transparent; color: var(--asp-accent);
+  font-weight: 700; font-size: 0.82rem; cursor: pointer; transition: all 0.25s;
+  margin-top: auto;
+}
+.asp-dl-btn:hover {
+  background: var(--asp-accent); color: #000;
+}
+
+/* ── Mock Exam Section ── */
+.asp-exam-hero {
+  background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 20px; padding: 2rem; margin-bottom: 1.5rem;
+  display: flex; align-items: center; gap: 2rem;
+}
+.asp-exam-info { flex: 1; }
+.asp-exam-info h3 { font-size: 1.3rem; font-weight: 800; margin: 0 0 0.5rem; }
+.asp-exam-info p { color: #7A8BA8; font-size: 0.88rem; margin: 0 0 1rem; }
+.asp-exam-meta {
+  display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1.2rem;
+}
+.asp-exam-meta span {
+  font-size: 0.78rem; color: #94A3B8; display: flex; align-items: center; gap: 0.3rem;
+}
+.asp-exam-meta strong { color: var(--asp-accent); }
+.asp-start-btn {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.8rem 2rem; border-radius: 12px; border: none;
+  background: var(--asp-accent); color: #000;
+  font-weight: 800; font-size: 0.95rem; cursor: pointer;
+  transition: all 0.25s; box-shadow: 0 4px 20px var(--asp-glow-sm);
+}
+.asp-start-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px var(--asp-glow-sm); }
+.asp-start-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* ── Past Exams ── */
+.asp-past-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+.asp-past-card {
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 14px; padding: 1.2rem; transition: all 0.25s;
+}
+.asp-past-card:hover { border-color: rgba(255,255,255,0.15); }
+.asp-past-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.8rem; }
+.asp-past-title { font-weight: 700; font-size: 0.9rem; margin: 0; }
+.asp-past-date { font-size: 0.7rem; color: #7A8BA8; margin: 0.2rem 0 0; }
+.asp-score-badge {
+  padding: 0.3rem 0.8rem; border-radius: 8px; font-size: 0.8rem; font-weight: 800;
+}
+.asp-score-badge.high { background: rgba(34,197,94,0.12); color: #22C55E; }
+.asp-score-badge.mid { background: rgba(245,197,24,0.12); color: #F5C518; }
+.asp-score-badge.low { background: rgba(239,68,68,0.12); color: #EF4444; }
+.asp-progress-bar {
+  height: 6px; border-radius: 3px; background: rgba(255,255,255,0.06);
+  overflow: hidden; margin-top: 0.6rem;
+}
+.asp-progress-fill {
+  height: 100%; border-radius: 3px; transition: width 0.8s ease;
+}
+
+/* ── Quiz Interface ── */
+.asp-quiz-container {
+  max-width: 700px; margin: 0 auto;
+}
+.asp-quiz-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 1.5rem; padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.asp-quiz-progress { font-size: 0.85rem; color: #94A3B8; }
+.asp-quiz-timer {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.4rem 1rem; border-radius: 8px;
+  background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
+  color: #EF4444; font-weight: 700; font-size: 0.85rem;
+}
+.asp-question-card {
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px; padding: 2rem; margin-bottom: 1rem;
+}
+.asp-question-num {
+  font-size: 0.72rem; color: var(--asp-accent); font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.8rem;
+}
+.asp-question-text {
+  font-size: 1.1rem; font-weight: 600; line-height: 1.6; margin-bottom: 1.5rem;
+}
+.asp-options { display: flex; flex-direction: column; gap: 0.6rem; }
+.asp-option {
+  display: flex; align-items: center; gap: 0.8rem;
+  padding: 1rem 1.2rem; border-radius: 12px;
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+  cursor: pointer; transition: all 0.2s; font-size: 0.92rem;
+}
+.asp-option:hover { border-color: var(--asp-accent); background: var(--asp-badge-bg); }
+.asp-option.selected { border-color: var(--asp-accent); background: var(--asp-badge-bg); }
+.asp-option.correct { border-color: #22C55E; background: rgba(34,197,94,0.1); }
+.asp-option.wrong { border-color: #EF4444; background: rgba(239,68,68,0.1); }
+.asp-option-letter {
+  width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+  background: rgba(255,255,255,0.06); display: flex;
+  align-items: center; justify-content: center;
+  font-weight: 700; font-size: 0.85rem; color: #94A3B8;
+}
+.asp-option.selected .asp-option-letter { background: var(--asp-accent); color: #000; }
+.asp-option.correct .asp-option-letter { background: #22C55E; color: #000; }
+.asp-option.wrong .asp-option-letter { background: #EF4444; color: #fff; }
+
+.asp-quiz-nav {
+  display: flex; justify-content: space-between; margin-top: 1.5rem;
+}
+.asp-nav-btn {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.7rem 1.5rem; border-radius: 10px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  color: #F0F4FF; font-weight: 600; font-size: 0.85rem;
+  cursor: pointer; transition: all 0.2s;
+}
+.asp-nav-btn:hover { background: rgba(255,255,255,0.1); }
+.asp-nav-btn.submit { background: var(--asp-accent); color: #000; border-color: var(--asp-accent); }
+
+/* ── Results ── */
+.asp-results {
+  text-align: center; padding: 3rem 2rem;
+  background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 24px;
+}
+.asp-results h2 { font-size: 1.8rem; font-weight: 900; margin: 1rem 0 0.5rem; }
+.asp-results-score {
+  font-size: 4rem; font-weight: 900; color: var(--asp-accent);
+  line-height: 1;
+}
+.asp-results-breakdown {
+  display: flex; justify-content: center; gap: 2rem; margin: 2rem 0;
+  flex-wrap: wrap;
+}
+.asp-results-item {
+  text-align: center; padding: 1rem 1.5rem;
+  background: rgba(255,255,255,0.03); border-radius: 12px;
+  min-width: 100px;
+}
+.asp-results-item strong { display: block; font-size: 1.4rem; margin-bottom: 0.2rem; }
+.asp-results-item span { font-size: 0.75rem; color: #7A8BA8; }
+
+/* ── NEET Variables ── */
+.asp-neet {
+  --asp-accent: #22C55E; --asp-glow: rgba(34,197,94,0.3);
+  --asp-glow-sm: rgba(34,197,94,0.15);
+  --asp-badge-bg: rgba(34,197,94,0.08); --asp-badge-border: rgba(34,197,94,0.25);
+}
+/* ── JEE Variables ── */
+.asp-jee {
+  --asp-accent: #818CF8; --asp-glow: rgba(129,140,248,0.3);
+  --asp-glow-sm: rgba(129,140,248,0.15);
+  --asp-badge-bg: rgba(129,140,248,0.08); --asp-badge-border: rgba(129,140,248,0.25);
+}
+
+/* ── Empty State ── */
+.asp-empty {
+  text-align: center; padding: 4rem 2rem; color: #7A8BA8;
+}
+.asp-empty p { margin: 0.5rem 0 0; font-size: 0.9rem; }
+
+/* ── Animations ── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .asp-hero { padding: 5rem 1.5rem 3rem; }
+  .asp-hero h1 { font-size: 2rem; }
+  .asp-exam-hero { flex-direction: column; }
+  .asp-content { padding: 0 1rem 3rem; }
+  .asp-tabs { padding: 0 1rem; gap: 0.4rem; justify-content: flex-start; }
+  .asp-tab { padding: 0.6rem 1rem; font-size: 0.8rem; }
+}

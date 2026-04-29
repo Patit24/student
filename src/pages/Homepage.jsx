@@ -279,7 +279,7 @@ export default function Homepage() {
       <section className="hp-paths">
         <div className="hp-path-grid">
           {/* NEET CARD */}
-          <div className="hp-path-card neet animate-premium">
+          <Link to="/neet" className="hp-path-card neet animate-premium" style={{ textDecoration: 'none', color: 'inherit' }}>
             <img src={neetWatermark} className="hp-path-watermark" alt="DNA Watermark" />
             <div className="hp-path-content">
               <div className="hp-path-badge">Medical Aspirant</div>
@@ -287,22 +287,22 @@ export default function Homepage() {
               <p>Prepare for the most prestigious medical exams with curated study materials and weekly mock tests.</p>
               
               <div className="hp-path-features">
-                <div className="hp-path-feature"><CheckCircle size={18} /> Weekly Mock Exams <span className="coming-soon-tag">Coming Soon</span></div>
-                <div className="hp-path-feature"><CheckCircle size={18} /> Last Minute Suggestions <span className="coming-soon-tag">Coming Soon</span></div>
-                <div className="hp-path-feature"><CheckCircle size={18} /> Continuous Notes <span className="coming-soon-tag">Coming Soon</span></div>
+                <div className="hp-path-feature"><CheckCircle size={18} /> Weekly Mock Exams</div>
+                <div className="hp-path-feature"><CheckCircle size={18} /> NCERT Biology Notes</div>
+                <div className="hp-path-feature"><CheckCircle size={18} /> Instant Results & Analysis</div>
                 <div className="hp-path-feature"><CheckCircle size={18} /> Admin-Verified Content</div>
               </div>
 
               <div className="hp-path-btn-wrap">
                 <div className="glass-path-btn">
-                  <Zap size={20} /> Join the Medical Path
+                  <Zap size={20} /> Explore NEET Path →
                 </div>
               </div>
             </div>
-          </div>
+          </Link>
 
           {/* JEE CARD */}
-          <div className="hp-path-card jee animate-premium">
+          <Link to="/jee" className="hp-path-card jee animate-premium" style={{ textDecoration: 'none', color: 'inherit' }}>
             <img src={jeeWatermark} className="hp-path-watermark" alt="Engineering Watermark" />
             <div className="hp-path-content">
               <div className="hp-path-badge">Engineering Aspirant</div>
@@ -310,19 +310,19 @@ export default function Homepage() {
               <p>Crack JEE Main & Advanced with technical precision and automated exam practice.</p>
               
               <div className="hp-path-features">
-                <div className="hp-path-feature"><CheckCircle size={18} /> Weekly Technical Exams <span className="coming-soon-tag">Coming Soon</span></div>
-                <div className="hp-path-feature"><CheckCircle size={18} /> JEE Advanced Prep Pack <span className="coming-soon-tag">Coming Soon</span></div>
-                <div className="hp-path-feature"><CheckCircle size={18} /> Formula Cheat Sheets <span className="coming-soon-tag">Coming Soon</span></div>
+                <div className="hp-path-feature"><CheckCircle size={18} /> Weekly Technical Exams</div>
+                <div className="hp-path-feature"><CheckCircle size={18} /> JEE Advanced Prep Pack</div>
+                <div className="hp-path-feature"><CheckCircle size={18} /> Formula Cheat Sheets</div>
                 <div className="hp-path-feature"><CheckCircle size={18} /> AI-Powered Analysis</div>
               </div>
 
               <div className="hp-path-btn-wrap">
                 <div className="glass-path-btn">
-                  <Zap size={20} /> Join the Engineering Path
+                  <Zap size={20} /> Explore JEE Path →
                 </div>
               </div>
             </div>
-          </div>
+          </Link>
         </div>
       </section>
 
