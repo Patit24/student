@@ -4,37 +4,11 @@ import {
   BookOpen, FileText, Download, Clock, Trophy, ChevronRight, ChevronLeft,
   Cpu, Zap, Atom, Brain, Play, CheckCircle, XCircle, Timer, ArrowLeft, Settings,
 } from 'lucide-react';
+import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase';
 import './NeetAspirant.css'; /* shared CSS */
 
-/* ── Mock Data ── */
-const JEE_MATERIALS = [
-  { id: 'j1', title: 'Calculus — Differentiation & Integration', subject: 'Mathematics', class: '12th', pages: 250, tag: 'Notes', icon: Brain },
-  { id: 'j2', title: 'Mechanics — Kinematics & Dynamics', subject: 'Physics', class: '11th', pages: 180, tag: 'Notes', icon: Settings },
-  { id: 'j3', title: 'Coordinate Geometry — Complete Guide', subject: 'Mathematics', class: '11th', pages: 140, tag: 'Formula Sheet', icon: Brain },
-  { id: 'j4', title: 'Organic Chemistry — Named Reactions', subject: 'Chemistry', class: '12th', pages: 95, tag: 'Cheat Sheet', icon: Atom },
-  { id: 'j5', title: 'Electromagnetism — Theory & Problems', subject: 'Physics', class: '12th', pages: 210, tag: 'Notes', icon: Zap },
-  { id: 'j6', title: 'Matrices & Determinants — JEE Advanced', subject: 'Mathematics', class: '12th', pages: 80, tag: 'Practice Set', icon: Cpu },
-];
-
-const JEE_QUESTIONS = [
-  { id: 1, question: 'The value of lim(x→0) sin(x)/x is:', options: ['0', '1', '∞', 'Does not exist'], correct: 1 },
-  { id: 2, question: 'If F = ma, what is the SI unit of force?', options: ['Joule', 'Newton', 'Watt', 'Pascal'], correct: 1 },
-  { id: 3, question: 'The integral of 1/x dx is:', options: ['x²/2', 'ln|x| + C', '1/x² + C', 'e^x + C'], correct: 1 },
-  { id: 4, question: 'Which of the following is a vector quantity?', options: ['Speed', 'Mass', 'Velocity', 'Temperature'], correct: 2 },
-  { id: 5, question: 'The hybridization of carbon in methane is:', options: ['sp', 'sp²', 'sp³', 'sp³d'], correct: 2 },
-  { id: 6, question: 'The rank of a 3×3 identity matrix is:', options: ['0', '1', '2', '3'], correct: 3 },
-  { id: 7, question: 'Faraday\'s law is related to:', options: ['Electrostatics', 'Electromagnetic induction', 'Thermodynamics', 'Optics'], correct: 1 },
-  { id: 8, question: 'The derivative of e^x is:', options: ['xe^(x-1)', 'e^x', 'e^(x+1)', 'ln(e^x)'], correct: 1 },
-  { id: 9, question: 'Dimensional formula of work is:', options: ['[ML²T⁻²]', '[MLT⁻²]', '[ML²T⁻³]', '[M²LT⁻²]'], correct: 0 },
-  { id: 10, question: 'Number of pi bonds in ethylene (C₂H₄):', options: ['0', '1', '2', '3'], correct: 1 },
-];
-
-const PAST_EXAMS = [
-  { id: 'pe1', title: 'JEE Mock — Week 12', date: '2026-04-21', score: 78, total: 100, questions: 30 },
-  { id: 'pe2', title: 'JEE Mock — Week 11', date: '2026-04-14', score: 92, total: 100, questions: 30 },
-  { id: 'pe3', title: 'JEE Mock — Week 10', date: '2026-04-07', score: 65, total: 100, questions: 30 },
-  { id: 'pe4', title: 'JEE Mock — Week 9', date: '2026-03-31', score: 88, total: 100, questions: 30 },
-];
+const SUBJECT_ICONS = { Mathematics: Cpu, Physics: Zap, Chemistry: Atom, General: Brain };
 
 export default function JeeAspirant() {
   const [activeTab, setActiveTab] = useState('materials');
@@ -43,6 +17,23 @@ export default function JeeAspirant() {
   const [answers, setAnswers] = useState({});
   const [timer, setTimer] = useState(600);
   const [showAnswer, setShowAnswer] = useState(false);
+  const [selectedExam, setSelectedExam] = useState(null);
+
+  // Firestore data
+  const [materials, setMaterials] = useState([]);
+  const [exams, setExams] = useState([]);
+  const [pastExams, setPastExams] = useState([]); // Will hook up to real results later
+
+  useEffect(() => {
+    const qMat = query(collection(db, 'aspirant_materials'), where('stream', '==', 'jee'), orderBy('created_at', 'desc'));
+    const unsubMat = onSnapshot(qMat, snap => setMaterials(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    const qExam = query(collection(db, 'aspirant_exams'), where('stream', '==', 'jee'), orderBy('created_at', 'desc'));
+    const unsubExam = onSnapshot(qExam, snap => setExams(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    return () => { unsubMat(); unsubExam(); };
+  }, []);
+
+  const activeExam = selectedExam || exams[0];
+  const questions = activeExam?.questions || [];
 
   useEffect(() => {
     if (quizState !== 'active') return;
@@ -56,12 +47,12 @@ export default function JeeAspirant() {
   };
 
   const selectOption = (idx) => { if (!showAnswer) setAnswers(prev => ({ ...prev, [currentQ]: idx })); };
-  const nextQ = () => { if (currentQ < JEE_QUESTIONS.length - 1) { setCurrentQ(c => c + 1); setShowAnswer(false); } };
+  const nextQ = () => { if (currentQ < questions.length - 1) { setCurrentQ(c => c + 1); setShowAnswer(false); } };
   const prevQ = () => { if (currentQ > 0) { setCurrentQ(c => c - 1); setShowAnswer(false); } };
   const finishQuiz = useCallback(() => { setQuizState('results'); }, []);
 
-  const score = Object.entries(answers).filter(([qi, ai]) => JEE_QUESTIONS[qi].correct === ai).length;
-  const pct = Math.round((score / JEE_QUESTIONS.length) * 100);
+  const score = Object.entries(answers).filter(([qi, ai]) => questions[qi]?.correct === ai).length;
+  const pct = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
   const formatTime = (s) => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
 
   const tabs = [
@@ -99,22 +90,26 @@ export default function JeeAspirant() {
         {/* ── Materials ── */}
         {activeTab === 'materials' && (
           <div className="asp-materials-grid" style={{ animation: 'fadeInUp 0.5s ease' }}>
-            {JEE_MATERIALS.map(m => (
-              <div key={m.id} className="asp-mat-card">
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.8rem' }}>
-                  <div className="asp-mat-icon"><m.icon size={22} color="var(--asp-accent)" /></div>
-                  <div style={{ flex: 1 }}>
-                    <p className="asp-mat-title">{m.title}</p>
-                    <p className="asp-mat-meta">{m.pages} pages · Class {m.class}</p>
+            {materials.length === 0 && <p style={{ color: '#7A8BA8', gridColumn: '1 / -1', textAlign: 'center', padding: '2rem' }}>No materials available yet.</p>}
+            {materials.map(m => {
+              const Icon = SUBJECT_ICONS[m.subject] || Brain;
+              return (
+                <div key={m.id} className="asp-mat-card">
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.8rem' }}>
+                    <div className="asp-mat-icon"><Icon size={22} color="var(--asp-accent)" /></div>
+                    <div style={{ flex: 1 }}>
+                      <p className="asp-mat-title">{m.title}</p>
+                      <p className="asp-mat-meta">Class {m.class_name}</p>
+                    </div>
                   </div>
+                  <div className="asp-mat-tags">
+                    <span className="asp-mat-tag subject">{m.subject}</span>
+                    <span className="asp-mat-tag">PDF</span>
+                  </div>
+                  <button className="asp-dl-btn" onClick={() => window.open(m.url, '_blank')}><Download size={16} /> Download PDF</button>
                 </div>
-                <div className="asp-mat-tags">
-                  <span className="asp-mat-tag subject">{m.subject}</span>
-                  <span className="asp-mat-tag">{m.tag}</span>
-                </div>
-                <button className="asp-dl-btn"><Download size={16} /> Download PDF</button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -123,19 +118,30 @@ export default function JeeAspirant() {
           <div style={{ animation: 'fadeInUp 0.5s ease' }}>
             <div className="asp-exam-hero">
               <div className="asp-exam-info">
-                <h3>📋 Weekly Mock Test — Week 13</h3>
-                <p>Test your JEE preparation with this week's PCM mixed mock exam.</p>
+                <h3>📋 {activeExam?.title || 'Weekly Mock Test'}</h3>
+                <p>Test your JEE preparation with this mock exam.</p>
                 <div className="asp-exam-meta">
-                  <span><Clock size={14} /> Duration: <strong>10 min</strong></span>
-                  <span><FileText size={14} /> Questions: <strong>10 MCQs</strong></span>
+                  <span><Clock size={14} /> Duration: <strong>{activeExam ? Math.round(activeExam.duration / 60) : 10} min</strong></span>
+                  <span><FileText size={14} /> Questions: <strong>{questions.length} MCQs</strong></span>
                   <span><Trophy size={14} /> Max Score: <strong>100</strong></span>
                 </div>
-                <button className="asp-start-btn" onClick={startQuiz}><Play size={18} /> Start Mock Exam</button>
+                <button className="asp-start-btn" onClick={startQuiz} disabled={questions.length === 0}>
+                  <Play size={18} /> Start Mock Exam
+                </button>
               </div>
             </div>
             <h4 style={{ fontWeight: 700, marginBottom: '1rem', color: '#94A3B8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>📊 Previous Mock Exams</h4>
+            {exams.length > 1 && (
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+                {exams.map(e => (
+                  <button key={e.id} onClick={() => setSelectedExam(e)} style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: `1px solid ${activeExam?.id === e.id ? 'var(--asp-accent)' : 'rgba(255,255,255,0.1)'}`, background: activeExam?.id === e.id ? 'var(--asp-badge-bg)' : 'transparent', color: activeExam?.id === e.id ? 'var(--asp-accent)' : '#94A3B8', cursor: 'pointer' }}>
+                    {e.title}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="asp-past-grid">
-              {PAST_EXAMS.map(e => {
+              {pastExams.map(e => {
                 const p = Math.round((e.score / e.total) * 100);
                 const cls = p >= 80 ? 'high' : p >= 50 ? 'mid' : 'low';
                 const color = p >= 80 ? '#22C55E' : p >= 50 ? '#F5C518' : '#EF4444';
@@ -162,16 +168,17 @@ export default function JeeAspirant() {
         {activeTab === 'exam' && quizState === 'active' && (
           <div className="asp-quiz-container" style={{ animation: 'fadeInUp 0.4s ease' }}>
             <div className="asp-quiz-header">
-              <span className="asp-quiz-progress">Question {currentQ + 1} of {JEE_QUESTIONS.length}</span>
+              <span className="asp-quiz-progress">Question {currentQ + 1} of {questions.length}</span>
               <div className="asp-quiz-timer"><Timer size={16} /> {formatTime(timer)}</div>
             </div>
-            <div className="asp-question-card">
-              <div className="asp-question-num">Question {currentQ + 1}</div>
-              <div className="asp-question-text">{JEE_QUESTIONS[currentQ].question}</div>
-              <div className="asp-options">
-                {JEE_QUESTIONS[currentQ].options.map((opt, i) => {
-                  const selected = answers[currentQ] === i;
-                  const correct = JEE_QUESTIONS[currentQ].correct === i;
+            {questions.length > 0 && (
+              <div className="asp-question-card">
+                <div className="asp-question-num">Question {currentQ + 1}</div>
+                <div className="asp-question-text">{questions[currentQ].question}</div>
+                <div className="asp-options">
+                  {questions[currentQ].options.map((opt, i) => {
+                    const selected = answers[currentQ] === i;
+                    const correct = questions[currentQ].correct === i;
                   let cls = '';
                   if (showAnswer) { cls = correct ? 'correct' : (selected ? 'wrong' : ''); }
                   else if (selected) { cls = 'selected'; }
@@ -186,12 +193,13 @@ export default function JeeAspirant() {
                 })}
               </div>
             </div>
+            )}
             <div className="asp-quiz-nav">
               <button className="asp-nav-btn" onClick={prevQ} disabled={currentQ === 0}><ChevronLeft size={16} /> Previous</button>
               <button className="asp-nav-btn" onClick={() => setShowAnswer(!showAnswer)} style={{ color: 'var(--asp-accent)' }}>
                 {showAnswer ? 'Hide Answer' : 'Show Answer'}
               </button>
-              {currentQ === JEE_QUESTIONS.length - 1 ? (
+              {currentQ === questions.length - 1 ? (
                 <button className="asp-nav-btn submit" onClick={finishQuiz}>Submit Exam</button>
               ) : (
                 <button className="asp-nav-btn" onClick={nextQ}>Next <ChevronRight size={16} /></button>
@@ -206,11 +214,11 @@ export default function JeeAspirant() {
             <Trophy size={48} color="var(--asp-accent)" />
             <h2>Exam Complete!</h2>
             <div className="asp-results-score">{pct}%</div>
-            <p style={{ color: '#94A3B8', margin: '0.5rem 0 0' }}>{score} out of {JEE_QUESTIONS.length} correct</p>
+            <p style={{ color: '#94A3B8', margin: '0.5rem 0 0' }}>{score} out of {questions.length} correct</p>
             <div className="asp-results-breakdown">
               <div className="asp-results-item"><strong style={{ color: '#22C55E' }}>{score}</strong><span>Correct</span></div>
-              <div className="asp-results-item"><strong style={{ color: '#EF4444' }}>{JEE_QUESTIONS.length - score - (JEE_QUESTIONS.length - Object.keys(answers).length)}</strong><span>Wrong</span></div>
-              <div className="asp-results-item"><strong style={{ color: '#F5C518' }}>{JEE_QUESTIONS.length - Object.keys(answers).length}</strong><span>Skipped</span></div>
+              <div className="asp-results-item"><strong style={{ color: '#EF4444' }}>{questions.length - score - (questions.length - Object.keys(answers).length)}</strong><span>Wrong</span></div>
+              <div className="asp-results-item"><strong style={{ color: '#F5C518' }}>{questions.length - Object.keys(answers).length}</strong><span>Skipped</span></div>
               <div className="asp-results-item"><strong style={{ color: 'var(--asp-accent)' }}>{formatTime(600 - timer)}</strong><span>Time Taken</span></div>
             </div>
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -224,8 +232,11 @@ export default function JeeAspirant() {
         {activeTab === 'results' && (
           <div style={{ animation: 'fadeInUp 0.5s ease' }}>
             <h3 style={{ fontWeight: 800, marginBottom: '1.5rem' }}>📈 Performance History</h3>
-            <div className="asp-past-grid">
-              {PAST_EXAMS.map(e => {
+            {pastExams.length === 0 ? (
+              <div className="asp-empty"><Trophy size={40} style={{ opacity: 0.3 }} /><p>No exam results yet. Take your first mock test!</p></div>
+            ) : (
+              <div className="asp-past-grid">
+                {pastExams.map(e => {
                 const p = Math.round((e.score / e.total) * 100);
                 const cls = p >= 80 ? 'high' : p >= 50 ? 'mid' : 'low';
                 const color = p >= 80 ? '#22C55E' : p >= 50 ? '#F5C518' : '#EF4444';

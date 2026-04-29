@@ -4,45 +4,36 @@ import {
   BookOpen, FileText, Download, Clock, Trophy, ChevronRight, ChevronLeft,
   Microscope, Heart, Atom, Leaf, Brain, Play, CheckCircle, XCircle, Timer, ArrowLeft,
 } from 'lucide-react';
+import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { db } from '../firebase';
 import './NeetAspirant.css';
 
-/* ── Mock Data ── */
-const NEET_MATERIALS = [
-  { id: 'n1', title: 'NCERT Biology — Chapter-wise Notes', subject: 'Biology', class: '11th & 12th', pages: 320, tag: 'Notes', icon: Leaf },
-  { id: 'n2', title: 'Human Physiology — Quick Revision', subject: 'Biology', class: '12th', pages: 85, tag: 'Revision', icon: Heart },
-  { id: 'n3', title: 'Organic Chemistry — Reaction Mechanisms', subject: 'Chemistry', class: '12th', pages: 140, tag: 'Notes', icon: Atom },
-  { id: 'n4', title: 'Physics — Optics & Modern Physics', subject: 'Physics', class: '12th', pages: 110, tag: 'Formula Sheet', icon: Brain },
-  { id: 'n5', title: 'Inorganic Chemistry — Periodic Table Tricks', subject: 'Chemistry', class: '11th', pages: 60, tag: 'Cheat Sheet', icon: Atom },
-  { id: 'n6', title: 'Biology — Ecology & Environment', subject: 'Biology', class: '12th', pages: 75, tag: 'Notes', icon: Leaf },
-];
-
-const NEET_QUESTIONS = [
-  { id: 1, question: 'Which of the following is the powerhouse of the cell?', options: ['Nucleus', 'Mitochondria', 'Ribosome', 'Golgi Body'], correct: 1 },
-  { id: 2, question: 'The pH of human blood is approximately:', options: ['6.4', '7.4', '8.4', '5.4'], correct: 1 },
-  { id: 3, question: 'Which vitamin is synthesized by intestinal bacteria?', options: ['Vitamin A', 'Vitamin B12', 'Vitamin K', 'Vitamin D'], correct: 2 },
-  { id: 4, question: 'Krebs cycle occurs in:', options: ['Cytoplasm', 'Mitochondrial matrix', 'Nucleus', 'ER'], correct: 1 },
-  { id: 5, question: 'The smallest bone in the human body is:', options: ['Stapes', 'Femur', 'Humerus', 'Radius'], correct: 0 },
-  { id: 6, question: 'Which of the following is NOT a greenhouse gas?', options: ['CO₂', 'N₂O', 'O₂', 'CH₄'], correct: 2 },
-  { id: 7, question: 'DNA replication is:', options: ['Conservative', 'Semi-conservative', 'Dispersive', 'Random'], correct: 1 },
-  { id: 8, question: 'The functional unit of kidney is:', options: ['Neuron', 'Nephron', 'Alveoli', 'Hepatocyte'], correct: 1 },
-  { id: 9, question: 'Which blood group is universal donor?', options: ['A', 'B', 'AB', 'O'], correct: 3 },
-  { id: 10, question: 'Photosynthesis occurs in:', options: ['Mitochondria', 'Chloroplast', 'Ribosome', 'Nucleus'], correct: 1 },
-];
-
-const PAST_EXAMS = [
-  { id: 'pe1', title: 'Mock Test — Week 12', date: '2026-04-21', score: 85, total: 100, questions: 50 },
-  { id: 'pe2', title: 'Mock Test — Week 11', date: '2026-04-14', score: 72, total: 100, questions: 50 },
-  { id: 'pe3', title: 'Mock Test — Week 10', date: '2026-04-07', score: 91, total: 100, questions: 50 },
-  { id: 'pe4', title: 'Mock Test — Week 9', date: '2026-03-31', score: 68, total: 100, questions: 50 },
-];
+const SUBJECT_ICONS = { Biology: Leaf, Chemistry: Atom, Physics: Brain, General: Microscope };
 
 export default function NeetAspirant() {
   const [activeTab, setActiveTab] = useState('materials');
-  const [quizState, setQuizState] = useState('idle'); // idle | active | results
+  const [quizState, setQuizState] = useState('idle');
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState({});
-  const [timer, setTimer] = useState(600); // 10 min
+  const [timer, setTimer] = useState(600);
   const [showAnswer, setShowAnswer] = useState(false);
+  const [selectedExam, setSelectedExam] = useState(null);
+
+  // Firestore data
+  const [materials, setMaterials] = useState([]);
+  const [exams, setExams] = useState([]);
+  const [pastExams, setPastExams] = useState([]); // Will hook up to real results later
+
+  useEffect(() => {
+    const qMat = query(collection(db, 'aspirant_materials'), where('stream', '==', 'neet'), orderBy('created_at', 'desc'));
+    const unsubMat = onSnapshot(qMat, snap => setMaterials(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    const qExam = query(collection(db, 'aspirant_exams'), where('stream', '==', 'neet'), orderBy('created_at', 'desc'));
+    const unsubExam = onSnapshot(qExam, snap => setExams(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    return () => { unsubMat(); unsubExam(); };
+  }, []);
+
+  const activeExam = selectedExam || exams[0];
+  const questions = activeExam?.questions || [];
 
   // Timer
   useEffect(() => {
@@ -62,7 +53,7 @@ export default function NeetAspirant() {
   };
 
   const nextQ = () => {
-    if (currentQ < NEET_QUESTIONS.length - 1) { setCurrentQ(c => c + 1); setShowAnswer(false); }
+    if (currentQ < questions.length - 1) { setCurrentQ(c => c + 1); setShowAnswer(false); }
   };
   const prevQ = () => {
     if (currentQ > 0) { setCurrentQ(c => c - 1); setShowAnswer(false); }
@@ -70,8 +61,8 @@ export default function NeetAspirant() {
 
   const finishQuiz = useCallback(() => { setQuizState('results'); }, []);
 
-  const score = Object.entries(answers).filter(([qi, ai]) => NEET_QUESTIONS[qi].correct === ai).length;
-  const pct = Math.round((score / NEET_QUESTIONS.length) * 100);
+  const score = Object.entries(answers).filter(([qi, ai]) => questions[qi]?.correct === ai).length;
+  const pct = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
   const formatTime = (s) => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
 
   const tabs = [
@@ -114,22 +105,26 @@ export default function NeetAspirant() {
         {/* ── Materials Tab ── */}
         {activeTab === 'materials' && (
           <div className="asp-materials-grid" style={{ animation: 'fadeInUp 0.5s ease' }}>
-            {NEET_MATERIALS.map(m => (
-              <div key={m.id} className="asp-mat-card">
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.8rem' }}>
-                  <div className="asp-mat-icon"><m.icon size={22} color="var(--asp-accent)" /></div>
-                  <div style={{ flex: 1 }}>
-                    <p className="asp-mat-title">{m.title}</p>
-                    <p className="asp-mat-meta">{m.pages} pages · Class {m.class}</p>
+            {materials.length === 0 && <p style={{ color: '#7A8BA8', gridColumn: '1 / -1', textAlign: 'center', padding: '2rem' }}>No materials available yet.</p>}
+            {materials.map(m => {
+              const Icon = SUBJECT_ICONS[m.subject] || Microscope;
+              return (
+                <div key={m.id} className="asp-mat-card">
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.8rem' }}>
+                    <div className="asp-mat-icon"><Icon size={22} color="var(--asp-accent)" /></div>
+                    <div style={{ flex: 1 }}>
+                      <p className="asp-mat-title">{m.title}</p>
+                      <p className="asp-mat-meta">Class {m.class_name}</p>
+                    </div>
                   </div>
+                  <div className="asp-mat-tags">
+                    <span className="asp-mat-tag subject">{m.subject}</span>
+                    <span className="asp-mat-tag">PDF</span>
+                  </div>
+                  <button className="asp-dl-btn" onClick={() => window.open(m.url, '_blank')}><Download size={16} /> Download PDF</button>
                 </div>
-                <div className="asp-mat-tags">
-                  <span className="asp-mat-tag subject">{m.subject}</span>
-                  <span className="asp-mat-tag">{m.tag}</span>
-                </div>
-                <button className="asp-dl-btn"><Download size={16} /> Download PDF</button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -138,19 +133,30 @@ export default function NeetAspirant() {
           <div style={{ animation: 'fadeInUp 0.5s ease' }}>
             <div className="asp-exam-hero">
               <div className="asp-exam-info">
-                <h3>📋 Weekly Mock Test — Week 13</h3>
-                <p>Test your NEET preparation with this week's biology-focused mock exam.</p>
+                <h3>📋 {activeExam?.title || 'Weekly Mock Test'}</h3>
+                <p>Test your NEET preparation with this mock exam.</p>
                 <div className="asp-exam-meta">
-                  <span><Clock size={14} /> Duration: <strong>10 min</strong></span>
-                  <span><FileText size={14} /> Questions: <strong>10 MCQs</strong></span>
+                  <span><Clock size={14} /> Duration: <strong>{activeExam ? Math.round(activeExam.duration / 60) : 10} min</strong></span>
+                  <span><FileText size={14} /> Questions: <strong>{questions.length} MCQs</strong></span>
                   <span><Trophy size={14} /> Max Score: <strong>100</strong></span>
                 </div>
-                <button className="asp-start-btn" onClick={startQuiz}><Play size={18} /> Start Mock Exam</button>
+                <button className="asp-start-btn" onClick={startQuiz} disabled={questions.length === 0}>
+                  <Play size={18} /> Start Mock Exam
+                </button>
               </div>
             </div>
             <h4 style={{ fontWeight: 700, marginBottom: '1rem', color: '#94A3B8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>📊 Previous Mock Exams</h4>
+            {exams.length > 1 && (
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+                {exams.map(e => (
+                  <button key={e.id} onClick={() => setSelectedExam(e)} style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: `1px solid ${activeExam?.id === e.id ? 'var(--asp-accent)' : 'rgba(255,255,255,0.1)'}`, background: activeExam?.id === e.id ? 'var(--asp-badge-bg)' : 'transparent', color: activeExam?.id === e.id ? 'var(--asp-accent)' : '#94A3B8', cursor: 'pointer' }}>
+                    {e.title}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="asp-past-grid">
-              {PAST_EXAMS.map(e => {
+              {pastExams.map(e => {
                 const p = Math.round((e.score / e.total) * 100);
                 const cls = p >= 80 ? 'high' : p >= 50 ? 'mid' : 'low';
                 const color = p >= 80 ? '#22C55E' : p >= 50 ? '#F5C518' : '#EF4444';
@@ -177,16 +183,17 @@ export default function NeetAspirant() {
         {activeTab === 'exam' && quizState === 'active' && (
           <div className="asp-quiz-container" style={{ animation: 'fadeInUp 0.4s ease' }}>
             <div className="asp-quiz-header">
-              <span className="asp-quiz-progress">Question {currentQ + 1} of {NEET_QUESTIONS.length}</span>
+              <span className="asp-quiz-progress">Question {currentQ + 1} of {questions.length}</span>
               <div className="asp-quiz-timer"><Timer size={16} /> {formatTime(timer)}</div>
             </div>
-            <div className="asp-question-card">
-              <div className="asp-question-num">Question {currentQ + 1}</div>
-              <div className="asp-question-text">{NEET_QUESTIONS[currentQ].question}</div>
-              <div className="asp-options">
-                {NEET_QUESTIONS[currentQ].options.map((opt, i) => {
-                  const selected = answers[currentQ] === i;
-                  const correct = NEET_QUESTIONS[currentQ].correct === i;
+            {questions.length > 0 && (
+              <div className="asp-question-card">
+                <div className="asp-question-num">Question {currentQ + 1}</div>
+                <div className="asp-question-text">{questions[currentQ].question}</div>
+                <div className="asp-options">
+                  {questions[currentQ].options.map((opt, i) => {
+                    const selected = answers[currentQ] === i;
+                    const correct = questions[currentQ].correct === i;
                   let cls = '';
                   if (showAnswer) { cls = correct ? 'correct' : (selected ? 'wrong' : ''); }
                   else if (selected) { cls = 'selected'; }
@@ -201,12 +208,13 @@ export default function NeetAspirant() {
                 })}
               </div>
             </div>
+            )}
             <div className="asp-quiz-nav">
               <button className="asp-nav-btn" onClick={prevQ} disabled={currentQ === 0}><ChevronLeft size={16} /> Previous</button>
               <button className="asp-nav-btn" onClick={() => setShowAnswer(!showAnswer)} style={{ color: 'var(--asp-accent)' }}>
                 {showAnswer ? 'Hide Answer' : 'Show Answer'}
               </button>
-              {currentQ === NEET_QUESTIONS.length - 1 ? (
+              {currentQ === questions.length - 1 ? (
                 <button className="asp-nav-btn submit" onClick={finishQuiz}>Submit Exam</button>
               ) : (
                 <button className="asp-nav-btn" onClick={nextQ}>Next <ChevronRight size={16} /></button>
@@ -221,11 +229,11 @@ export default function NeetAspirant() {
             <Trophy size={48} color="var(--asp-accent)" />
             <h2>Exam Complete!</h2>
             <div className="asp-results-score">{pct}%</div>
-            <p style={{ color: '#94A3B8', margin: '0.5rem 0 0' }}>{score} out of {NEET_QUESTIONS.length} correct</p>
+            <p style={{ color: '#94A3B8', margin: '0.5rem 0 0' }}>{score} out of {questions.length} correct</p>
             <div className="asp-results-breakdown">
               <div className="asp-results-item"><strong style={{ color: '#22C55E' }}>{score}</strong><span>Correct</span></div>
-              <div className="asp-results-item"><strong style={{ color: '#EF4444' }}>{NEET_QUESTIONS.length - score - (NEET_QUESTIONS.length - Object.keys(answers).length)}</strong><span>Wrong</span></div>
-              <div className="asp-results-item"><strong style={{ color: '#F5C518' }}>{NEET_QUESTIONS.length - Object.keys(answers).length}</strong><span>Skipped</span></div>
+              <div className="asp-results-item"><strong style={{ color: '#EF4444' }}>{questions.length - score - (questions.length - Object.keys(answers).length)}</strong><span>Wrong</span></div>
+              <div className="asp-results-item"><strong style={{ color: '#F5C518' }}>{questions.length - Object.keys(answers).length}</strong><span>Skipped</span></div>
               <div className="asp-results-item"><strong style={{ color: 'var(--asp-accent)' }}>{formatTime(600 - timer)}</strong><span>Time Taken</span></div>
             </div>
             <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -239,11 +247,11 @@ export default function NeetAspirant() {
         {activeTab === 'results' && (
           <div style={{ animation: 'fadeInUp 0.5s ease' }}>
             <h3 style={{ fontWeight: 800, marginBottom: '1.5rem' }}>📈 Performance History</h3>
-            {PAST_EXAMS.length === 0 ? (
+            {pastExams.length === 0 ? (
               <div className="asp-empty"><Trophy size={40} style={{ opacity: 0.3 }} /><p>No exam results yet. Take your first mock test!</p></div>
             ) : (
               <div className="asp-past-grid">
-                {PAST_EXAMS.map(e => {
+                {pastExams.map(e => {
                   const p = Math.round((e.score / e.total) * 100);
                   const cls = p >= 80 ? 'high' : p >= 50 ? 'mid' : 'low';
                   const color = p >= 80 ? '#22C55E' : p >= 50 ? '#F5C518' : '#EF4444';

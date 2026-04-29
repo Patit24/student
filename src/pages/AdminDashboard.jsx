@@ -8,11 +8,11 @@ import {
   Lock, ArrowRight, UserCheck, Upload, Zap, Globe,
   BookOpen, Star, Loader2, FileText, BarChart, Download,
   MessageSquare, Video, CheckSquare, ChevronRight, PackageCheck,
-  TrendingDown, Info, Settings, ShieldAlert, Globe2
+  TrendingDown, Info, Settings, ShieldAlert, Globe2, Microscope, Plus, Brain
 } from 'lucide-react';
 import { subscribeGlobalAssets, uploadGlobalAsset, deleteGlobalAsset, uploadFileToStorage } from '../db.service';
 import { useToast } from '../components/Toast';
-import { collection, query, where, onSnapshot, updateDoc, doc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, updateDoc, doc, deleteDoc, serverTimestamp, addDoc, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
 import AdminBlogManager from '../components/AdminBlogManager';
 import TutorCourseManager from '../components/TutorCourseManager';
@@ -31,6 +31,16 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('tutors'); 
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+
+  // NEET/JEE Aspirant state
+  const [aspirantMaterials, setAspirantMaterials] = useState([]);
+  const [aspirantExams, setAspirantExams] = useState([]);
+  const [aspStream, setAspStream] = useState('neet');
+  const [aspMatTitle, setAspMatTitle] = useState('');
+  const [aspMatSubject, setAspMatSubject] = useState('');
+  const [aspMatClass, setAspMatClass] = useState('12th');
+  const [aspExamTitle, setAspExamTitle] = useState('');
+  const [aspQuestions, setAspQuestions] = useState([{ question: '', options: ['', '', '', ''], correct: 0 }]);
 
   // Search/Filters for Analytics
   const [selectedAnalyticsTutor, setSelectedAnalyticsTutor] = useState(null);
@@ -67,7 +77,15 @@ export default function AdminDashboard() {
     const unsubCourses = onSnapshot(qCourses, snap => {
       setAllCourses(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
-    return () => { unsubAssets(); unsubCourses(); };
+    const qMat = query(collection(db, 'aspirant_materials'), orderBy('created_at', 'desc'));
+    const unsubAspMat = onSnapshot(qMat, snap => {
+      setAspirantMaterials(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+    const qExam = query(collection(db, 'aspirant_exams'), orderBy('created_at', 'desc'));
+    const unsubAspExam = onSnapshot(qExam, snap => {
+      setAspirantExams(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+    return () => { unsubAssets(); unsubCourses(); unsubAspMat(); unsubAspExam(); };
   }, []);
 
   const totalRevenue = tutors.reduce((acc, tutor) => {
@@ -209,6 +227,7 @@ export default function AdminDashboard() {
               <button className={`tab-btn ${activeTab === 'blogs' ? 'active' : ''}`} onClick={() => setActiveTab('blogs')}><FileText size={18} /> Blogs</button>
               <button className={`tab-btn ${activeTab === 'courses' ? 'active' : ''}`} onClick={() => setActiveTab('courses')}><BookOpen size={18} /> Marketplace</button>
               <button className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')}><BarChart size={18} /> Analytics</button>
+              <button className={`tab-btn ${activeTab === 'aspirant' ? 'active' : ''}`} onClick={() => setActiveTab('aspirant')}><Microscope size={18} /> NEET / JEE</button>
             </div>
 
             {/* TAB: Tutors */}
@@ -348,6 +367,121 @@ export default function AdminDashboard() {
                 <Loader2 className="animate-spin mb-4" size={48} />
                 <h3>Module Loading...</h3>
                 <p>This command sub-center is currently being synchronized.</p>
+              </div>
+            )}
+
+            {/* TAB: NEET / JEE Aspirant */}
+            {activeTab === 'aspirant' && (
+              <div className="flex-col gap-8 animate-premium">
+                {/* Stream Selector */}
+                <div className="flex gap-4 mb-4">
+                  <button className={`tab-btn ${aspStream === 'neet' ? 'active' : ''}`} onClick={() => setAspStream('neet')} style={{ background: aspStream === 'neet' ? 'rgba(34,197,94,0.12)' : '', borderColor: aspStream === 'neet' ? '#22C55E' : '', color: aspStream === 'neet' ? '#22C55E' : '' }}><Microscope size={16} /> NEET</button>
+                  <button className={`tab-btn ${aspStream === 'jee' ? 'active' : ''}`} onClick={() => setAspStream('jee')} style={{ background: aspStream === 'jee' ? 'rgba(129,140,248,0.12)' : '', borderColor: aspStream === 'jee' ? '#818CF8' : '', color: aspStream === 'jee' ? '#818CF8' : '' }}><Brain size={16} /> JEE</button>
+                </div>
+
+                {/* Upload Study Material */}
+                <div className="glass-card p-8" style={{ border: `1px solid ${aspStream === 'neet' ? 'rgba(34,197,94,0.25)' : 'rgba(129,140,248,0.25)'}` }}>
+                  <h3 className="flex items-center gap-2 mb-6"><Upload size={20} color={aspStream === 'neet' ? '#22C55E' : '#818CF8'} /> Upload {aspStream.toUpperCase()} Study Material</h3>
+                  <div className="flex gap-4 mb-4 mobile-stack">
+                    <input className="input-field flex-1" placeholder="Material Title" value={aspMatTitle} onChange={e => setAspMatTitle(e.target.value)} />
+                    <input className="input-field" placeholder="Subject (e.g. Biology)" value={aspMatSubject} onChange={e => setAspMatSubject(e.target.value)} style={{ maxWidth: '200px' }} />
+                    <select className="input-field" value={aspMatClass} onChange={e => setAspMatClass(e.target.value)} style={{ maxWidth: '120px' }}>
+                      <option value="11th">11th</option>
+                      <option value="12th">12th</option>
+                      <option value="11th & 12th">Both</option>
+                    </select>
+                  </div>
+                  <input type="file" id={`asp-mat-file-${aspStream}`} hidden onChange={async (e) => {
+                    const file = e.target.files[0]; if (!file || !aspMatTitle.trim()) { toast.error('Enter title & select file'); return; }
+                    setIsUploading(true); setUploadProgress(0);
+                    try {
+                      const url = await uploadFileToStorage(file, `aspirant_${aspStream}`, (pct) => setUploadProgress(pct));
+                      await addDoc(collection(db, 'aspirant_materials'), { title: aspMatTitle.trim(), subject: aspMatSubject.trim() || 'General', class_name: aspMatClass, stream: aspStream, file_name: file.name, size: file.size, url, created_at: serverTimestamp() });
+                      toast.success(`${aspStream.toUpperCase()} material published! 🚀`); setAspMatTitle(''); setAspMatSubject('');
+                    } catch (err) { toast.error('Upload failed: ' + err.message); }
+                    finally { setIsUploading(false); }
+                  }} />
+                  <label htmlFor={`asp-mat-file-${aspStream}`} className="btn-approve flex items-center gap-2 cursor-pointer" style={{ padding: '0.8rem 2rem', display: 'inline-flex' }}>
+                    <Upload size={18} /> Upload PDF
+                  </label>
+                  {isUploading && <div className="mt-4"><div style={{ height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px' }}><div style={{ width: `${uploadProgress}%`, height: '100%', background: aspStream === 'neet' ? '#22C55E' : '#818CF8', transition: 'width 0.3s' }} /></div></div>}
+                </div>
+
+                {/* Existing Materials */}
+                <div className="glass-card p-8">
+                  <h4 className="mb-4" style={{ color: '#94A3B8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>📚 {aspStream.toUpperCase()} Materials ({aspirantMaterials.filter(m => m.stream === aspStream).length})</h4>
+                  {aspirantMaterials.filter(m => m.stream === aspStream).length === 0 ? (
+                    <p style={{ color: '#7A8BA8', textAlign: 'center', padding: '2rem' }}>No materials uploaded yet.</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {aspirantMaterials.filter(m => m.stream === aspStream).map(m => (
+                        <div key={m.id} className="flex justify-between items-center" style={{ padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px' }}>
+                          <div>
+                            <p style={{ margin: 0, fontWeight: 700, color: '#F0F4FF', fontSize: '0.9rem' }}>{m.title}</p>
+                            <p style={{ margin: 0, fontSize: '0.72rem', color: '#7A8BA8' }}>{m.subject} · Class {m.class_name} · {m.file_name}</p>
+                          </div>
+                          <button className="btn-icon" onClick={async () => { await deleteDoc(doc(db, 'aspirant_materials', m.id)); toast.success('Deleted'); }}><Trash2 size={16} /></button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Upload Mock Exam */}
+                <div className="glass-card p-8" style={{ border: `1px solid ${aspStream === 'neet' ? 'rgba(34,197,94,0.25)' : 'rgba(129,140,248,0.25)'}` }}>
+                  <h3 className="flex items-center gap-2 mb-6"><CheckSquare size={20} color={aspStream === 'neet' ? '#22C55E' : '#818CF8'} /> Create {aspStream.toUpperCase()} Mock Exam</h3>
+                  <input className="input-field mb-4" placeholder="Exam Title (e.g. Weekly Mock — Week 14)" value={aspExamTitle} onChange={e => setAspExamTitle(e.target.value)} />
+                  {aspQuestions.map((q, qi) => (
+                    <div key={qi} style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', marginBottom: '0.8rem' }}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span style={{ fontSize: '0.72rem', color: aspStream === 'neet' ? '#22C55E' : '#818CF8', fontWeight: 700 }}>Q{qi + 1}</span>
+                        <input className="input-field flex-1" placeholder="Enter question..." value={q.question} onChange={e => { const nq = [...aspQuestions]; nq[qi].question = e.target.value; setAspQuestions(nq); }} />
+                        {aspQuestions.length > 1 && <button style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer' }} onClick={() => setAspQuestions(aspQuestions.filter((_, i) => i !== qi))}><Trash2 size={14} /></button>}
+                      </div>
+                      <div className="flex gap-2 mobile-stack mb-2">
+                        {q.options.map((opt, oi) => (
+                          <input key={oi} className="input-field flex-1" placeholder={`Option ${String.fromCharCode(65 + oi)}`} value={opt} onChange={e => { const nq = [...aspQuestions]; nq[qi].options[oi] = e.target.value; setAspQuestions(nq); }} style={{ fontSize: '0.82rem' }} />
+                        ))}
+                      </div>
+                      <select className="input-field" value={q.correct} onChange={e => { const nq = [...aspQuestions]; nq[qi].correct = parseInt(e.target.value); setAspQuestions(nq); }} style={{ maxWidth: '200px', fontSize: '0.82rem' }}>
+                        {q.options.map((_, oi) => <option key={oi} value={oi}>Correct: {String.fromCharCode(65 + oi)}</option>)}
+                      </select>
+                    </div>
+                  ))}
+                  <div className="flex gap-4 mt-4">
+                    <button className="btn-approve" style={{ padding: '0.6rem 1.5rem', fontSize: '0.85rem' }} onClick={() => setAspQuestions([...aspQuestions, { question: '', options: ['', '', '', ''], correct: 0 }])}><Plus size={16} /> Add Question</button>
+                    <button className="btn-approve" style={{ padding: '0.6rem 1.5rem', fontSize: '0.85rem', background: aspStream === 'neet' ? 'rgba(34,197,94,0.15)' : 'rgba(129,140,248,0.15)', color: aspStream === 'neet' ? '#22C55E' : '#818CF8' }} onClick={async () => {
+                      if (!aspExamTitle.trim()) { toast.error('Enter exam title'); return; }
+                      const validQ = aspQuestions.filter(q => q.question.trim() && q.options.every(o => o.trim()));
+                      if (validQ.length === 0) { toast.error('Add at least 1 complete question'); return; }
+                      try {
+                        await addDoc(collection(db, 'aspirant_exams'), { title: aspExamTitle.trim(), stream: aspStream, questions: validQ, duration: validQ.length * 60, created_at: serverTimestamp() });
+                        toast.success(`${aspStream.toUpperCase()} exam published with ${validQ.length} questions! ✅`);
+                        setAspExamTitle(''); setAspQuestions([{ question: '', options: ['', '', '', ''], correct: 0 }]);
+                      } catch (err) { toast.error('Failed: ' + err.message); }
+                    }}><Zap size={16} /> Publish Exam</button>
+                  </div>
+                </div>
+
+                {/* Existing Exams */}
+                <div className="glass-card p-8">
+                  <h4 className="mb-4" style={{ color: '#94A3B8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>📋 {aspStream.toUpperCase()} Exams ({aspirantExams.filter(e => e.stream === aspStream).length})</h4>
+                  {aspirantExams.filter(e => e.stream === aspStream).length === 0 ? (
+                    <p style={{ color: '#7A8BA8', textAlign: 'center', padding: '2rem' }}>No exams created yet.</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      {aspirantExams.filter(e => e.stream === aspStream).map(ex => (
+                        <div key={ex.id} className="flex justify-between items-center" style={{ padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px' }}>
+                          <div>
+                            <p style={{ margin: 0, fontWeight: 700, color: '#F0F4FF', fontSize: '0.9rem' }}>{ex.title}</p>
+                            <p style={{ margin: 0, fontSize: '0.72rem', color: '#7A8BA8' }}>{ex.questions?.length || 0} questions · {formatDate(ex.created_at)}</p>
+                          </div>
+                          <button className="btn-icon" onClick={async () => { await deleteDoc(doc(db, 'aspirant_exams', ex.id)); toast.success('Exam deleted'); }}><Trash2 size={16} /></button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
