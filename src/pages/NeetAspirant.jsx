@@ -25,10 +25,16 @@ export default function NeetAspirant() {
   const [pastExams, setPastExams] = useState([]); // Will hook up to real results later
 
   useEffect(() => {
-    const qMat = query(collection(db, 'aspirant_materials'), where('stream', '==', 'neet'), orderBy('created_at', 'desc'));
-    const unsubMat = onSnapshot(qMat, snap => setMaterials(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
-    const qExam = query(collection(db, 'aspirant_exams'), where('stream', '==', 'neet'), orderBy('created_at', 'desc'));
-    const unsubExam = onSnapshot(qExam, snap => setExams(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    const qMat = query(collection(db, 'aspirant_materials'), where('stream', '==', 'neet'));
+    const unsubMat = onSnapshot(qMat, snap => {
+      const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setMaterials(data.sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0)));
+    });
+    const qExam = query(collection(db, 'aspirant_exams'), where('stream', '==', 'neet'));
+    const unsubExam = onSnapshot(qExam, snap => {
+      const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setExams(data.sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0)));
+    });
     return () => { unsubMat(); unsubExam(); };
   }, []);
 
