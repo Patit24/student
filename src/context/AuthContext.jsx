@@ -21,7 +21,7 @@ import {
   signInWithPhoneNumber
 } from 'firebase/auth';
 import {
-  doc, getDoc, setDoc, updateDoc,
+  doc, getDoc, getDocFromCache, setDoc, updateDoc,
   collection, query, where, onSnapshot, serverTimestamp,
 } from 'firebase/firestore';
 
@@ -438,8 +438,17 @@ export function AppProvider({ children }) {
       }
 
       try {
-        const docSnap = await getDoc(doc(db, 'users', user.uid));
-        const profile = docSnap.exists() ? docSnap.data() : {};
+        let docSnap;
+        try {
+          docSnap = await getDoc(doc(db, 'users', user.uid));
+        } catch (offlineErr) {
+          // Fallback to cache when offline
+          console.warn('⚠️ Firestore offline — using cached data');
+          try {
+            docSnap = await getDocFromCache(doc(db, 'users', user.uid));
+          } catch { docSnap = null; }
+        }
+        const profile = docSnap?.exists?.() ? docSnap.data() : {};
         setCurrentUser({ uid: user.uid, email: user.email, ...profile });
 
         // Profile Listener (Reactive to role/enrolled_batches changes)
@@ -447,6 +456,9 @@ export function AppProvider({ children }) {
           if (snap.exists()) {
             setCurrentUser(prev => ({ ...prev, ...snap.data(), uid: user.uid, email: user.email }));
           }
+          setLoading(false);
+        }, (err) => {
+          console.warn('Profile listener error (likely offline):', err.message);
           setLoading(false);
         });
 
@@ -456,6 +468,8 @@ export function AppProvider({ children }) {
 
       } catch (err) {
         console.error('Auth sync error:', err);
+        // Still set user so the app isn't stuck on loading
+        setCurrentUser({ uid: user.uid, email: user.email });
         setLoading(false);
       }
     });
