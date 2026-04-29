@@ -227,7 +227,7 @@ export default function AdminDashboard() {
               <button className={`tab-btn ${activeTab === 'blogs' ? 'active' : ''}`} onClick={() => setActiveTab('blogs')}><FileText size={18} /> Blogs</button>
               <button className={`tab-btn ${activeTab === 'courses' ? 'active' : ''}`} onClick={() => setActiveTab('courses')}><BookOpen size={18} /> Marketplace</button>
               <button className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')}><BarChart size={18} /> Analytics</button>
-              <button className={`tab-btn ${activeTab === 'aspirant' ? 'active' : ''}`} onClick={() => setActiveTab('aspirant')}><Microscope size={18} /> NEET / JEE</button>
+              <button className={`tab-btn ${activeTab === 'aspirant' ? 'active' : ''}`} onClick={() => setActiveTab('aspirant')}><Microscope size={18} /> {'NEET / JEE'}</button>
             </div>
 
             {/* TAB: Tutors */}

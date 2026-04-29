@@ -249,7 +249,7 @@ export default function JeeAspirant() {
                       </div>
                       <span className={`asp-score-badge ${cls}`}>{e.score}%</span>
                     </div>
-                    <p style={{ fontSize: '0.78rem', color: '#7A8BA8', margin: '0.5rem 0' }}>{e.questions} questions · Score: {e.score}/{e.total}</p>
+                    <p style={{ fontSize: '0.78rem', color: '#7A8BA8', margin: '0.5rem 0' }}>{e.questions} questions · Score: {e.score} / {e.total}</p>
                     <div className="asp-progress-bar">
                       <div className="asp-progress-fill" style={{ width: `${p}%`, background: color }} />
                     </div>
@@ -257,9 +257,10 @@ export default function JeeAspirant() {
                 );
               })}
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
+    </div>
     </div>
   );
 }
