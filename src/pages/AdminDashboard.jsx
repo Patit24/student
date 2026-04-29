@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import * as XLSX from 'xlsx';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AuthContext';
 import { 
@@ -180,6 +181,46 @@ export default function AdminDashboard() {
     if (!val) return 'N/A';
     if (val.toDate) return val.toDate().toLocaleDateString();
     return new Date(val).toLocaleDateString();
+  };
+
+  const handleExcelUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+        // Skip header row if needed, assuming: Question, A, B, C, D, Correct
+        const formattedQuestions = data.slice(1).map(row => {
+          if (!row[0]) return null;
+          const options = [row[1], row[2], row[3], row[4]].map(o => String(o || '').trim());
+          const correctLetter = String(row[5] || 'A').toUpperCase().trim();
+          const correctIndex = ['A', 'B', 'C', 'D'].indexOf(correctLetter);
+          
+          return {
+            question: String(row[0]).trim(),
+            options,
+            correct: correctIndex === -1 ? 0 : correctIndex
+          };
+        }).filter(q => q !== null);
+
+        if (formattedQuestions.length > 0) {
+          setAspQuestions(formattedQuestions);
+          toast.success(`Parsed ${formattedQuestions.length} questions from Excel!`);
+        } else {
+          toast.error('No valid questions found in Excel');
+        }
+      } catch (err) {
+        toast.error('Error parsing Excel: ' + err.message);
+      }
+    };
+    reader.readAsBinaryString(file);
   };
 
   return (
@@ -430,6 +471,27 @@ export default function AdminDashboard() {
                 {/* Upload Mock Exam */}
                 <div className="glass-card p-8" style={{ border: `1px solid ${aspStream === 'neet' ? 'rgba(34,197,94,0.25)' : 'rgba(129,140,248,0.25)'}` }}>
                   <h3 className="flex items-center gap-2 mb-6"><CheckSquare size={20} color={aspStream === 'neet' ? '#22C55E' : '#818CF8'} /> Create {aspStream.toUpperCase()} Mock Exam</h3>
+                  
+                  <div className="flex gap-4 mb-6">
+                    <input type="file" id="exam-excel-upload" hidden accept=".xlsx, .xls" onChange={handleExcelUpload} />
+                    <label htmlFor="exam-excel-upload" className="btn-approve flex-1 flex items-center justify-center gap-2 cursor-pointer" style={{ background: 'rgba(255,255,255,0.05)', border: '1px dashed rgba(255,255,255,0.2)', color: '#F0F4FF' }}>
+                      <FileText size={18} /> Bulk Upload via Excel
+                    </label>
+                    <button className="btn-approve" onClick={() => {
+                      const template = [
+                        ['Question', 'Option A', 'Option B', 'Option C', 'Option D', 'Correct (A/B/C/D)'],
+                        ['What is the capital of France?', 'London', 'Paris', 'Berlin', 'Madrid', 'B'],
+                        ['Which planet is known as the Red Planet?', 'Venus', 'Mars', 'Jupiter', 'Saturn', 'B']
+                      ];
+                      const ws = XLSX.utils.aoa_to_sheet(template);
+                      const wb = XLSX.utils.book_new();
+                      XLSX.utils.book_append_sheet(wb, ws, "Template");
+                      XLSX.writeFile(wb, `${aspStream}_exam_template.xlsx`);
+                    }} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#7A8BA8', padding: '0.6rem' }} title="Download Template">
+                      <Download size={16} />
+                    </button>
+                  </div>
+
                   <input className="input-field mb-4" placeholder="Exam Title (e.g. Weekly Mock — Week 14)" value={aspExamTitle} onChange={e => setAspExamTitle(e.target.value)} />
                   {aspQuestions.map((q, qi) => (
                     <div key={qi} style={{ padding: '1rem', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px', marginBottom: '0.8rem' }}>
