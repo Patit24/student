@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Users, Edit3, ArrowRightLeft, AlertTriangle, CheckCircle,
-  Trash2, Phone, Mail, X, Save, ChevronRight, Search, MessageCircle, Calendar,
+  Trash2, Phone, Mail, X, Save, ChevronRight, Search, MessageCircle, Calendar, DollarSign, CreditCard,
 } from 'lucide-react';
 import { useAppContext } from '../context/AuthContext';
 import { useToast } from './Toast';
@@ -30,6 +30,31 @@ function getMonthRange(admissionDate) {
     cursor.setMonth(cursor.getMonth() + 1);
   }
   return months;
+}
+
+function getMonthKeysBetween(startDate, endDate) {
+  const keys = [];
+  let cursor = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+  const end = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+  while (cursor <= end) {
+    keys.push(`${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,'0')}`);
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+  return keys;
+}
+
+function computeBalances(student) {
+  const fee = student.monthly_fee || 2500;
+  const history = student.payment_history || {};
+  const months = getMonthRange(student.admission_date);
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const totalAdvance = student.advance_payments?.reduce((a, p) => a + (p.amount || 0), 0) || 0;
+  const monthsPaidByAdvance = student.advance_payments?.reduce((a, p) => a + (p.covered_months?.length || 0), 0) || 0;
+  const advanceCredit = totalAdvance - (monthsPaidByAdvance * fee);
+  const overdueMonths = months.filter(m => m.key < currentMonthKey && (history[m.key] || 'unpaid') !== 'paid');
+  const overdueBalance = overdueMonths.length * fee;
+  return { creditBalance: Math.max(0, advanceCredit), overdueBalance, overdueCount: overdueMonths.length };
 }
 
 const inputStyle = {
@@ -100,6 +125,8 @@ function PaymentHistoryGrid({ student, tutorName }) {
     toast.success(`${MONTH_NAMES[parseInt(monthKey.split('-')[1]) - 1]} marked as ${newStatus}`);
   }
 
+  const salaryDates = student.salary_dates || {};
+
   return (
     <div>
       <p style={{ ...labelStyle, marginBottom: '0.7rem', fontSize: '0.78rem', color: '#94A3B8' }}>📅 PAYMENT HISTORY</p>
@@ -107,8 +134,9 @@ function PaymentHistoryGrid({ student, tutorName }) {
         {months.map(m => {
           const status = history[m.key] || 'unpaid';
           const isPaid = status === 'paid';
+          const salaryDate = salaryDates[m.key];
           return (
-            <div key={m.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem', flexShrink: 0, minWidth: '60px' }}>
+            <div key={m.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3rem', flexShrink: 0, minWidth: '68px' }}>
               <span style={{ fontSize: '0.65rem', color: '#7A8BA8', fontWeight: 600 }}>{m.label}</span>
               <button
                 onClick={() => toggleMonth(m.key, status)}
@@ -119,21 +147,18 @@ function PaymentHistoryGrid({ student, tutorName }) {
                   padding: '0 3px', transition: 'all 0.3s',
                 }}
               >
-                <div style={{
-                  width: '22px', height: '22px', borderRadius: '50%',
-                  background: isPaid ? '#22C55E' : '#EF4444',
-                  transition: 'all 0.3s', boxShadow: `0 2px 8px ${isPaid ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)'}`,
-                }} />
+                <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: isPaid ? '#22C55E' : '#EF4444', transition: 'all 0.3s', boxShadow: `0 2px 8px ${isPaid ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)'}` }} />
               </button>
               <span style={{ fontSize: '0.6rem', fontWeight: 700, color: isPaid ? '#22C55E' : '#EF4444' }}>
                 {isPaid ? 'Paid' : 'Unpaid'}
               </span>
+              {isPaid && salaryDate && (
+                <span style={{ fontSize: '0.55rem', color: '#94A3B8', textAlign: 'center', lineHeight: 1.2 }}>
+                  {new Date(salaryDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                </span>
+              )}
               {!isPaid && (
-                <button
-                  onClick={() => sendWhatsAppReminder(student, tutorName, m.label)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.1rem', color: '#25D366' }}
-                  title="Send WhatsApp Reminder"
-                >
+                <button onClick={() => sendWhatsAppReminder(student, tutorName, m.label)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.1rem', color: '#25D366' }} title="Send WhatsApp Reminder">
                   <MessageCircle size={14} />
                 </button>
               )}
@@ -155,6 +180,12 @@ function StudentDrawer({ student, batches, onClose, tutorName }) {
   const [monthlyFee, setMonthlyFee] = useState(student.monthly_fee || 2500);
   const [batchId,    setBatchId]    = useState(student.batch_id || '');
   const [saving,     setSaving]     = useState(false);
+  const [showAdvance, setShowAdvance] = useState(false);
+  const [advAmount,   setAdvAmount]   = useState('');
+  const [advStart,    setAdvStart]    = useState('');
+  const [advEnd,      setAdvEnd]      = useState('');
+  const [advSalaryDate, setAdvSalaryDate] = useState(new Date().toISOString().split('T')[0]);
+  const balances = computeBalances(student);
 
   /* write helper */
   async function firestoreUpdate(payload) {
@@ -274,15 +305,90 @@ function StudentDrawer({ student, batches, onClose, tutorName }) {
 
         <hr style={{ borderColor: 'rgba(255,255,255,0.07)', margin: 0 }} />
 
+        {/* ── Balance Cards ── */}
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          {balances.creditBalance > 0 && (
+            <div style={{ flex: 1, padding: '0.7rem', borderRadius: '10px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', textAlign: 'center' }}>
+              <p style={{ fontSize: '0.65rem', color: '#94A3B8', margin: 0, textTransform: 'uppercase', fontWeight: 700 }}>Credit Balance</p>
+              <p style={{ fontSize: '1.2rem', fontWeight: 800, color: '#22C55E', margin: '0.2rem 0 0' }}>₹{balances.creditBalance.toLocaleString()}</p>
+            </div>
+          )}
+          {balances.overdueBalance > 0 && (
+            <div style={{ flex: 1, padding: '0.7rem', borderRadius: '10px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)', textAlign: 'center' }}>
+              <p style={{ fontSize: '0.65rem', color: '#94A3B8', margin: 0, textTransform: 'uppercase', fontWeight: 700 }}>Overdue ({balances.overdueCount} mo)</p>
+              <p style={{ fontSize: '1.2rem', fontWeight: 800, color: '#EF4444', margin: '0.2rem 0 0' }}>₹{balances.overdueBalance.toLocaleString()}</p>
+            </div>
+          )}
+        </div>
+
+        <hr style={{ borderColor: 'rgba(255,255,255,0.07)', margin: 0 }} />
+
         {/* ── Payment Actions ── */}
         <div>
-          <p style={{ ...labelStyle, marginBottom: '0.7rem', fontSize: '0.78rem', color: '#94A3B8' }}>💰 QUICK PAYMENT</p>
+          <p style={{ ...labelStyle, marginBottom: '0.7rem', fontSize: '0.78rem', color: '#94A3B8' }}>💰 PAYMENT ACTIONS</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <button style={{ ...actionBtn('#F5C518'), background: 'rgba(245,197,24,0.08)', border: '1px solid rgba(245,197,24,0.25)' }} onClick={() => setShowAdvance(true)}><DollarSign size={16} /> Record Advance Payment</button>
             <button style={actionBtn('#22C55E')} onClick={() => handleMarkPaid('cash')}><CheckCircle size={16} /> Mark Paid — Cash</button>
             <button style={actionBtn('#818CF8')} onClick={() => handleMarkPaid('digital')}><CheckCircle size={16} /> Mark Paid — Digital / UPI</button>
             <button style={actionBtn('#EF4444')} onClick={handleMarkOverdue}><AlertTriangle size={16} /> Mark as Overdue</button>
           </div>
         </div>
+
+        {/* ── Advance Payment Modal ── */}
+        {showAdvance && (
+          <>
+            <div onClick={() => setShowAdvance(false)} style={{ position: 'fixed', inset: 0, zIndex: 9500, background: 'rgba(0,0,0,0.6)' }} />
+            <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 9501, background: '#0D1425', border: '1px solid rgba(245,197,24,0.2)', borderRadius: '24px', padding: '2rem', width: '90%', maxWidth: '400px', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h3 style={{ margin: 0, color: '#F5C518', fontWeight: 800, fontSize: '1.1rem' }}>💵 Advance Payment</h3>
+                <button onClick={() => setShowAdvance(false)} style={{ background: 'none', border: 'none', color: '#7A8BA8', cursor: 'pointer' }}><X size={20} /></button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
+                <div><label style={labelStyle}>Amount Paid (₹)</label><input style={inputStyle} type="number" value={advAmount} onChange={e => setAdvAmount(e.target.value)} placeholder="e.g. 5000" min="0" /></div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <div style={{ flex: 1 }}><label style={labelStyle}>Coverage Start</label><input style={inputStyle} type="month" value={advStart} onChange={e => setAdvStart(e.target.value)} /></div>
+                  <div style={{ flex: 1 }}><label style={labelStyle}>Coverage End</label><input style={inputStyle} type="month" value={advEnd} onChange={e => setAdvEnd(e.target.value)} /></div>
+                </div>
+                <div><label style={labelStyle}>Salary Date (Date Received)</label><input style={inputStyle} type="date" value={advSalaryDate} onChange={e => setAdvSalaryDate(e.target.value)} /></div>
+                {advAmount && advStart && advEnd && (() => {
+                  const coveredKeys = getMonthKeysBetween(new Date(advStart + '-01'), new Date(advEnd + '-01'));
+                  const fee = student.monthly_fee || 2500;
+                  const totalCost = coveredKeys.length * fee;
+                  const credit = Number(advAmount) - totalCost;
+                  return (
+                    <div style={{ padding: '0.8rem', borderRadius: '10px', background: 'rgba(245,197,24,0.06)', border: '1px solid rgba(245,197,24,0.15)' }}>
+                      <p style={{ fontSize: '0.78rem', color: '#94A3B8', margin: 0 }}>Covers <strong style={{ color: '#F5C518' }}>{coveredKeys.length}</strong> months · Fee: ₹{totalCost.toLocaleString()}</p>
+                      {credit > 0 && <p style={{ fontSize: '0.78rem', color: '#22C55E', margin: '0.3rem 0 0', fontWeight: 700 }}>Credit Balance: +₹{credit.toLocaleString()}</p>}
+                      {credit < 0 && <p style={{ fontSize: '0.78rem', color: '#EF4444', margin: '0.3rem 0 0', fontWeight: 700 }}>Shortfall: ₹{Math.abs(credit).toLocaleString()}</p>}
+                    </div>
+                  );
+                })()}
+                <button
+                  style={{ ...actionBtn('#F5C518'), justifyContent: 'center', background: 'rgba(245,197,24,0.15)', border: '1px solid rgba(245,197,24,0.3)' }}
+                  onClick={async () => {
+                    if (!advAmount || !advStart || !advEnd) { toast.error('Fill all fields'); return; }
+                    const coveredKeys = getMonthKeysBetween(new Date(advStart + '-01'), new Date(advEnd + '-01'));
+                    const newHistory = { ...(student.payment_history || {}) };
+                    const newSalaryDates = { ...(student.salary_dates || {}) };
+                    coveredKeys.forEach(k => { newHistory[k] = 'paid'; newSalaryDates[k] = advSalaryDate; });
+                    const advRecord = { amount: Number(advAmount), covered_months: coveredKeys, salary_date: advSalaryDate, recorded_at: new Date().toISOString() };
+                    const existingAdv = student.advance_payments || [];
+                    const now = new Date();
+                    const curKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+                    const months = getMonthRange(student.admission_date);
+                    const hasPastDue = months.some(m => m.key < curKey && (newHistory[m.key] || 'unpaid') !== 'paid');
+                    const overallStatus = hasPastDue ? 'overdue' : ((newHistory[curKey] || 'unpaid') === 'paid' ? 'paid' : 'unpaid');
+                    const payload = { payment_history: newHistory, salary_dates: newSalaryDates, advance_payments: [...existingAdv, advRecord], payment_status: overallStatus };
+                    setMockStudents(prev => prev.map(s => s.id === student.id ? { ...s, ...payload } : s));
+                    if (!isMockMode && db) { try { await updateDoc(doc(db, 'users', student.id), payload); } catch (e) { console.error(e); } }
+                    toast.success(`Advance ₹${Number(advAmount).toLocaleString()} recorded for ${coveredKeys.length} months ✅`);
+                    setShowAdvance(false); setAdvAmount(''); setAdvStart(''); setAdvEnd('');
+                  }}
+                ><CreditCard size={16} /> Confirm Advance Payment</button>
+              </div>
+            </div>
+          </>
+        )}
 
         <hr style={{ borderColor: 'rgba(255,255,255,0.07)', margin: 0 }} />
 
@@ -370,6 +476,7 @@ export default function StudentManagePanel({ myStudents, myBatches, tutorName })
           {filtered.map(s => {
             const st = statusStyle(s.payment_status);
             const batchName = myBatches.find(b => b.id === s.batch_id)?.name || '—';
+            const bal = computeBalances(s);
             return (
               <div
                 key={s.id}
@@ -389,7 +496,11 @@ export default function StudentManagePanel({ myStudents, myBatches, tutorName })
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontWeight: 600, color: '#F0F4FF', margin: 0, fontSize: '0.9rem' }}>{s.name}</p>
-                  <p style={{ fontSize: '0.72rem', color: '#7A8BA8', margin: 0 }}>{s.phone || s.email} · {batchName}</p>
+                  <p style={{ fontSize: '0.72rem', color: '#7A8BA8', margin: 0 }}>
+                    {s.phone || s.email} · {batchName}
+                    {bal.creditBalance > 0 && <span style={{ color: '#22C55E', marginLeft: '0.4rem' }}>+₹{bal.creditBalance}</span>}
+                    {bal.overdueBalance > 0 && <span style={{ color: '#EF4444', marginLeft: '0.4rem' }}>−₹{bal.overdueBalance}</span>}
+                  </p>
                 </div>
                 <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: '999px', flexShrink: 0, background: st.bg, color: st.color, border: `1px solid ${st.border}` }}>{st.label}</span>
                 <ChevronRight size={16} color="#7A8BA8" style={{ flexShrink: 0 }} />
