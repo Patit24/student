@@ -52,20 +52,48 @@ export default function StudentDoubtSolver({ tutorId, studentId }) {
         setTimeout(async () => {
           let logicSteps = [];
           let finalSolution = "";
+          const qText = userMsg.text.toLowerCase();
 
+          // DYNAMIC LOGIC ENGINE (Mimicking the System Instruction)
           if (userMsg.image) {
+            // Simulated Vision Analysis
             logicSteps = [
-              { title: "Visual Recognition", desc: "Detected a mathematical expression: $f(x) = x^2 - 4x + 4$." },
-              { title: "Concept Mapping", desc: "Identifying quadratic factorization and root finding." },
-              { title: "Logical Deduction", desc: "Recognized as a perfect square: $(a-b)^2 = a^2 - 2ab + b^2$." }
+              { title: "Parsing Image Data", desc: "Detected a visual expression: $f(x) = x^2 - 4x + 4$." },
+              { title: "Mathematical Law", desc: "Applying the Perfect Square Trinomial rule: $(a-b)^2 = a^2 - 2ab + b^2$." }
             ];
             finalSolution = "The expression simplifies to $(x - 2)^2$. The root is $x = 2$.";
-          } else {
+          } else if (qText.includes('+') || qText.includes('-') || qText.includes('*') || qText.includes('/')) {
+            // Basic Arithmetic
             logicSteps = [
-              { title: "Problem Parsing", desc: "Extracted core inquiry from text." },
-              { title: "First Principles", desc: "Applying fundamental laws of physics/chemistry." }
+              { title: "Parsing Arithmetic", desc: `Identified numbers and operators in: "${userMsg.text}"` },
+              { title: "Basic Arithmetic Law", desc: "Applying standard order of operations (BODMAS/PEMDAS)." }
             ];
-            finalSolution = "Based on your query, the logical path is to apply the conservation of energy.";
+            // Simple evaluation simulation
+            try { 
+              const result = eval(userMsg.text.replace(/[^-()\d/*+.]/g, '')); 
+              finalSolution = `The calculated result is $${result}$.`;
+            } catch { finalSolution = "The result depends on the specific numbers provided."; }
+          } else if (qText.includes('atom') || qText.includes('reaction') || qText.includes('chemistry')) {
+            // Chemistry
+            logicSteps = [
+              { title: "Chemical Parsing", desc: "Identified chemical species or atomic structures." },
+              { title: "Chemical Law", desc: "Applying the Law of Definite Proportions or Stoichiometry." }
+            ];
+            finalSolution = "In chemistry, always ensure the molecular structure is stable and electrons are balanced.";
+          } else if (qText.includes('force') || qText.includes('motion') || qText.includes('physics')) {
+            // Physics
+            logicSteps = [
+              { title: "Physical Parameter Parsing", desc: "Extracted forces, mass, or acceleration variables." },
+              { title: "Newton's Laws", desc: "Applying Newton's Second Law: $F = ma$." }
+            ];
+            finalSolution = "The net force is the product of mass and acceleration.";
+          } else {
+            // Default Dynamic Response
+            logicSteps = [
+              { title: "Logic Parsing", desc: "Extracted core inquiry from your question." },
+              { title: "PPR Logical Rule", desc: "Identifying the first-principle law applicable here." }
+            ];
+            finalSolution = "Based on your query, the best path is to break down the variables and solve step-by-step.";
           }
 
           const aiMsg = { role: 'ai', steps: logicSteps, solution: finalSolution, text: finalSolution };
