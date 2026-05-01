@@ -3,13 +3,15 @@ import { Sparkles, Image as ImageIcon, Send, Bot, User, Loader2, History, CheckC
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp, query, where, orderBy, onSnapshot } from 'firebase/firestore';
 import { InlineMath, BlockMath } from 'react-katex';
+import { solveDoubtWithAI } from '../services/aiService';
 import 'katex/dist/katex.min.css';
 import '../pages/StudentDashboard.css';
 
 export default function StudentDoubtSolver({ tutorId, studentId }) {
   const [activeMode, setActiveMode] = useState('chat'); // 'chat' or 'history'
+  const [engine, setEngine] = useState('gemini'); // 'gemini' or 'openai'
   const [messages, setMessages] = useState([
-    { role: 'ai', text: 'Welcome to Logic-Scan! Snap a photo of any math or science problem, and I will help you break down the logic step-by-step.', type: 'welcome' }
+    { role: 'ai', text: 'Welcome to Logic-Scan! I am now connected to real-time Gemini & ChatGPT. Snap a photo of any problem and I will solve it with logic.', type: 'welcome' }
   ]);
   const [historyList, setHistoryList] = useState([]);
   const [input, setInput] = useState('');
@@ -31,13 +33,25 @@ export default function StudentDoubtSolver({ tutorId, studentId }) {
     if (chatRef.current) chatRef.current.scrollTop = chatRef.current.scrollHeight;
   }, [messages, isTyping, scanStep]);
 
+  const fileToBase64 = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (error) => reject(error);
+  });
+
   const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim() && !fileInputRef.current?.files[0]) return;
 
     const userMsg = { role: 'user', text: input, createdAt: new Date() };
     const file = fileInputRef.current?.files[0];
-    if (file) userMsg.image = URL.createObjectURL(file);
+    let imageBase64 = null;
+    
+    if (file) {
+      userMsg.image = URL.createObjectURL(file);
+      imageBase64 = await fileToBase64(file);
+    }
     
     setMessages(prev => [...prev, userMsg]);
     setInput('');
@@ -45,76 +59,39 @@ export default function StudentDoubtSolver({ tutorId, studentId }) {
     
     setScanStep(1); 
     
-    setTimeout(() => {
-      setScanStep(2); 
-      setTimeout(() => {
-        setScanStep(3); 
-        setTimeout(async () => {
-          let logicSteps = [];
-          let finalSolution = "";
-          const qText = userMsg.text.toLowerCase();
+    try {
+      // Real API Call
+      setTimeout(() => setScanStep(2), 600);
+      setTimeout(() => setScanStep(3), 1200);
 
-          // DYNAMIC LOGIC ENGINE (Mimicking the System Instruction)
-          console.log("Logic-Scan Processing:", qText);
+      const response = await solveDoubtWithAI(userMsg.text || "Solve this image", imageBase64, engine);
+      
+      const aiMsg = { 
+        role: 'ai', 
+        steps: response.steps, 
+        solution: response.solution, 
+        text: response.solution,
+        engineUsed: engine
+      };
 
-          if (userMsg.image) {
-            // Simulated Vision Analysis
-            logicSteps = [
-              { title: "Parsing Image Data", desc: "Detected a visual expression: $f(x) = x^2 - 4x + 4$." },
-              { title: "Mathematical Law", desc: "Applying the Perfect Square Trinomial rule: $(a-b)^2 = a^2 - 2ab + b^2$." }
-            ];
-            finalSolution = "The expression simplifies to $(x - 2)^2$. The root is $x = 2$.";
-          } else if (qText.includes('+') || qText.includes('-') || qText.includes('*') || qText.includes('/')) {
-            // Basic Arithmetic
-            logicSteps = [
-              { title: "Parsing Arithmetic", desc: `Identified specific numbers in your request: "${userMsg.text.replace(/[^0-9\+\-\*\/]/g, '')}"` },
-              { title: "Basic Arithmetic Law", desc: "Applying standard order of operations (BODMAS/PEMDAS)." }
-            ];
-            try { 
-              const result = eval(userMsg.text.replace(/[^-()\d/*+.]/g, '')); 
-              finalSolution = `The calculated result for your expression is $${result}$.`;
-            } catch { finalSolution = "I've identified the numbers, but the expression needs to be clearly formatted."; }
-          } else if (qText.includes('atom') || qText.includes('reaction') || qText.includes('chemistry') || qText.includes('molecular')) {
-            // Chemistry
-            logicSteps = [
-              { title: "Chemical Parsing", desc: `Detected chemistry inquiry regarding: "${userMsg.text}"` },
-              { title: "Chemical Law", desc: "Applying the Law of Definite Proportions or Stoichiometry." }
-            ];
-            finalSolution = "In chemistry, the first step is always to balance the equation and check valence electrons.";
-          } else if (qText.includes('force') || qText.includes('motion') || qText.includes('physics') || qText.includes('newton') || qText.includes('law')) {
-            // Physics
-            logicSteps = [
-              { title: "Physical Parameter Parsing", desc: `Extracted physics concepts: "${userMsg.text}"` },
-              { title: "Newton's Laws", desc: qText.includes('3rd') ? "Applying Newton's Third Law: For every action, there is an equal and opposite reaction." : "Applying the relevant Newton's Law of Motion." }
-            ];
-            finalSolution = qText.includes('3rd') ? "This means if Object A exerts a force on Object B, Object B exerts an equal force back." : "In physics, we must analyze the forces acting on the system first.";
-          } else {
-            // Default Dynamic Response
-            logicSteps = [
-              { title: "Logic Parsing", desc: `Analyzing your specific question: "${userMsg.text}"` },
-              { title: "PPR Logical Rule", desc: "Identifying the unique first-principle law applicable to this context." }
-            ];
-            finalSolution = `Regarding "${userMsg.text}", the best approach is to identify the core variables first. Let me know if you want to solve for a specific value.`;
-          }
+      setMessages(prev => [...prev, aiMsg]);
+      setScanStep(0);
 
-          const aiMsg = { role: 'ai', steps: logicSteps, solution: finalSolution, text: finalSolution };
-          setMessages(prev => [...prev, aiMsg]);
-          setScanStep(0);
-
-          try {
-            await addDoc(collection(db, 'doubts'), {
-              studentId,
-              tutorId: tutorId || 'global',
-              question: userMsg.text || 'Image Doubt',
-              imageUrl: userMsg.image || null,
-              response: aiMsg,
-              createdAt: serverTimestamp()
-            });
-          } catch (err) { console.error("History save error:", err); }
-
-        }, 400);
-      }, 500);
-    }, 600);
+      // Save to Firestore History
+      await addDoc(collection(db, 'doubts'), {
+        studentId,
+        tutorId: tutorId || 'global',
+        question: userMsg.text || 'Image Doubt',
+        imageUrl: userMsg.image || null,
+        response: aiMsg,
+        engineUsed: engine,
+        createdAt: serverTimestamp()
+      });
+    } catch (err) {
+      console.error("AI Solve Error:", err);
+      setMessages(prev => [...prev, { role: 'ai', text: `⚠️ Error: ${err.message}. Please check if API Keys are set in .env` }]);
+      setScanStep(0);
+    }
   };
 
   return (
@@ -128,6 +105,10 @@ export default function StudentDoubtSolver({ tutorId, studentId }) {
           <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800 }}>Logic-Scan AI</h3>
         </div>
         <div className="flex gap-2">
+          <select value={engine} onChange={(e) => setEngine(e.target.value)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#F5C518', padding: '0.2rem 0.5rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 800, cursor: 'pointer', outline: 'none' }}>
+            <option value="gemini" style={{ background: '#0D1425' }}>GEMINI 1.5</option>
+            <option value="openai" style={{ background: '#0D1425' }}>GPT-4o</option>
+          </select>
           <button onClick={() => setActiveMode('chat')} style={{ background: activeMode === 'chat' ? 'rgba(245,197,24,0.1)' : 'transparent', border: 'none', color: activeMode === 'chat' ? '#F5C518' : '#64748B', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>SOLVER</button>
           <button onClick={() => setActiveMode('history')} style={{ background: activeMode === 'history' ? 'rgba(245,197,24,0.1)' : 'transparent', border: 'none', color: activeMode === 'history' ? '#F5C518' : '#64748B', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><History size={14} /> HISTORY</button>
         </div>
