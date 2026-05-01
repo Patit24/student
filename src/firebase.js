@@ -10,7 +10,7 @@ import {
   getFirestore,
   doc, setDoc, getDoc, getDocFromCache,
   collection, query, where, getDocs,
-  enableIndexedDbPersistence,
+  initializeFirestore, persistentLocalCache, persistentMultipleTabManager
 } from 'firebase/firestore';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { getDatabase, ref as rtdbRef, set, onValue, push } from 'firebase/database';
@@ -51,17 +51,13 @@ let app, auth, db, storage, rtdb;
 try {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
-  db = getFirestore(app);
-  storage = getStorage(app);
-
-  // Enable offline persistence so the app works without internet
-  enableIndexedDbPersistence(db).catch((err) => {
-    if (err.code === 'failed-precondition') {
-      console.warn('⚠️ Firestore persistence failed: multiple tabs open');
-    } else if (err.code === 'unimplemented') {
-      console.warn('⚠️ Firestore persistence not supported in this browser');
-    }
+  
+  // Use modern initialization with persistentLocalCache to fix the multi-tab and deprecation errors
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache({tabManager: persistentMultipleTabManager()})
   });
+  
+  storage = getStorage(app);
 
   console.log("✅ Firebase core initialized (Auth + Firestore + Storage + Offline)");
 } catch (err) {

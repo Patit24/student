@@ -4,6 +4,8 @@ import OpenAI from "openai";
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const OPENAI_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
+console.log("AI Keys loaded:", { gemini: !!GEMINI_KEY, openai: !!OPENAI_KEY });
+
 const genAI = GEMINI_KEY ? new GoogleGenerativeAI(GEMINI_KEY) : null;
 const openai = OPENAI_KEY ? new OpenAI({ apiKey: OPENAI_KEY, dangerouslyAllowBrowser: true }) : null;
 
