@@ -377,7 +377,7 @@ export default function StudentDashboard() {
             {/* ── TAB: AI Doubt Solver ── */}
             {activeTab === 'ai' && !isRestricted && (
               <div className="sd-animate">
-                <StudentDoubtSolver tutorId={selectedEnrollment?.tutor_id} />
+                <StudentDoubtSolver tutorId={selectedEnrollment?.tutor_id} studentId={currentUser?.uid} />
               </div>
             )}
 

@@ -18,11 +18,13 @@
     "firebase-admin": "^11.11.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
+    "katex": "^0.16.45",
     "lucide-react": "^1.9.0",
     "multer": "^1.4.5-lts.1",
     "razorpay": "^2.9.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "react-katex": "^3.1.0",
     "react-router-dom": "^7.14.1",
     "xlsx": "^0.18.5"
   },
