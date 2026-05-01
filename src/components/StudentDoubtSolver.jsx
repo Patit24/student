@@ -55,6 +55,8 @@ export default function StudentDoubtSolver({ tutorId, studentId }) {
           const qText = userMsg.text.toLowerCase();
 
           // DYNAMIC LOGIC ENGINE (Mimicking the System Instruction)
+          console.log("Logic-Scan Processing:", qText);
+
           if (userMsg.image) {
             // Simulated Vision Analysis
             logicSteps = [
@@ -65,35 +67,34 @@ export default function StudentDoubtSolver({ tutorId, studentId }) {
           } else if (qText.includes('+') || qText.includes('-') || qText.includes('*') || qText.includes('/')) {
             // Basic Arithmetic
             logicSteps = [
-              { title: "Parsing Arithmetic", desc: `Identified numbers and operators in: "${userMsg.text}"` },
+              { title: "Parsing Arithmetic", desc: `Identified specific numbers in your request: "${userMsg.text.replace(/[^0-9\+\-\*\/]/g, '')}"` },
               { title: "Basic Arithmetic Law", desc: "Applying standard order of operations (BODMAS/PEMDAS)." }
             ];
-            // Simple evaluation simulation
             try { 
               const result = eval(userMsg.text.replace(/[^-()\d/*+.]/g, '')); 
-              finalSolution = `The calculated result is $${result}$.`;
-            } catch { finalSolution = "The result depends on the specific numbers provided."; }
-          } else if (qText.includes('atom') || qText.includes('reaction') || qText.includes('chemistry')) {
+              finalSolution = `The calculated result for your expression is $${result}$.`;
+            } catch { finalSolution = "I've identified the numbers, but the expression needs to be clearly formatted."; }
+          } else if (qText.includes('atom') || qText.includes('reaction') || qText.includes('chemistry') || qText.includes('molecular')) {
             // Chemistry
             logicSteps = [
-              { title: "Chemical Parsing", desc: "Identified chemical species or atomic structures." },
+              { title: "Chemical Parsing", desc: `Detected chemistry inquiry regarding: "${userMsg.text}"` },
               { title: "Chemical Law", desc: "Applying the Law of Definite Proportions or Stoichiometry." }
             ];
-            finalSolution = "In chemistry, always ensure the molecular structure is stable and electrons are balanced.";
-          } else if (qText.includes('force') || qText.includes('motion') || qText.includes('physics')) {
+            finalSolution = "In chemistry, the first step is always to balance the equation and check valence electrons.";
+          } else if (qText.includes('force') || qText.includes('motion') || qText.includes('physics') || qText.includes('newton') || qText.includes('law')) {
             // Physics
             logicSteps = [
-              { title: "Physical Parameter Parsing", desc: "Extracted forces, mass, or acceleration variables." },
-              { title: "Newton's Laws", desc: "Applying Newton's Second Law: $F = ma$." }
+              { title: "Physical Parameter Parsing", desc: `Extracted physics concepts: "${userMsg.text}"` },
+              { title: "Newton's Laws", desc: qText.includes('3rd') ? "Applying Newton's Third Law: For every action, there is an equal and opposite reaction." : "Applying the relevant Newton's Law of Motion." }
             ];
-            finalSolution = "The net force is the product of mass and acceleration.";
+            finalSolution = qText.includes('3rd') ? "This means if Object A exerts a force on Object B, Object B exerts an equal force back." : "In physics, we must analyze the forces acting on the system first.";
           } else {
             // Default Dynamic Response
             logicSteps = [
-              { title: "Logic Parsing", desc: "Extracted core inquiry from your question." },
-              { title: "PPR Logical Rule", desc: "Identifying the first-principle law applicable here." }
+              { title: "Logic Parsing", desc: `Analyzing your specific question: "${userMsg.text}"` },
+              { title: "PPR Logical Rule", desc: "Identifying the unique first-principle law applicable to this context." }
             ];
-            finalSolution = "Based on your query, the best path is to break down the variables and solve step-by-step.";
+            finalSolution = `Regarding "${userMsg.text}", the best approach is to identify the core variables first. Let me know if you want to solve for a specific value.`;
           }
 
           const aiMsg = { role: 'ai', steps: logicSteps, solution: finalSolution, text: finalSolution };
