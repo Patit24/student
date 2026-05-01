@@ -184,6 +184,7 @@ export function AppProvider({ children }) {
         uid: newId, phone, role, name, is_verified: false, email,
         subscription_status: role === 'tutor' ? 'inactive' : 'active',
         subscription_tier: null,
+        trial_used: false,
       };
       if (role === 'tutor') {
         setMockTutors(prev => [...prev, { id: newId, phone, name, role, email, subscription_status: 'inactive', subscription_tier: null, branding_color: '#4F46E5' }]);
@@ -202,6 +203,7 @@ export function AppProvider({ children }) {
       is_verified: false,
       createdAt: new Date(),
       subscription_status: role === 'tutor' ? 'inactive' : 'active',
+      trial_used: false,
     };
     await setDoc(doc(db, 'users', userCredential.user.uid), profile);
     const merged = { ...userCredential.user, uid: userCredential.user.uid, ...profile };

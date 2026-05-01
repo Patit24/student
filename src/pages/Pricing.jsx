@@ -83,9 +83,39 @@ export default function Pricing() {
 
   const handleChoosePlan = (plan) => {
     if (!currentUser) return navigate('/login');
+    
+    // If tutor has never used a trial, they can activate it
+    if (currentUser.role === 'tutor' && !currentUser.trial_used) {
+      setUpiModal({ show: true, plan, isTrial: true });
+      return;
+    }
+
     if (plan.id === 'flex' && currentUser.subscription_tier === 'flex') return;
-    setUpiModal({ show: true, plan });
+    setUpiModal({ show: true, plan, isTrial: false });
     setTxId('');
+  };
+
+  const handleConfirmTrial = async () => {
+    setPaying(true);
+    try {
+      const plan = upiModal.plan;
+      if (!isMockMode && db && currentUser?.uid) {
+        await updateDoc(doc(db, 'users', currentUser.uid), {
+          subscription_tier: plan.id,
+          subscription_status: 'active',
+          trial_used: true,
+          trial_activated_at: serverTimestamp(),
+          trial_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+        });
+      }
+      setSuccess(true);
+      toast.success(`🎉 ${plan.label} Trial Activated! Enjoy 30 days of free premium access.`);
+      setTimeout(() => navigate('/tutor'), 2000);
+    } catch (err) {
+      toast.error('Failed to activate trial: ' + err.message);
+    } finally {
+      setPaying(false);
+    }
   };
 
   const handleConfirmPayment = async () => {
@@ -148,6 +178,29 @@ export default function Pricing() {
       </header>
 
       <div className="pr-grid">
+        {/* FREE TRIAL BANNER */}
+        <div className="animate-premium" style={{ 
+          gridColumn: '1 / -1',
+          background: 'linear-gradient(90deg, #F5C518 0%, #FFD700 100%)', 
+          borderRadius: '24px', 
+          padding: '2rem', 
+          textAlign: 'center',
+          boxShadow: '0 10px 40px rgba(245, 197, 24, 0.2)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column',
+          gap: '0.5rem',
+          color: '#000',
+          marginBottom: '2rem'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+            <Sparkles size={32} />
+            <h2 style={{ margin: 0, fontWeight: 900, fontSize: '1.8rem', letterSpacing: '-0.8px' }}>1 MONTH FREE FOR ALL TUTORS!</h2>
+          </div>
+          <p style={{ margin: 0, opacity: 0.8, fontWeight: 700, fontSize: '1.1rem' }}>Get full access to any growth plan absolutely free for your first 30 days.</p>
+        </div>
+
         {PLANS.map((plan) => {
           const Icon = plan.icon;
           const isCurrent = currentUser?.subscription_tier === plan.id;
@@ -168,6 +221,10 @@ export default function Pricing() {
                   <span className="pr-period">{plan.period}</span>
                 </div>
                 <p className="pr-tagline">{plan.tagline}</p>
+                <div style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#22C55E', fontSize: '0.75rem', fontWeight: 800, padding: '6px 12px', borderRadius: '99px', display: 'inline-block', marginTop: '1rem' }}>
+                   🎁 FIRST 30 DAYS FREE
+                </div>
+
               </div>
 
               <ul className="pr-features">
@@ -199,35 +256,55 @@ export default function Pricing() {
             <button className="pr-close" onClick={() => setUpiModal({ show: false, plan: null })}><X size={24} /></button>
 
             <div className="pr-modal-head">
-              <div className="pr-modal-icon"><Smartphone size={32} /></div>
-              <h3>Complete Payment</h3>
-              <p>Upgrade to <strong>{upiModal.plan?.label}</strong> — ₹{upiAmount.toLocaleString()}{upiModal.plan?.period}</p>
+              <div className="pr-modal-icon">{upiModal.isTrial ? <Sparkles size={32} /> : <Smartphone size={32} />}</div>
+              <h3>{upiModal.isTrial ? 'Activate Free Trial' : 'Complete Payment'}</h3>
+              <p>
+                {upiModal.isTrial 
+                  ? `Get 30 days of ${upiModal.plan?.label} features for FREE.` 
+                  : `Upgrade to ${upiModal.plan?.label} — ₹${upiAmount.toLocaleString()}${upiModal.plan?.period}`}
+              </p>
             </div>
 
-            <div className="pr-qr-wrap">
-              <img src={`https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${encodeURIComponent(upiUrl)}&choe=UTF-8`} alt="QR" />
-              <div className="pr-qr-border"></div>
-            </div>
+            {upiModal.isTrial ? (
+              <div style={{ padding: '1rem 0', textAlign: 'center' }}>
+                <div style={{ background: 'rgba(34, 197, 94, 0.1)', color: '#22C55E', padding: '1.5rem', borderRadius: '16px', marginBottom: '1.5rem' }}>
+                  <CheckCircle size={40} style={{ marginBottom: '1rem' }} />
+                  <h4 style={{ margin: 0, fontSize: '1.2rem' }}>Ready to Scale?</h4>
+                  <p style={{ margin: '0.5rem 0 0', opacity: 0.8, fontSize: '0.9rem' }}>You won't be charged for the first 30 days. You can cancel or change plans anytime.</p>
+                </div>
+                <button className="pr-btn pr-btn-gold pr-full" onClick={handleConfirmTrial} disabled={paying}>
+                  {paying ? 'Activating...' : 'Start My 30-Day Free Trial'}
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="pr-qr-wrap">
+                  <img src={`https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${encodeURIComponent(upiUrl)}&choe=UTF-8`} alt="QR" />
+                  <div className="pr-qr-border"></div>
+                </div>
 
-            <div className="pr-pay-details">
-              <div className="pr-detail"><span>UPI ID</span><span className="pr-val">{MY_UPI_ID}</span></div>
-              <div className="pr-detail"><span>Amount</span><span className="pr-val pr-hl">₹{upiAmount.toLocaleString()}</span></div>
-              <div className="pr-detail"><span>Plan</span><span className="pr-val">{upiModal.plan?.label} ({upiModal.plan?.period?.replace('/', '').trim()})</span></div>
-            </div>
+                <div className="pr-pay-details">
+                  <div className="pr-detail"><span>UPI ID</span><span className="pr-val">{MY_UPI_ID}</span></div>
+                  <div className="pr-detail"><span>Amount</span><span className="pr-val pr-hl">₹{upiAmount.toLocaleString()}</span></div>
+                  <div className="pr-detail"><span>Plan</span><span className="pr-val">{upiModal.plan?.label} ({upiModal.plan?.period?.replace('/', '').trim()})</span></div>
+                </div>
 
-            <a href={upiUrl} className="pr-btn pr-btn-gold pr-full" style={{ textDecoration: 'none', marginBottom: '1.5rem' }}>
-              Open UPI App (GPay / PhonePe)
-            </a>
+                <a href={upiUrl} className="pr-btn pr-btn-gold pr-full" style={{ textDecoration: 'none', marginBottom: '1.5rem' }}>
+                  Open UPI App (GPay / PhonePe)
+                </a>
 
-            <div className="pr-utr-box">
-              <label><Upload size={14} /> Enter Transaction ID (UTR)</label>
-              <input type="text" placeholder="12-digit reference number" value={txId} onChange={e => setTxId(e.target.value)} />
-              <p className="pr-hint">Required for manual verification by admin</p>
-            </div>
+                <div className="pr-utr-box">
+                  <label><Upload size={14} /> Enter Transaction ID (UTR)</label>
+                  <input type="text" placeholder="12-digit reference number" value={txId} onChange={e => setTxId(e.target.value)} />
+                  <p className="pr-hint">Required for manual verification by admin</p>
+                </div>
 
-            <button className="pr-btn pr-btn-gold pr-full" onClick={handleConfirmPayment} disabled={paying}>
-              {paying ? 'Submitting...' : 'Submit Payment Proof'}
-            </button>
+                <button className="pr-btn pr-btn-gold pr-full" onClick={handleConfirmPayment} disabled={paying}>
+                  {paying ? 'Submitting...' : 'Submit Payment Proof'}
+                </button>
+              </>
+            )}
+
           </div>
         </div>
       )}
