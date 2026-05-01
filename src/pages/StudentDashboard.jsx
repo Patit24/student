@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppContext } from '../context/AuthContext';
-import { Play, Download, MessageSquare, FileText, Shield, Calendar as CalendarIcon, CheckCircle, CreditCard, AlertTriangle, LogOut, Users, Video, Package, Eye, EyeOff, Lock, ChevronRight, XCircle, Activity, TrendingUp, BookOpen, Star, Zap } from 'lucide-react';
+import { Play, Download, MessageSquare, FileText, Shield, Calendar as CalendarIcon, CheckCircle, CreditCard, AlertTriangle, LogOut, Users, Video, Package, Eye, EyeOff, Lock, ChevronRight, XCircle, Activity, TrendingUp, BookOpen, Star, Zap, Sparkles } from 'lucide-react';
 import StudentMaterialsPanel from '../components/StudentMaterialsPanel';
+import StudentDoubtSolver from '../components/StudentDoubtSolver';
 import { subscribeGlobalAssets } from '../db.service';
 import { useToast } from '../components/Toast';
 import './StudentDashboard.css';
@@ -255,6 +256,7 @@ export default function StudentDashboard() {
                 { id: 'overview', icon: <Activity size={16} />, label: 'Overview' },
                 { id: 'live', icon: <Video size={16} />, label: 'Live Class' },
                 { id: 'materials', icon: <BookOpen size={16} />, label: 'Library' },
+                { id: 'ai', icon: <Sparkles size={16} />, label: 'AI Doubt Solver' },
                 { id: 'payments', icon: <CreditCard size={16} />, label: 'Fees' },
               ].map(tab => (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`sd-tab ${activeTab === tab.id ? 'active' : ''}`}>
@@ -369,6 +371,13 @@ export default function StudentDashboard() {
                     <CreditCard size={18} /> Get Bank & UPI Details
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* ── TAB: AI Doubt Solver ── */}
+            {activeTab === 'ai' && !isRestricted && (
+              <div className="sd-animate">
+                <StudentDoubtSolver tutorId={selectedEnrollment?.tutor_id} />
               </div>
             )}
 
