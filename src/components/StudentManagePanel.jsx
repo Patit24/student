@@ -100,14 +100,24 @@ function PaymentHistoryGrid({ student, tutorName }) {
     const newHistory = { ...history };
 
     if (newStatus === 'paid') {
+      const today = new Date().toISOString();
+      const newSalaryDates = { ...(student.salary_dates || {}) };
       // Mark this month AND all previous months as paid
       months.forEach(m => {
-        if (m.key <= monthKey) newHistory[m.key] = 'paid';
+        if (m.key <= monthKey) {
+          newHistory[m.key] = 'paid';
+          if (!newSalaryDates[m.key]) newSalaryDates[m.key] = today;
+        }
       });
+      newHistory.salary_dates = newSalaryDates; // Temporary storage for payload construction
     } else {
       newHistory[monthKey] = 'unpaid';
     }
     
+    // Extract salary_dates if we updated them
+    const updatedSalaryDates = newStatus === 'paid' ? newHistory.salary_dates : (student.salary_dates || {});
+    if (newStatus === 'paid') delete newHistory.salary_dates;
+
     // Overall status only cares about the CURRENT month
     const now = new Date();
     const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
@@ -116,7 +126,11 @@ function PaymentHistoryGrid({ student, tutorName }) {
     const hasPastDue = months.some(m => m.key < currentMonthKey && (newHistory[m.key] || 'unpaid') !== 'paid');
     const overallStatus = hasPastDue ? 'overdue' : currentMonthStatus;
 
-    const payload = { payment_history: newHistory, payment_status: overallStatus };
+    const payload = { 
+      payment_history: newHistory, 
+      payment_status: overallStatus,
+      salary_dates: updatedSalaryDates
+    };
     setMockStudents(prev => prev.map(s => s.id === student.id ? { ...s, ...payload } : s));
     if (!isMockMode && db) {
       try { await updateDoc(doc(db, 'users', student.id), payload); }

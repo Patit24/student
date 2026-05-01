@@ -343,13 +343,68 @@ export function AppProvider({ children }) {
 
   const updatePaymentStatus = async (studentId, method = 'cash') => {
     const today   = new Date();
+    const curKey  = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
     const nextDue = new Date(today.getFullYear(), today.getMonth() + 1, 5).toISOString().split('T')[0];
-    const payload = { payment_status: 'paid', payment_method: method, outstanding_balance: 0, payment_due_date: nextDue, paid_at: today.toISOString() };
-    setMockStudents(prev => prev.map(s => s.id === studentId ? { ...s, ...payload } : s));
+    
+    setMockStudents(prev => prev.map(s => {
+      if (s.id !== studentId) return s;
+      
+      const newHistory = { ...(s.payment_history || {}) };
+      const newSalaryDates = { ...(s.salary_dates || {}) };
+      
+      // Calculate months to mark as paid (from admission or Jan 1st of current year)
+      const start = s.admission_date ? new Date(s.admission_date) : new Date(today.getFullYear(), 0, 1);
+      let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+      const end = new Date(today.getFullYear(), today.getMonth(), 1);
+      
+      while (cursor <= end) {
+        const mKey = `${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,'0')}`;
+        newHistory[mKey] = 'paid';
+        if (!newSalaryDates[mKey]) newSalaryDates[mKey] = today.toISOString();
+        cursor.setMonth(cursor.getMonth() + 1);
+      }
+
+      const payload = { 
+        payment_status: 'paid', 
+        payment_method: method, 
+        outstanding_balance: 0, 
+        payment_due_date: nextDue, 
+        paid_at: today.toISOString(),
+        payment_history: newHistory,
+        salary_dates: newSalaryDates
+      };
+      
+      // Real DB update inside the map is a bit risky but we have a guard below
+      return { ...s, ...payload };
+    }));
+
     if (!isMockMode && db && studentId) {
       try {
-        const { markStudentPaid } = await import('../db.service');
-        await markStudentPaid(studentId, method);
+        const sObj = mockStudents.find(s => s.id === studentId);
+        if (sObj) {
+          // Re-calculate payload for Firestore
+          const newHistory = { ...(sObj.payment_history || {}) };
+          const newSalaryDates = { ...(sObj.salary_dates || {}) };
+          const start = sObj.admission_date ? new Date(sObj.admission_date) : new Date(today.getFullYear(), 0, 1);
+          let cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+          const end = new Date(today.getFullYear(), today.getMonth(), 1);
+          while (cursor <= end) {
+            const mKey = `${cursor.getFullYear()}-${String(cursor.getMonth()+1).padStart(2,'0')}`;
+            newHistory[mKey] = 'paid';
+            if (!newSalaryDates[mKey]) newSalaryDates[mKey] = today.toISOString();
+            cursor.setMonth(cursor.getMonth() + 1);
+          }
+          const payload = { 
+            payment_status: 'paid', 
+            payment_method: method, 
+            outstanding_balance: 0, 
+            payment_due_date: nextDue, 
+            paid_at: today.toISOString(),
+            payment_history: newHistory,
+            salary_dates: newSalaryDates
+          };
+          await updateDoc(doc(db, 'users', studentId), payload);
+        }
       } catch (err) { console.error('Payment update failed:', err); }
     }
   };
