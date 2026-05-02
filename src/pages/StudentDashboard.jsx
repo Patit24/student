@@ -344,7 +344,7 @@ export default function StudentDashboard() {
                     <h3 className="flex items-center gap-2 mb-6" style={{ fontWeight: 800 }}><ClipboardList size={20} color="#F5C518" /> My Assessments</h3>
                     
                     <div className="flex-col gap-4">
-                      {mockExams.filter(e => e.batchId === selectedEnrollment?.batch_id).map(exam => {
+                      {mockExams.filter(e => e.batchId === selectedEnrollment?.batch_id || e.batch_id === selectedEnrollment?.batch_id).map(exam => {
                         const submission = mockSubmissions.find(s => s.exam_id === exam.id && s.student_id === currentUser.uid);
                         return (
                           <div key={exam.id} className="sd-notice-item flex justify-between items-center" style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem' }}>

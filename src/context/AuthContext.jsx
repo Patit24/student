@@ -507,6 +507,8 @@ export function AppProvider({ children }) {
         setMockMaterials([]);
         setMockSessions([]);
         setMockNotices([]);
+        setMockExams([]);
+        setMockSubmissions([]);
         setPurchasedAssets([]);
         setLoading(false);
         return;
@@ -646,7 +648,7 @@ export function AppProvider({ children }) {
       if (unsubExams) unsubExams();
       if (unsubSubmissions) unsubSubmissions();
     };
-  }, [isMockMode, currentUser?.uid, JSON.stringify(currentUser?.enrolled_batches), currentUser?.batch_id]);
+  }, [isMockMode, currentUser?.uid, currentUser?.role, JSON.stringify(currentUser?.enrolled_batches), currentUser?.batch_id]);
 
   // ── Global Tutor List Listener (Public) ──
   useEffect(() => {
