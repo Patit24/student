@@ -560,7 +560,7 @@ export function AppProvider({ children }) {
   useEffect(() => {
     if (isMockMode || !currentUser || !currentUser.uid) return;
 
-    let unsubMaterials, unsubSessions, unsubNotices, unsubStudents, unsubBatches;
+    let unsubMaterials, unsubSessions, unsubNotices, unsubStudents, unsubBatches, unsubExams, unsubSubmissions;
 
     if (currentUser.role === 'tutor') {
       unsubBatches = onSnapshot(
