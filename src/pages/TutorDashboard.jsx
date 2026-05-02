@@ -42,7 +42,7 @@ const PLAN_LABELS = {
 };
 
 function ExamResultsPanel({ tutorId, myBatches, myStudents }) {
-  const { mockExams, setMockExams, mockSubmissions, setMockSubmissions } = useAppContext();
+  const { mockExams, setMockExams, mockSubmissions, setMockSubmissions, isMockMode } = useAppContext();
   const [view, setView] = useState('list'); // 'list' | 'create' | 'smart-upload' | 'draft-review' | 'results'
   const [selectedExam, setSelectedExam] = useState(null);
   const [parsedDraft, setParsedDraft] = useState(null);
@@ -62,13 +62,22 @@ function ExamResultsPanel({ tutorId, myBatches, myStudents }) {
     setView('draft-review');
   };
 
-  const handlePublish = (exam, asDraft) => {
-    const finalExam = { ...exam, tutorId };
-    setMockExams(prev => [...prev, finalExam]);
-    if (asDraft) {
-      alert(`Draft "${exam.title}" saved. Students cannot see it yet.`);
+  const handlePublish = async (exam, asDraft) => {
+    const finalExam = { ...exam, tutorId, is_draft: !!asDraft };
+    
+    if (isMockMode) {
+      setMockExams(prev => [...prev, { ...finalExam, id: `exam-${Date.now()}` }]);
+      if (asDraft) alert(`Draft "${exam.title}" saved (Mock Mode).`);
+      else alert(`Exam "${exam.title}" published (Mock Mode)!`);
     } else {
-      alert(`Exam "${exam.title}" published! A notification has been sent to all students in the batch.`);
+      try {
+        const { createExam } = await import('../db.service');
+        await createExam(finalExam);
+        alert(`Exam "${exam.title}" ${asDraft ? 'saved as draft' : 'published'} successfully! 🚀`);
+      } catch (err) {
+        console.error('Failed to publish smart exam:', err);
+        alert('Failed to publish exam to database.');
+      }
     }
     setParsedDraft(null);
     setView('list');
