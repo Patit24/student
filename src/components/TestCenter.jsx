@@ -8,10 +8,28 @@ export default function TestCenter({ exam, studentId, onFinish }) {
   const [timeLeft, setTimeLeft] = useState(exam.duration_minutes * 60);
   const [submitted, setSubmitted] = useState(false);
   const [result, setResult] = useState(null);
-  const intervalRef = useRef(null);
+  const [hasAgreed, setHasAgreed] = useState(false);
+  const [stream, setStream] = useState(null);
+  const videoRef = useRef(null);
+
+  // Stop camera and exit fullscreen on unmount or submit
+  const cleanupProctoring = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(err => console.log('Fullscreen exit error:', err));
+    }
+  };
+
+  useEffect(() => {
+    return () => cleanupProctoring();
+  }, [stream]);
 
   // Prevent tab switching / visibility change
   useEffect(() => {
+    if (!hasAgreed) return;
     const handleVisibilityChange = () => {
       if (document.hidden) {
         alert('⚠️ Warning: Do not leave this exam tab! Your submission may be auto-filed.');
@@ -23,7 +41,7 @@ export default function TestCenter({ exam, studentId, onFinish }) {
 
   // Countdown timer
   useEffect(() => {
-    if (submitted) return;
+    if (!hasAgreed || submitted) return;
     intervalRef.current = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
@@ -45,6 +63,7 @@ export default function TestCenter({ exam, studentId, onFinish }) {
 
   const handleSubmit = (autoSubmit = false) => {
     clearInterval(intervalRef.current);
+    cleanupProctoring();
 
     // Grade MCQs automatically
     let mcqScore = 0, mcqTotal = 0;
@@ -97,8 +116,60 @@ export default function TestCenter({ exam, studentId, onFinish }) {
     );
   }
 
+  const handleProceed = async () => {
+    try {
+      // 1. Request Fullscreen
+      if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+      }
+      // 2. Request Camera
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      setStream(mediaStream);
+      setHasAgreed(true);
+    } catch (err) {
+      console.error('Proctoring setup failed:', err);
+      alert('You must allow camera access and fullscreen to start the exam.');
+    }
+  };
+
+  useEffect(() => {
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream, videoRef]);
+
+  if (!hasAgreed) {
+    return (
+      <div className="glass-panel p-8 animate-fade-in" style={{ maxWidth: '600px', margin: '2rem auto' }}>
+        <div className="text-center mb-6">
+          <AlertTriangle size={48} color="var(--danger)" style={{ margin: '0 auto 1rem' }} />
+          <h2 style={{ margin: 0 }}>Rules & Regulations</h2>
+          <p className="text-muted">Please read carefully before proceeding</p>
+        </div>
+        <ul style={{ lineHeight: '1.8', marginBottom: '2rem', paddingLeft: '1.2rem', color: 'var(--text)' }}>
+          <li><strong>Proctored Environment:</strong> Your front camera will be activated. The teacher will monitor your movements.</li>
+          <li><strong>Fullscreen Locked:</strong> The exam will open in fullscreen mode. Do not attempt to exit fullscreen.</li>
+          <li><strong>No Tab Switching:</strong> Navigating away from the exam tab will trigger a warning and may auto-submit your exam.</li>
+          <li><strong>Time Limit:</strong> You have {exam.duration_minutes} minutes. The exam will auto-submit when time is up.</li>
+        </ul>
+        <div className="flex-col gap-3">
+          <button className="btn btn-primary w-full py-3 text-lg font-bold flex items-center justify-center gap-2" onClick={handleProceed}>
+            <CheckCircle size={20} /> I Agree, Proceed to Exam
+          </button>
+          <button className="btn btn-outline w-full" onClick={onFinish}>Cancel</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', paddingBottom: '4rem' }}>
+      {/* Proctoring Camera Feed */}
+      <div style={{ position: 'fixed', bottom: '20px', right: '20px', zIndex: 1000, width: '150px', height: '200px', borderRadius: '12px', overflow: 'hidden', border: '3px solid var(--primary)', boxShadow: '0 8px 30px rgba(0,0,0,0.5)', background: '#000' }}>
+        <video ref={videoRef} autoPlay playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }} />
+        <div style={{ position: 'absolute', bottom: '5px', left: '0', right: '0', textAlign: 'center', fontSize: '10px', fontWeight: 'bold', background: 'rgba(0,0,0,0.5)', padding: '2px', color: '#fff' }}>LIVE PROCTORING</div>
+      </div>
+
       {/* Sticky Timer Header */}
       <div style={{ position: 'sticky', top: '73px', zIndex: 100, background: 'var(--background)', padding: '1rem 0', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
