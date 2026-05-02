@@ -17,6 +17,7 @@ import StudentManagePanel from '../components/StudentManagePanel';
 import SubscriptionGuard, { useSubscription } from '../components/SubscriptionGuard';
 import TutorLeadsPanel from '../components/TutorLeadsPanel';
 import TutorCourseManager from '../components/TutorCourseManager';
+import TutorAttendanceManager from '../components/TutorAttendanceManager';
 import FinancialAnalytics from '../components/FinancialAnalytics';
 import FileUploadVercel from '../components/FileUploadVercel';
 import { useToast } from '../components/Toast';
@@ -775,6 +776,7 @@ export default function TutorDashboard() {
 
       <div className="tabs-row mb-6 custom-scrollbar" style={{ display: 'flex', flexWrap: 'nowrap', gap: '0.8rem', overflowX: 'auto', paddingBottom: '0.5rem', WebkitOverflowScrolling: 'touch' }}>
         <Tab id="students"   label="Students"   icon={Users} />
+        <Tab id="attendance" label="Attendance" icon={CheckSquare} />
         <Tab id="analytics"  label="Analytics"  icon={TrendingUp} />
         <Tab id="batches"    label="Batches"     icon={Layers} />
         <Tab id="schedule"   label="Schedule"    icon={Calendar} />
@@ -820,6 +822,16 @@ export default function TutorDashboard() {
             <StudentManagePanel myStudents={myStudents} myBatches={myBatches} tutorName={currentUser?.name || 'Your Tutor'} />
           </div>
         </div>
+      )}
+
+      {activeTab === 'attendance' && (
+        <TutorAttendanceManager 
+          tutorId={currentUser?.uid} 
+          batches={myBatches} 
+          students={myStudents} 
+          isMockMode={isMockMode}
+          tutorName={myTutorRecord?.name || 'Your Tutor'}
+        />
       )}
 
       {activeTab === 'analytics' && <FinancialAnalytics myStudents={myStudents} />}

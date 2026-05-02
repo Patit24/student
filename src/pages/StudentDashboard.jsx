@@ -4,6 +4,7 @@ import { useAppContext } from '../context/AuthContext';
 import { Play, Download, MessageSquare, FileText, Shield, Calendar as CalendarIcon, CheckCircle, CreditCard, AlertTriangle, LogOut, Users, Video, Package, Eye, EyeOff, Lock, ChevronRight, XCircle, Activity, TrendingUp, BookOpen, Star, Zap, Sparkles } from 'lucide-react';
 import StudentMaterialsPanel from '../components/StudentMaterialsPanel';
 import StudentDoubtSolver from '../components/StudentDoubtSolver';
+import StudentAttendanceViewer from '../components/StudentAttendanceViewer';
 import { subscribeGlobalAssets } from '../db.service';
 import { useToast } from '../components/Toast';
 import './StudentDashboard.css';
@@ -255,6 +256,7 @@ export default function StudentDashboard() {
               {[
                 { id: 'overview', icon: <Activity size={16} />, label: 'Overview' },
                 { id: 'live', icon: <Video size={16} />, label: 'Live Class' },
+                { id: 'attendance', icon: <CalendarIcon size={16} />, label: 'Attendance' },
                 { id: 'materials', icon: <BookOpen size={16} />, label: 'Library' },
                 { id: 'ai', icon: <Sparkles size={16} />, label: 'AI Doubt Solver' },
                 { id: 'payments', icon: <CreditCard size={16} />, label: 'Fees' },
@@ -378,6 +380,18 @@ export default function StudentDashboard() {
             {activeTab === 'ai' && !isRestricted && (
               <div className="sd-animate">
                 <StudentDoubtSolver tutorId={selectedEnrollment?.tutor_id} studentId={currentUser?.uid} />
+              </div>
+            )}
+
+            {/* ── TAB: Attendance ── */}
+            {activeTab === 'attendance' && !isRestricted && (
+              <div className="sd-animate">
+                <StudentAttendanceViewer 
+                  studentId={currentUser?.uid} 
+                  batchId={selectedEnrollment?.batch_id} 
+                  tutorId={selectedEnrollment?.tutor_id} 
+                  isMockMode={isMockMode} 
+                />
               </div>
             )}
 
