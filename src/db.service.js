@@ -137,7 +137,6 @@ export async function recordCourseSale(studentId, courseId, amount, tutorId) {
       total_revenue: (courseSnap.data().total_revenue || 0) + amount
     });
   }
-  }
 }
 
 // ── EXAMS ──
