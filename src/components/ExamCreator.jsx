@@ -37,12 +37,11 @@ export default function ExamCreator({ tutorId, batches }) {
     setQuestions(prev => prev.filter(q => q.id !== id));
   };
 
-  const handleCreate = (e) => {
+  const handleCreate = async (e) => {
     e.preventDefault();
     if (!title || !batchId || questions.length === 0) return;
 
-    const newExam = {
-      id: `exam-${Date.now()}`,
+    const examData = {
       tutorId,
       batchId,
       title,
@@ -51,8 +50,22 @@ export default function ExamCreator({ tutorId, batches }) {
       questions: questions.map((q, i) => ({ ...q, number: i + 1 })),
       created_at: new Date().toISOString()
     };
-    setMockExams(prev => [...prev, newExam]);
-    alert(`Exam "${title}" created and published to the batch.`);
+
+    if (isMockMode) {
+      const newExam = { id: `exam-${Date.now()}`, ...examData };
+      setMockExams(prev => [...prev, newExam]);
+      alert(`Exam "${title}" created and published (Mock Mode).`);
+    } else {
+      try {
+        const { createExam } = await import('../db.service');
+        await createExam(examData);
+        alert(`Exam "${title}" published successfully to the batch! 🚀`);
+      } catch (err) {
+        console.error('Failed to publish exam:', err);
+        alert('Failed to publish exam. Please check your connection.');
+      }
+    }
+
     setTitle(''); setBatchId(''); setDuration(30); setPassingScore(60);
     setQuestions([{ id: 1, type: 'mcq', text: '', options: ['', '', '', ''], correct: 0 }]);
   };

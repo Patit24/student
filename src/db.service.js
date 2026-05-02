@@ -137,6 +137,51 @@ export async function recordCourseSale(studentId, courseId, amount, tutorId) {
       total_revenue: (courseSnap.data().total_revenue || 0) + amount
     });
   }
+  }
+}
+
+// ── EXAMS ──
+
+export async function createExam(examData) {
+  return await addDoc(collection(db, 'exams'), {
+    ...examData,
+    created_at: serverTimestamp()
+  });
+}
+
+export function subscribeExams(batchId, callback) {
+  const q = query(collection(db, 'exams'), where('batchId', '==', batchId));
+  return onSnapshot(q, snap => {
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  });
+}
+
+export function subscribeTutorExams(tutorId, callback) {
+  const q = query(collection(db, 'exams'), where('tutorId', '==', tutorId));
+  return onSnapshot(q, snap => {
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  });
+}
+
+export async function submitExamResult(submissionData) {
+  return await addDoc(collection(db, 'exam_submissions'), {
+    ...submissionData,
+    submitted_at: serverTimestamp()
+  });
+}
+
+export function subscribeSubmissions(examId, callback) {
+  const q = query(collection(db, 'exam_submissions'), where('exam_id', '==', examId));
+  return onSnapshot(q, snap => {
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  });
+}
+
+export function subscribeStudentSubmissions(studentId, callback) {
+  const q = query(collection(db, 'exam_submissions'), where('student_id', '==', studentId));
+  return onSnapshot(q, snap => {
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  });
 }
 
 // ── ELITE COURSE EXAMS ──

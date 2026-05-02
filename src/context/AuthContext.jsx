@@ -599,6 +599,10 @@ export function AppProvider({ children }) {
           lsSet(LS_NOTICES, notices);
         }
       );
+      const { subscribeTutorExams } = await import('../db.service');
+      unsubExams = subscribeTutorExams(currentUser.uid, (exams) => {
+        setMockExams(exams);
+      });
     } else if (currentUser.role === 'student') {
       const batchIds = currentUser.enrolled_batches?.map(b => b.batch_id) || (currentUser.batch_id ? [currentUser.batch_id] : []);
       
@@ -623,7 +627,19 @@ export function AppProvider({ children }) {
             lsSet(LS_NOTICES, notices);
           }
         );
+        const { subscribeExams } = await import('../db.service');
+        // We can only subscribe to one batchId in a single 'where' query for now or use multiple listeners.
+        // For simplicity, we'll listen to the first batch or implement a better multi-batch listener.
+        if (batchIds[0]) {
+          unsubExams = subscribeExams(batchIds[0], (exams) => {
+            setMockExams(exams);
+          });
+        }
       }
+      const { subscribeStudentSubmissions } = await import('../db.service');
+      unsubSubmissions = subscribeStudentSubmissions(currentUser.uid, (subs) => {
+        setMockSubmissions(subs);
+      });
     }
 
     return () => {
@@ -632,6 +648,8 @@ export function AppProvider({ children }) {
       if (unsubNotices) unsubNotices();
       if (unsubStudents) unsubStudents();
       if (unsubBatches) unsubBatches();
+      if (unsubExams) unsubExams();
+      if (unsubSubmissions) unsubSubmissions();
     };
   }, [isMockMode, currentUser?.uid, JSON.stringify(currentUser?.enrolled_batches), currentUser?.batch_id]);
 

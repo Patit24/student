@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppContext } from '../context/AuthContext';
-import { Play, Download, MessageSquare, FileText, Shield, Calendar as CalendarIcon, CheckCircle, CreditCard, AlertTriangle, LogOut, Users, Video, Package, Eye, EyeOff, Lock, ChevronRight, XCircle, Activity, TrendingUp, BookOpen, Star, Zap, Sparkles } from 'lucide-react';
+import { Play, Download, MessageSquare, FileText, Shield, Calendar as CalendarIcon, CheckCircle, CreditCard, AlertTriangle, LogOut, Users, Video, Package, Eye, EyeOff, Lock, ChevronRight, XCircle, Activity, TrendingUp, BookOpen, Star, Zap, Sparkles, ClipboardList } from 'lucide-react';
 import StudentMaterialsPanel from '../components/StudentMaterialsPanel';
 import StudentDoubtSolver from '../components/StudentDoubtSolver';
 import StudentAttendanceViewer from '../components/StudentAttendanceViewer';
+import TestCenter from '../components/TestCenter';
 import { subscribeGlobalAssets } from '../db.service';
 import { useToast } from '../components/Toast';
 import './StudentDashboard.css';
@@ -63,7 +64,7 @@ function PasswordResetGate() {
 }
 
 export default function StudentDashboard() {
-  const { currentUser, verifyOTP, sendOTP, mockSessions, mockNotices, mockStudents, mockBatches, mockTutors, logout, isMockMode } = useAppContext();
+  const { currentUser, verifyOTP, sendOTP, mockSessions, mockNotices, mockStudents, mockBatches, mockTutors, mockExams, mockSubmissions, logout, isMockMode } = useAppContext();
   const toast = useToast();
   const navigate = useNavigate();
   const [globalAssets, setGlobalAssets] = useState([]);
@@ -96,6 +97,7 @@ export default function StudentDashboard() {
   const [otp, setOtp] = useState('');
   const [otpError, setOtpError] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
+  const [selectedExam, setSelectedExam] = useState(null);
 
   const mySessions = mockSessions.filter(s => s.batch_id === selectedEnrollment?.batch_id);
   const liveSession = mySessions.find(s => s.is_live);
@@ -257,6 +259,7 @@ export default function StudentDashboard() {
                 { id: 'overview', icon: <Activity size={16} />, label: 'Overview' },
                 { id: 'live', icon: <Video size={16} />, label: 'Live Class' },
                 { id: 'attendance', icon: <CalendarIcon size={16} />, label: 'Attendance' },
+                { id: 'exams', icon: <ClipboardList size={16} />, label: 'Exams' },
                 { id: 'materials', icon: <BookOpen size={16} />, label: 'Library' },
                 { id: 'ai', icon: <Sparkles size={16} />, label: 'AI Doubt Solver' },
                 { id: 'payments', icon: <CreditCard size={16} />, label: 'Fees' },
@@ -328,6 +331,58 @@ export default function StudentDashboard() {
                     )}
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* ── TAB: Exams ── */}
+            {activeTab === 'exams' && !isRestricted && (
+              <div className="flex-col gap-4 sd-animate">
+                {selectedExam ? (
+                  <TestCenter exam={selectedExam} studentId={currentUser.uid} onFinish={() => setSelectedExam(null)} />
+                ) : (
+                  <div className="sd-card" style={{ padding: '2rem' }}>
+                    <h3 className="flex items-center gap-2 mb-6" style={{ fontWeight: 800 }}><ClipboardList size={20} color="#F5C518" /> My Assessments</h3>
+                    
+                    <div className="flex-col gap-4">
+                      {mockExams.map(exam => {
+                        const submission = mockSubmissions.find(s => s.exam_id === exam.id && s.student_id === currentUser.uid);
+                        return (
+                          <div key={exam.id} className="sd-notice-item flex justify-between items-center" style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem' }}>
+                            <div>
+                              <p style={{ fontWeight: 800, margin: '0 0 0.3rem', fontSize: '1rem' }}>{exam.title}</p>
+                              <div className="flex gap-3 text-xs text-muted">
+                                <span className="flex items-center gap-1"><Clock size={12} /> {exam.duration_minutes} min</span>
+                                <span className="flex items-center gap-1"><Shield size={12} /> Proctored</span>
+                                {submission && (
+                                  <span className={`flex items-center gap-1 ${submission.passed ? 'text-secondary' : 'text-danger'}`}>
+                                    <CheckCircle size={12} /> Score: {submission.mcq_score}%
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {submission ? (
+                              <div style={{ textAlign: 'right' }}>
+                                <span className={`sd-notice-badge ${submission.passed ? 'green' : 'danger'}`} style={{ position: 'static' }}>
+                                  {submission.passed ? 'PASSED' : 'FAILED'}
+                                </span>
+                              </div>
+                            ) : (
+                              <button 
+                                className="sd-pay-btn" 
+                                style={{ width: 'auto', padding: '0.6rem 1.2rem', fontSize: '0.8rem' }}
+                                onClick={() => setSelectedExam(exam)}
+                              >
+                                Start Exam
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                      {mockExams.length === 0 && <p className="text-muted text-center py-8">No exams published for this batch yet.</p>}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

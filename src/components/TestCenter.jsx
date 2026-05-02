@@ -77,7 +77,6 @@ export default function TestCenter({ exam, studentId, onFinish }) {
     const passed = pct !== null ? pct >= exam.passing_score : null;
 
     const submission = {
-      id: `sub-${Date.now()}`,
       exam_id: exam.id,
       student_id: studentId,
       answers,
@@ -86,7 +85,14 @@ export default function TestCenter({ exam, studentId, onFinish }) {
       submitted_at: new Date().toISOString(),
       teacher_feedback: null
     };
-    setMockSubmissions(prev => [...prev, submission]);
+
+    const { isMockMode } = useAppContext();
+    if (isMockMode) {
+      setMockSubmissions(prev => [...prev, { id: `sub-${Date.now()}`, ...submission }]);
+    } else {
+      import('../db.service').then(m => m.submitExamResult(submission)).catch(console.error);
+    }
+
     setResult({ pct, passed, mcqScore, mcqTotal, autoSubmit });
     setSubmitted(true);
   };
