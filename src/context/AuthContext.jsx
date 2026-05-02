@@ -39,6 +39,8 @@ const LS_STUDENTS = 'ag_students';
 const LS_MATERIALS = 'ag_materials';
 const LS_SESSIONS = 'ag_sessions';
 const LS_NOTICES = 'ag_notices';
+const LS_EXAMS = 'ag_exams';
+const LS_SUBMISSIONS = 'ag_submissions';
 
 function lsGet(key, fallback = []) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
@@ -146,8 +148,8 @@ export function AppProvider({ children }) {
 
   const [mockSessions,    setMockSessions]    = useState(() => lsGet(LS_SESSIONS, []));
   const [mockNotices,     setMockNotices]     = useState(() => lsGet(LS_NOTICES, []));
-  const [mockExams,       setMockExams]       = useState([]);
-  const [mockSubmissions, setMockSubmissions] = useState([]);
+  const [mockExams,       setMockExams]       = useState(() => lsGet(LS_EXAMS, []));
+  const [mockSubmissions, setMockSubmissions] = useState(() => lsGet(LS_SUBMISSIONS, []));
   const [mockMaterials,   setMockMaterials]   = useState(() =>
     isMockMode ? [
       { id: 'mat-1', file_name: 'Chapter 1 - Algebra.pdf',       file_url: '#', batch_id: 'batch-1', tutor_id: 'tutor-123', visibility: 'private', created_at: null },
@@ -172,9 +174,16 @@ export function AppProvider({ children }) {
   }, [mockStudents, isMockMode]);
 
   useEffect(() => {
-    if (isMockMode) return;
     lsSet(LS_MATERIALS, mockMaterials);
-  }, [mockMaterials, isMockMode]);
+  }, [mockMaterials]);
+
+  useEffect(() => {
+    lsSet(LS_EXAMS, mockExams);
+  }, [mockExams]);
+
+  useEffect(() => {
+    lsSet(LS_SUBMISSIONS, mockSubmissions);
+  }, [mockSubmissions]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // AUTH ACTIONS
@@ -512,6 +521,7 @@ export function AppProvider({ children }) {
         setMockNotices([]);
         setMockExams([]);
         setMockSubmissions([]);
+        lsClear(LS_BATCHES, LS_STUDENTS, LS_SESSIONS, LS_NOTICES, LS_EXAMS, LS_SUBMISSIONS);
         setPurchasedAssets([]);
         setLoading(false);
         return;
