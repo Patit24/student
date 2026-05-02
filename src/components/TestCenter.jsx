@@ -3,7 +3,7 @@ import { useAppContext } from '../context/AuthContext';
 import { Clock, AlertTriangle, CheckCircle, Send } from 'lucide-react';
 
 export default function TestCenter({ exam, studentId, onFinish }) {
-  const { mockSubmissions, setMockSubmissions } = useAppContext();
+  const { mockSubmissions, setMockSubmissions, isMockMode } = useAppContext();
   const [answers, setAnswers] = useState({});
   const [timeLeft, setTimeLeft] = useState(exam.duration_minutes * 60);
   const [submitted, setSubmitted] = useState(false);
@@ -87,7 +87,6 @@ export default function TestCenter({ exam, studentId, onFinish }) {
       teacher_feedback: null
     };
 
-    const { isMockMode } = useAppContext();
     if (isMockMode) {
       setMockSubmissions(prev => [...prev, { id: `sub-${Date.now()}`, ...submission }]);
     } else {
