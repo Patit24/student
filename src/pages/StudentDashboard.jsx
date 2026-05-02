@@ -63,7 +63,7 @@ function PasswordResetGate() {
 }
 
 export default function StudentDashboard() {
-  const { currentUser, verifyOTP, sendOTP, mockSessions, mockNotices, mockStudents, mockBatches, mockTutors, logout } = useAppContext();
+  const { currentUser, verifyOTP, sendOTP, mockSessions, mockNotices, mockStudents, mockBatches, mockTutors, logout, isMockMode } = useAppContext();
   const toast = useToast();
   const navigate = useNavigate();
   const [globalAssets, setGlobalAssets] = useState([]);
