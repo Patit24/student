@@ -25,7 +25,7 @@ import {
   collection, query, where, onSnapshot, serverTimestamp,
 } from 'firebase/firestore';
 import { 
-  subscribeExams, subscribeTutorExams, subscribeStudentSubmissions 
+  subscribeExams, subscribeTutorExams, subscribeStudentSubmissions, subscribeTutorSubmissions 
 } from '../db.service';
 
 const AppContext = createContext();
@@ -615,6 +615,7 @@ export function AppProvider({ children }) {
         }
       );
       unsubExams = subscribeTutorExams(currentUser.uid, setMockExams);
+      unsubSubmissions = subscribeTutorSubmissions(currentUser.uid, setMockSubmissions);
     } else if (currentUser.role === 'student') {
       const batchIds = currentUser.enrolled_batches?.map(b => b.batch_id) || (currentUser.batch_id ? [currentUser.batch_id] : []);
       

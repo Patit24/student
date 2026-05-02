@@ -186,6 +186,13 @@ export function subscribeStudentSubmissions(studentId, callback) {
   });
 }
 
+export function subscribeTutorSubmissions(tutorId, callback) {
+  const q = query(collection(db, 'exam_submissions'), where('tutor_id', '==', tutorId));
+  return onSnapshot(q, snap => {
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  });
+}
+
 // ── ELITE COURSE EXAMS ──
 
 /** Create an MCQ exam for a specific course module */

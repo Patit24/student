@@ -80,8 +80,11 @@ export default function TestCenter({ exam, studentId, onFinish }) {
     const submission = {
       exam_id: exam.id,
       student_id: studentId,
+      tutor_id: exam.tutorId || exam.tutor_id,
       answers,
       mcq_score: pct,
+      mcq_correct: mcqScore,
+      mcq_total: mcqTotal,
       passed,
       submitted_at: new Date().toISOString(),
       teacher_feedback: null

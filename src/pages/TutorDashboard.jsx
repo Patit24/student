@@ -132,11 +132,16 @@ function ExamResultsPanel({ tutorId, myBatches, myStudents }) {
                   </div>
                   <div className="text-right">
                     {sub.mcq_score !== null && (
-                      <span style={{ fontSize: '1.5rem', fontWeight: 700, color: sub.passed ? 'var(--secondary)' : 'var(--danger)' }}>
-                        {sub.mcq_score}%
-                      </span>
+                      <div className="flex flex-col items-end">
+                        <span style={{ fontSize: '1.5rem', fontWeight: 700, color: sub.passed ? 'var(--secondary)' : 'var(--danger)' }}>
+                          {sub.mcq_score}%
+                        </span>
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                          Marks: {sub.mcq_correct} / {sub.mcq_total}
+                        </span>
+                      </div>
                     )}
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{sub.passed === true ? '✓ Passed' : sub.passed === false ? '✗ Failed' : 'Pending'}</p>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>{sub.passed === true ? '✓ Passed' : sub.passed === false ? '✗ Failed' : 'Pending'}</p>
                   </div>
                 </div>
                 {selectedExam.questions.filter(q => q.type === 'short').map(q => (
