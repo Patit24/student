@@ -97,6 +97,12 @@ export default function TestCenter({ exam, studentId, onFinish }) {
     setSubmitted(true);
   };
 
+  useEffect(() => {
+    if (videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream, videoRef]);
+
   if (submitted && result) {
     return (
       <div className="glass-panel p-8 animate-fade-in text-center" style={{ maxWidth: '500px', margin: '2rem auto' }}>
@@ -137,12 +143,6 @@ export default function TestCenter({ exam, studentId, onFinish }) {
       alert('You must allow camera access and fullscreen to start the exam.');
     }
   };
-
-  useEffect(() => {
-    if (videoRef.current && stream) {
-      videoRef.current.srcObject = stream;
-    }
-  }, [stream, videoRef]);
 
   if (!hasAgreed) {
     return (
