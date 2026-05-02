@@ -11,6 +11,7 @@ export default function TestCenter({ exam, studentId, onFinish }) {
   const [hasAgreed, setHasAgreed] = useState(false);
   const [stream, setStream] = useState(null);
   const videoRef = useRef(null);
+  const intervalRef = useRef(null);
 
   // Stop camera and exit fullscreen on unmount or submit
   const cleanupProctoring = () => {
