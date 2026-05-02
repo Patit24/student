@@ -12,6 +12,8 @@ export default function TestCenter({ exam, studentId, onFinish }) {
   const [stream, setStream] = useState(null);
   const videoRef = useRef(null);
   const intervalRef = useRef(null);
+  const [warningCount, setWarningCount] = useState(0);
+  const MAX_WARNINGS = 3;
 
   // Stop camera and exit fullscreen on unmount or submit
   const cleanupProctoring = () => {
@@ -28,17 +30,66 @@ export default function TestCenter({ exam, studentId, onFinish }) {
     return () => cleanupProctoring();
   }, [stream]);
 
-  // Prevent tab switching / visibility change
+  // Prevent tab switching / visibility change / blur
   useEffect(() => {
-    if (!hasAgreed) return;
+    if (!hasAgreed || submitted) return;
+
+    const handleViolation = (type) => {
+      setWarningCount(prev => {
+        const next = prev + 1;
+        if (next >= MAX_WARNINGS) {
+          alert('🚨 STRIKE 3: Too many violations. Your exam is being auto-submitted.');
+          handleSubmit(true);
+          return next;
+        }
+        alert(`⚠️ Warning (${next}/${MAX_WARNINGS}): ${type}. Do not leave the exam window or your work will be auto-submitted!`);
+        return next;
+      });
+    };
+
     const handleVisibilityChange = () => {
-      if (document.hidden) {
-        alert('⚠️ Warning: Do not leave this exam tab! Your submission may be auto-filed.');
+      if (document.hidden) handleViolation('Tab Switched');
+    };
+
+    const handleBlur = () => {
+      handleViolation('Window Lost Focus');
+    };
+
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement && !submitted) {
+        handleViolation('Exited Fullscreen');
+        // Try to re-enter fullscreen
+        document.documentElement.requestFullscreen().catch(() => {});
       }
     };
+
+    const preventShortcuts = (e) => {
+      // Prevent Ctrl+C, Ctrl+V, Ctrl+U, F12
+      if (
+        (e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'v' || e.key === 'u' || e.key === 's') ||
+        e.key === 'F12'
+      ) {
+        e.preventDefault();
+        alert('Action restricted during exam.');
+      }
+    };
+
+    const preventContextMenu = (e) => e.preventDefault();
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
+    window.addEventListener('blur', handleBlur);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    window.addEventListener('keydown', preventShortcuts);
+    window.addEventListener('contextmenu', preventContextMenu);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleBlur);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      window.removeEventListener('keydown', preventShortcuts);
+      window.removeEventListener('contextmenu', preventContextMenu);
+    };
+  }, [hasAgreed, submitted]);
 
   // Countdown timer
   useEffect(() => {
@@ -158,8 +209,9 @@ export default function TestCenter({ exam, studentId, onFinish }) {
         <ul style={{ lineHeight: '1.8', marginBottom: '2rem', paddingLeft: '1.2rem', color: 'var(--text)' }}>
           <li><strong>Proctored Environment:</strong> Your front camera will be activated. The teacher will monitor your movements.</li>
           <li><strong>Fullscreen Locked:</strong> The exam will open in fullscreen mode. Do not attempt to exit fullscreen.</li>
-          <li><strong>No Tab Switching:</strong> Navigating away from the exam tab will trigger a warning and may auto-submit your exam.</li>
-          <li><strong>Time Limit:</strong> You have {exam.duration_minutes} minutes. The exam will auto-submit when time is up.</li>
+          <li><strong>No Tab Switching:</strong> Navigating away or losing focus will trigger a strike. 3 strikes = Auto-Submit.</li>
+          <li><strong>Locked Features:</strong> Right-click and copy-paste shortcuts are disabled.</li>
+          <li><strong>Time Limit:</strong> You have {exam.duration_minutes} minutes. Auto-submits on timeout.</li>
         </ul>
         <div className="flex-col gap-3">
           <button className="btn btn-primary w-full py-3 text-lg font-bold flex items-center justify-center gap-2" onClick={handleProceed}>
