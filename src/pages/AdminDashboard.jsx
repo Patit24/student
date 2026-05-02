@@ -139,10 +139,11 @@ export default function AdminDashboard() {
   };
 
   const handleDeleteTutor = async (tutorId) => {
-    if (window.confirm('Are you sure you want to completely remove this tutor? This action cannot be undone.')) {
+    if (window.confirm('Are you sure you want to completely remove this tutor? ALL their batches, materials, and student links will be deleted. This action cannot be undone.')) {
       try {
-        await deleteDoc(doc(db, 'users', tutorId));
-        toast.success('Tutor removed successfully');
+        const { deleteTutorCompletely } = await import('../db.service');
+        await deleteTutorCompletely(tutorId);
+        toast.success('Tutor and all associated data removed successfully');
       } catch (err) {
         toast.error('Failed to remove tutor');
         console.error(err);

@@ -9,8 +9,8 @@ function friendlyError(code) {
   switch (code) {
     case 'auth/user-not-found':
     case 'auth/wrong-password':
-    case 'auth/invalid-credential': return 'Incorrect mobile number or password.';
-    case 'auth/invalid-email':      return 'Please enter a valid mobile number.';
+    case 'auth/invalid-credential': return 'Incorrect login ID or password.';
+    case 'auth/invalid-email':      return 'Please enter a valid mobile number or email.';
     case 'auth/too-many-requests':  return 'Too many failed attempts. Please try again later.';
     case 'auth/network-request-failed': return 'Network error. Check your internet connection.';
     default: return `Login failed: ${code || 'unknown error'}. Check the console for details.`;
@@ -96,15 +96,15 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="login-field">
-            <label>Mobile Number</label>
+            <label>Mobile No or Email Address</label>
             <input
               id="login-phone"
-              type="tel"
+              type="text"
               className="input-field"
               required
               value={phone}
               onChange={e => setPhone(e.target.value)}
-              placeholder="e.g. 9876543210"
+              placeholder="e.g. 9876543210 or tutor@example.com"
             />
           </div>
           <div className="login-field">

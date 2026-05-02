@@ -182,12 +182,24 @@ export function AppProvider({ children }) {
       const newId = role === 'tutor' ? `tutor-${Date.now()}` : `student-${Date.now()}`;
       const user  = {
         uid: newId, phone, role, name, is_verified: false, email,
-        subscription_status: role === 'tutor' ? 'inactive' : 'active',
-        subscription_tier: null,
-        trial_used: false,
+        subscription_status: role === 'tutor' ? 'active' : 'active',
+        subscription_tier: role === 'tutor' ? 'free_trial' : 'standard',
+        trial_used: role === 'tutor' ? true : false,
+        is_subscribed: role === 'tutor' ? true : false,
       };
       if (role === 'tutor') {
-        setMockTutors(prev => [...prev, { id: newId, phone, name, role, email, subscription_status: 'inactive', subscription_tier: null, branding_color: '#4F46E5' }]);
+        const trialExpiry = new Date();
+        trialExpiry.setMonth(trialExpiry.getMonth() + 1);
+        user.subscription_expiry = trialExpiry.toISOString();
+
+        setMockTutors(prev => [...prev, { 
+          id: newId, phone, name, role, email, 
+          subscription_status: 'active', 
+          subscription_tier: 'free_trial', 
+          subscription_expiry: user.subscription_expiry,
+          is_subscribed: true,
+          branding_color: '#4F46E5' 
+        }]);
       }
       setMockUser(user);
       return user;
@@ -195,6 +207,9 @@ export function AppProvider({ children }) {
     // If real email is provided, use it. Otherwise, use virtual email from phone.
     const finalEmail = email ? email.trim() : `${phone.trim()}@ppreducation.in`;
     const userCredential = await createUserWithEmailAndPassword(auth, finalEmail, password);
+    const trialExpiry = new Date();
+    trialExpiry.setMonth(trialExpiry.getMonth() + 1);
+
     const profile = {
       phone: phone.trim(), 
       email: email.trim(),
@@ -202,8 +217,11 @@ export function AppProvider({ children }) {
       name, 
       is_verified: false,
       createdAt: new Date(),
-      subscription_status: role === 'tutor' ? 'inactive' : 'active',
-      trial_used: false,
+      subscription_status: role === 'tutor' ? 'active' : 'active',
+      subscription_tier: role === 'tutor' ? 'free_trial' : 'standard',
+      subscription_expiry: role === 'tutor' ? trialExpiry.toISOString() : null,
+      trial_used: role === 'tutor' ? true : false,
+      is_subscribed: role === 'tutor' ? true : false,
     };
     await setDoc(doc(db, 'users', userCredential.user.uid), profile);
     const merged = { ...userCredential.user, uid: userCredential.user.uid, ...profile };

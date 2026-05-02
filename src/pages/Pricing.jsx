@@ -84,6 +84,12 @@ export default function Pricing() {
   const handleChoosePlan = (plan) => {
     if (!currentUser) return navigate('/login');
     
+    // If it's the Flex plan, it's "Pay per student" - no need for payment proof upfront
+    if (plan.id === 'flex') {
+      setUpiModal({ show: true, plan, isFlexAuto: true });
+      return;
+    }
+
     // If tutor has never used a trial, they can activate it
     if (currentUser.role === 'tutor' && !currentUser.trial_used) {
       setUpiModal({ show: true, plan, isTrial: true });
@@ -274,6 +280,17 @@ export default function Pricing() {
                 </div>
                 <button className="pr-btn pr-btn-gold pr-full" onClick={handleConfirmTrial} disabled={paying}>
                   {paying ? 'Activating...' : 'Start My 30-Day Free Trial'}
+                </button>
+              </div>
+            ) : upiModal.isFlexAuto ? (
+              <div style={{ padding: '1rem 0', textAlign: 'center' }}>
+                <div style={{ background: 'rgba(79, 70, 229, 0.1)', color: '#4F46E5', padding: '1.5rem', borderRadius: '16px', marginBottom: '1.5rem' }}>
+                  <Users size={40} style={{ marginBottom: '1rem' }} />
+                  <h4 style={{ margin: 0, fontSize: '1.2rem' }}>Pay As You Go</h4>
+                  <p style={{ margin: '0.5rem 0 0', opacity: 0.8, fontSize: '0.9rem' }}>The Flex plan costs ₹1 per active student per month. No upfront payment required.</p>
+                </div>
+                <button className="pr-btn pr-btn-gold pr-full" onClick={handleConfirmTrial} disabled={paying}>
+                  {paying ? 'Activating...' : 'Activate Flex Plan'}
                 </button>
               </div>
             ) : (

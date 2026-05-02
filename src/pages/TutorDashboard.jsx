@@ -729,6 +729,19 @@ export default function TutorDashboard() {
       </div>
 
       {/* ── Smart Go Live Bar ── */}
+      {currentUser?.subscription_tier === 'free_trial' && (
+        <div className="glass-panel p-4 mb-8 flex items-center justify-between border-l-4 border-yellow-500 animate-slide-up" style={{ background: 'rgba(245, 197, 24, 0.05)' }}>
+          <div className="flex items-center gap-3">
+            <Sparkles className="text-yellow-500" size={24} />
+            <div>
+              <h4 className="m-0 text-yellow-500">Free Trial Active</h4>
+              <p className="m-0 text-sm opacity-70">Your 1-month free trial expires on {new Date(currentUser.subscription_expiry).toLocaleDateString()}. Upgrade now to secure your batches!</p>
+            </div>
+          </div>
+          <button className="btn btn-primary" onClick={() => navigate('/pricing')}>Upgrade Plan</button>
+        </div>
+      )}
+
       <div className="glass-panel p-2 flex items-center gap-3 animate-slide-up" style={{ 
         borderRadius: '20px', 
         border: '1px solid rgba(255,255,255,0.1)',

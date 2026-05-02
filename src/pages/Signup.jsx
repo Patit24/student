@@ -96,18 +96,20 @@ export default function Signup() {
             />
           </div>
 
-          {role === 'tutor' && (
-            <div className="input-group animate-fade-in">
-              <label className="input-label">Email Address (Optional)</label>
-              <input 
-                type="email" 
-                className="input-field" 
-                placeholder="tutor@example.com"
-                value={email} 
-                onChange={e => setEmail(e.target.value)} 
-              />
-            </div>
-          )}
+          <div className="input-group animate-fade-in">
+            <label className="input-label">
+              Email Address {role === 'tutor' ? '(Required for Tutors)' : '(Optional for Students)'}
+            </label>
+            <input 
+              type="email" 
+              className="input-field" 
+              required={role === 'tutor'}
+              placeholder={role === 'tutor' ? "tutor@example.com" : "student@example.com (Optional)"}
+              value={email} 
+              onChange={e => setEmail(e.target.value)} 
+            />
+            {role === 'student' && <p className="text-[10px] text-muted mt-1">Students login primarily using Mobile Number.</p>}
+          </div>
 
           <div className="input-group">
             <label className="input-label">Password</label>

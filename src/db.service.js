@@ -4,7 +4,7 @@
  * All reads/writes go through here — never raw Firestore calls in components.
  */
 import { 
-  collection, addDoc, query, where, onSnapshot, doc, getDoc, 
+  collection, addDoc, query, where, onSnapshot, doc, getDoc, getDocs,
   updateDoc, deleteDoc, setDoc, orderBy, serverTimestamp 
 } from 'firebase/firestore';
 import { ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
@@ -451,4 +451,50 @@ export async function enrollStudentInBatch(studentId, tutorId, batchId, monthlyF
       payment_due_date: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 5).toISOString().split('T')[0]
     })
   });
+}
+
+/**
+ * Completely remove a tutor and all their associated data (Cascade Delete).
+ */
+export async function deleteTutorCompletely(tutorId) {
+  // 1. Delete Batches
+  const qBatches = query(collection(db, 'batches'), where('tutorId', '==', tutorId));
+  const snapBatches = await getDocs(qBatches);
+  for (const d of snapBatches.docs) await deleteDoc(d.ref);
+
+  // 2. Delete Materials
+  const qMaterials = query(collection(db, 'tutor_materials'), where('tutor_id', '==', tutorId));
+  const snapMaterials = await getDocs(qMaterials);
+  for (const d of snapMaterials.docs) await deleteDoc(d.ref);
+
+  // 3. Delete Sessions
+  const qSessions = query(collection(db, 'sessions'), where('tutorId', '==', tutorId));
+  const snapSessions = await getDocs(qSessions);
+  for (const d of snapSessions.docs) await deleteDoc(d.ref);
+
+  // 4. Delete Notices
+  const qNotices = query(collection(db, 'notices'), where('tutorId', '==', tutorId));
+  const snapNotices = await getDocs(qNotices);
+  for (const d of snapNotices.docs) await deleteDoc(d.ref);
+
+  // 5. Delete or unlink Students
+  const qStudents = query(collection(db, 'users'), where('tutorId', '==', tutorId), where('role', '==', 'student'));
+  const snapStudents = await getDocs(qStudents);
+  for (const d of snapStudents.docs) {
+    const studentData = d.data();
+    // If student ONLY has this one batch/tutor, delete them completely.
+    if (!studentData.enrolled_batches || studentData.enrolled_batches.length <= 1) {
+      await deleteDoc(d.ref);
+    } else {
+      // Otherwise just remove the specific tutor's enrollment
+      const newEnrolled = studentData.enrolled_batches.filter(eb => eb.tutor_id !== tutorId);
+      await updateDoc(d.ref, { 
+        enrolled_batches: newEnrolled,
+        tutorId: newEnrolled[0]?.tutor_id || '' // Move to another tutor if possible
+      });
+    }
+  }
+
+  // 6. Delete Tutor Profile
+  await deleteDoc(doc(db, 'users', tutorId));
 }
