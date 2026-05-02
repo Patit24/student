@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context/AuthContext';
-import { Plus, Trash2, Clock } from 'lucide-react';
+import { Plus, Trash2, Clock, AlertTriangle } from 'lucide-react';
+import { createExam } from '../db.service';
 
 export default function ExamCreator({ tutorId, batches }) {
-  const { mockExams, setMockExams } = useAppContext();
+  const { mockExams, setMockExams, isMockMode } = useAppContext();
   
   const [title, setTitle] = useState('');
   const [batchId, setBatchId] = useState('');
@@ -54,12 +55,11 @@ export default function ExamCreator({ tutorId, batches }) {
     if (isMockMode) {
       const newExam = { id: `exam-${Date.now()}`, ...examData };
       setMockExams(prev => [...prev, newExam]);
-      alert(`Exam "${title}" created and published (Mock Mode).`);
+      alert(`Exam "${title}" created (Mock Mode - Not persisted to DB).`);
     } else {
       try {
-        const { createExam } = await import('../db.service');
         await createExam(examData);
-        alert(`Exam "${title}" published successfully to the batch! 🚀`);
+        alert(`Exam "${title}" published successfully! 🚀`);
       } catch (err) {
         console.error('Failed to publish exam:', err);
         alert('Failed to publish exam. Please check your connection.');
@@ -74,7 +74,14 @@ export default function ExamCreator({ tutorId, batches }) {
     <div>
       <form onSubmit={handleCreate}>
         <div className="glass-panel p-8 mb-6">
-          <h3 className="mb-4">Create New Exam</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="m-0">Create New Exam</h3>
+            {isMockMode && (
+              <span className="flex items-center gap-1 text-xs text-danger" title="Persistence disabled">
+                <AlertTriangle size={12} /> Mock Mode Active
+              </span>
+            )}
+          </div>
           <div className="flex gap-4 flex-wrap mb-4">
             <div className="input-group mb-0" style={{ flex: 2, minWidth: '200px' }}>
               <label className="input-label">Exam Title</label>
