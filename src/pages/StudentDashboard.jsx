@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppContext } from '../context/AuthContext';
-import { Play, Download, MessageSquare, FileText, Shield, Calendar as CalendarIcon, CheckCircle, CreditCard, AlertTriangle, LogOut, Users, Video, Package, Eye, EyeOff, Lock, ChevronRight, XCircle, Activity, TrendingUp, BookOpen, Star, Zap, Sparkles, ClipboardList } from 'lucide-react';
+import { Play, Download, MessageSquare, FileText, Shield, Calendar as CalendarIcon, CheckCircle, CreditCard, AlertTriangle, LogOut, Users, Video, Package, Eye, EyeOff, Lock, ChevronRight, XCircle, Activity, TrendingUp, BookOpen, Star, Zap, Sparkles, ClipboardList, Clock } from 'lucide-react';
 import StudentMaterialsPanel from '../components/StudentMaterialsPanel';
 import StudentDoubtSolver from '../components/StudentDoubtSolver';
 import StudentAttendanceViewer from '../components/StudentAttendanceViewer';
