@@ -627,8 +627,8 @@ export function AppProvider({ children }) {
           }
         );
         import('../db.service').then(m => {
-          if (batchIds[0]) {
-            unsubExams = m.subscribeExams(batchIds[0], setMockExams);
+          if (batchIds.length > 0) {
+            unsubExams = m.subscribeExams(batchIds, setMockExams);
           }
         });
       }

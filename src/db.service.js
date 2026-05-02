@@ -148,8 +148,11 @@ export async function createExam(examData) {
   });
 }
 
-export function subscribeExams(batchId, callback) {
-  const q = query(collection(db, 'exams'), where('batchId', '==', batchId));
+export function subscribeExams(batchIds, callback) {
+  const ids = Array.isArray(batchIds) ? batchIds : [batchIds];
+  if (ids.length === 0) { callback([]); return () => {}; }
+  
+  const q = query(collection(db, 'exams'), where('batchId', 'in', ids));
   return onSnapshot(q, snap => {
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
   });
