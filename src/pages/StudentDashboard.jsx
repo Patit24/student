@@ -344,7 +344,10 @@ export default function StudentDashboard() {
                     <h3 className="flex items-center gap-2 mb-6" style={{ fontWeight: 800 }}><ClipboardList size={20} color="#F5C518" /> My Assessments</h3>
                     
                     <div className="flex-col gap-4">
-                      {mockExams.filter(e => e.batchId === selectedEnrollment?.batch_id || e.batch_id === selectedEnrollment?.batch_id).map(exam => {
+                      {mockExams.filter(exam => {
+                        const bId = selectedEnrollment?.batch_id;
+                        return exam.batchId === bId || exam.batch_id === bId;
+                      }).map(exam => {
                         const submission = mockSubmissions.find(s => s.exam_id === exam.id && s.student_id === currentUser.uid);
                         return (
                           <div key={exam.id} className="sd-notice-item flex justify-between items-center" style={{ background: 'rgba(255,255,255,0.02)', padding: '1.25rem' }}>
@@ -379,7 +382,12 @@ export default function StudentDashboard() {
                           </div>
                         );
                       })}
-                      {mockExams.length === 0 && <p className="text-muted text-center py-8">No exams published for this batch yet.</p>}
+                      {mockExams.filter(e => e.batchId === selectedEnrollment?.batch_id || e.batch_id === selectedEnrollment?.batch_id).length === 0 && (
+                        <div className="text-center py-12">
+                          <p className="text-muted mb-2">No exams published for this batch yet.</p>
+                          <p style={{ fontSize: '0.7rem', opacity: 0.5 }}>Batch ID: {selectedEnrollment?.batch_id}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}

@@ -24,6 +24,9 @@ import {
   doc, getDoc, getDocFromCache, setDoc, updateDoc,
   collection, query, where, onSnapshot, serverTimestamp,
 } from 'firebase/firestore';
+import { 
+  subscribeExams, subscribeTutorExams, subscribeStudentSubmissions 
+} from '../db.service';
 
 const AppContext = createContext();
 
@@ -601,9 +604,7 @@ export function AppProvider({ children }) {
           lsSet(LS_NOTICES, notices);
         }
       );
-      import('../db.service').then(m => {
-        unsubExams = m.subscribeTutorExams(currentUser.uid, setMockExams);
-      });
+      unsubExams = subscribeTutorExams(currentUser.uid, setMockExams);
     } else if (currentUser.role === 'student') {
       const batchIds = currentUser.enrolled_batches?.map(b => b.batch_id) || (currentUser.batch_id ? [currentUser.batch_id] : []);
       
@@ -628,15 +629,9 @@ export function AppProvider({ children }) {
             lsSet(LS_NOTICES, notices);
           }
         );
-        import('../db.service').then(m => {
-          if (batchIds.length > 0) {
-            unsubExams = m.subscribeExams(batchIds, setMockExams);
-          }
-        });
+        unsubExams = subscribeExams(batchIds, setMockExams);
       }
-      import('../db.service').then(m => {
-        unsubSubmissions = m.subscribeStudentSubmissions(currentUser.uid, setMockSubmissions);
-      });
+      unsubSubmissions = subscribeStudentSubmissions(currentUser.uid, setMockSubmissions);
     }
 
     return () => {
