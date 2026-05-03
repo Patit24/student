@@ -594,19 +594,20 @@ export default function TutorDashboard() {
     if (phoneLookup?.found) {
       const selectedBatch = myBatches.find(b => b.id === studentBatchId);
       const batchFee = selectedBatch?.fee || 2500;
+      const studentId = phoneLookup.id;
 
-      if (!isMockMode && db && existingId) {
+      if (!isMockMode && db && studentId) {
         try {
           const { enrollStudentInBatch } = await import('../db.service');
-          await enrollStudentInBatch(existingId, currentUser.uid, studentBatchId, batchFee);
-          toast.success(`${studentName} linked ✅`);
+          await enrollStudentInBatch(studentId, currentUser.uid, studentBatchId, batchFee);
+          toast.success(`${studentName} added to batch ✅`);
         } catch (err) {
           toast.error(`Link failed: ${err.message}`);
           return;
         }
       } else {
         const linked = { 
-          id: existingId || `student-${Date.now()}`, 
+          id: studentId || `student-${Date.now()}`, 
           name: studentName, 
           phone: studentPhone, 
           is_verified: false, 
@@ -932,7 +933,9 @@ export default function TutorDashboard() {
                 <input type="date" className="input-field mb-2" value={admissionDate} onChange={e => setAdmissionDate(e.target.value)} required />
               </div>
               <p style={{ fontSize: '0.7rem', color: '#F5C518', margin: '0 0 0.5rem' }}>⚡ Students start as <strong>Unpaid</strong> for the current month.</p>
-              <button type="submit" className="btn btn-primary w-full">Create Student Account</button>
+              <button type="submit" className="btn btn-primary w-full">
+                {phoneLookup?.found ? 'Add to Batch' : 'Create Student Account'}
+              </button>
             </form>
           </div>
           <div className="glass-panel p-8" style={{ flex: 2, minWidth: '320px' }}>
