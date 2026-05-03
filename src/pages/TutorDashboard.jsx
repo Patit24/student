@@ -257,7 +257,10 @@ export default function TutorDashboard() {
   const limits = PLAN_LIMITS[tier] || PLAN_LIMITS.free;
 
   const myBatches = mockBatches.filter(b => b.tutorId === currentUser?.uid);
-  const myStudents = mockStudents.filter(s => s.tutorId === currentUser?.uid);
+  const myStudents = mockStudents.filter(s => 
+    s.tutorId === currentUser?.uid || 
+    (s.enrolled_batches || []).some(eb => eb.tutor_id === currentUser?.uid)
+  );
 
   const [isLive, setIsLive] = useState(false);
   const [streamActive, setStreamActive] = useState(false);
