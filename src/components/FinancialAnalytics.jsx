@@ -67,22 +67,24 @@ const Card = ({ title, amount, color, icon: Icon }) => {
 
 export default function FinancialAnalytics({ myStudents }) {
   const now = new Date();
-  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  const monthLabel = now.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+  const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const prevMonthKey = `${prevMonthDate.getFullYear()}-${String(prevMonthDate.getMonth()+1).padStart(2,'0')}`;
+  const salaryMonthLabel = prevMonthDate.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
 
-  // Only count CURRENT month — revenue from previous months is excluded
-  const currentMonthPaid = myStudents.filter(s => {
+  // "May payment is for April salary"
+  // So we track how many students have paid for the PREVIOUS month
+  const salaryPaid = myStudents.filter(s => {
     const history = s.payment_history || {};
-    return history[currentMonthKey] === 'paid';
+    return history[prevMonthKey] === 'paid';
   });
 
-  const currentMonthUnpaid = myStudents.filter(s => {
+  const salaryUnpaid = myStudents.filter(s => {
     const history = s.payment_history || {};
-    return history[currentMonthKey] !== 'paid';
+    return history[prevMonthKey] !== 'paid';
   });
 
-  const totalReceived = currentMonthPaid.reduce((acc, s) => acc + (s.monthly_fee || 2500), 0);
-  const totalPending = currentMonthUnpaid.reduce((acc, s) => acc + (s.monthly_fee || 2500), 0);
+  const totalReceived = salaryPaid.reduce((acc, s) => acc + (s.monthly_fee || 2500), 0);
+  const totalPending = salaryUnpaid.reduce((acc, s) => acc + (s.monthly_fee || 2500), 0);
   const expectedTotal = totalReceived + totalPending;
 
   const handleSendReminder = (student) => {
@@ -94,9 +96,9 @@ export default function FinancialAnalytics({ myStudents }) {
     <div className="animate-fade-in" style={{ padding: '0.5rem 0' }}>
       {/* Bento Grid Analytics */}
       <div className="flex gap-6 mb-8" style={{ flexWrap: 'wrap' }}>
-        <Card title={`Received — ${monthLabel}`} amount={totalReceived} color="#22C55E" icon={TrendingUp} />
-        <Card title={`Pending — ${monthLabel}`} amount={totalPending} color="#F59E0B" icon={Clock} />
-        <Card title={`Expected — ${monthLabel}`} amount={expectedTotal} color="#6366F1" icon={Target} />
+        <Card title={`Collected for ${salaryMonthLabel}`} amount={totalReceived} color="#22C55E" icon={TrendingUp} />
+        <Card title={`Dues for ${salaryMonthLabel}`} amount={totalPending} color="#F59E0B" icon={Clock} />
+        <Card title={`Total Target (${salaryMonthLabel})`} amount={expectedTotal} color="#6366F1" icon={Target} />
       </div>
 
       {/* Student Payment Roster */}
@@ -108,10 +110,10 @@ export default function FinancialAnalytics({ myStudents }) {
           </div>
           <div className="flex gap-2">
              <span style={{ fontSize: '0.75rem', background: 'rgba(34,197,94,0.08)', color: '#22C55E', padding: '0.3rem 0.8rem', borderRadius: '1rem', border: '1px solid rgba(34,197,94,0.2)', fontWeight: 600 }}>
-               {currentMonthPaid.length} Paid
+               {salaryPaid.length} Paid for {salaryMonthLabel}
              </span>
              <span style={{ fontSize: '0.75rem', background: 'rgba(245,158,11,0.08)', color: '#F59E0B', padding: '0.3rem 0.8rem', borderRadius: '1rem', border: '1px solid rgba(245,158,11,0.2)', fontWeight: 600 }}>
-               {currentMonthUnpaid.length} Pending
+               {salaryUnpaid.length} Pending for {salaryMonthLabel}
              </span>
           </div>
         </div>
@@ -130,7 +132,7 @@ export default function FinancialAnalytics({ myStudents }) {
             <tbody>
               {myStudents.map(s => {
                 const history = s.payment_history || {};
-                const isPaid = history[currentMonthKey] === 'paid';
+                const isPaid = history[prevMonthKey] === 'paid';
                 return (
                   <tr key={s.id} className="hover-row" style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', transition: 'background 0.2s' }}>
                     <td style={{ padding: '1.2rem 1rem' }}>

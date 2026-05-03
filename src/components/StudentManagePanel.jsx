@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Users, Edit3, ArrowRightLeft, AlertTriangle, CheckCircle,
-  Trash2, Phone, Mail, X, Save, ChevronRight, Search, MessageCircle, Calendar, DollarSign, CreditCard,
+  Trash2, Phone, Mail, X, Save, ChevronRight, Search, MessageCircle, Calendar, DollarSign, CreditCard, Plus
 } from 'lucide-react';
 import { useAppContext } from '../context/AuthContext';
 import { useToast } from './Toast';
@@ -48,12 +48,18 @@ function computeBalances(student) {
   const history = student.payment_history || {};
   const months = getMonthRange(student.admission_date);
   const now = new Date();
-  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  
+  // Logic: Payment in May is for April (previous month)
+  // So current month (May) is NOT yet due in terms of "salary" logic requested
+  const dueMonthKey = `${now.getFullYear()}-${String(now.getMonth()).padStart(2,'0')}`; // Previous month
+  
+  const overdueMonths = months.filter(m => m.key <= dueMonthKey && (history[m.key] || 'unpaid') !== 'paid');
+  const overdueBalance = overdueMonths.length * fee;
+  
   const totalAdvance = student.advance_payments?.reduce((a, p) => a + (p.amount || 0), 0) || 0;
   const monthsPaidByAdvance = student.advance_payments?.reduce((a, p) => a + (p.covered_months?.length || 0), 0) || 0;
   const advanceCredit = totalAdvance - (monthsPaidByAdvance * fee);
-  const overdueMonths = months.filter(m => m.key < currentMonthKey && (history[m.key] || 'unpaid') !== 'paid');
-  const overdueBalance = overdueMonths.length * fee;
+  
   return { creditBalance: Math.max(0, advanceCredit), overdueBalance, overdueCount: overdueMonths.length };
 }
 
@@ -303,16 +309,62 @@ function StudentDrawer({ student, batches, onClose, tutorName }) {
 
         <hr style={{ borderColor: 'rgba(255,255,255,0.07)', margin: 0 }} />
 
-        {/* ── Change Batch ── */}
+        {/* ── Enrolled Batches ── */}
         <div>
-          <p style={{ ...labelStyle, marginBottom: '0.7rem', fontSize: '0.78rem', color: '#94A3B8' }}>🔄 CHANGE BATCH</p>
+          <p style={{ ...labelStyle, marginBottom: '0.7rem', fontSize: '0.78rem', color: '#94A3B8' }}>📚 ENROLLED BATCHES</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+            {(student.enrolled_batches || [{ batch_id: student.batch_id, monthly_fee: student.monthly_fee }]).map((eb, idx) => {
+              const b = batches.find(batch => batch.id === eb.batch_id);
+              return (
+                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div>
+                    <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: 600 }}>{b?.name || 'Unknown Batch'}</p>
+                    <p style={{ margin: 0, fontSize: '0.7rem', color: 'var(--secondary)' }}>Fee: ₹{eb.monthly_fee || 2500}</p>
+                  </div>
+                  {student.enrolled_batches?.length > 1 && (
+                    <button 
+                      onClick={async () => {
+                        const newBatches = student.enrolled_batches.filter((_, i) => i !== idx);
+                        await firestoreUpdate({ enrolled_batches: newBatches });
+                        toast.success('Removed from batch');
+                      }}
+                      style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer' }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <select value={batchId} onChange={e => setBatchId(e.target.value)} style={{ ...inputStyle, flex: 1 }}>
-              <option value="">Select batch…</option>
-              {batches.map(b => <option key={b.id} value={b.id}>{b.name}{b.id === student.batch_id ? ' (current)' : ''}</option>)}
+              <option value="">Add to another batch…</option>
+              {batches.filter(b => !(student.enrolled_batches || []).some(eb => eb.batch_id === b.id)).map(b => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
             </select>
-            <button onClick={handleChangeBatch} disabled={!batchId || batchId === student.batch_id} style={{ padding: '0.65rem 1rem', background: 'rgba(245,197,24,0.12)', border: '1px solid rgba(245,197,24,0.3)', color: '#F5C518', borderRadius: '9px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem', flexShrink: 0, opacity: (!batchId || batchId === student.batch_id) ? 0.4 : 1 }}>
-              <ArrowRightLeft size={15} />
+            <button 
+              onClick={async () => {
+                if (!batchId) return;
+                const batch = batches.find(b => b.id === batchId);
+                const fee = batch?.fee || 2500;
+                
+                if (!isMockMode && db) {
+                  const { enrollStudentInBatch } = await import('../db.service');
+                  await enrollStudentInBatch(student.id, student.tutorId, batchId, fee);
+                } else {
+                  const newEB = { batch_id: batchId, monthly_fee: fee, payment_status: 'active' };
+                  setMockStudents(prev => prev.map(s => s.id === student.id ? { ...s, enrolled_batches: [...(s.enrolled_batches || []), newEB] } : s));
+                }
+                toast.success(`Added to ${batch?.name} ✅`);
+                setBatchId('');
+              }} 
+              disabled={!batchId} 
+              style={{ padding: '0.65rem 1rem', background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.35)', color: '#A5B4FC', borderRadius: '9px', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem', flexShrink: 0, opacity: !batchId ? 0.4 : 1 }}
+            >
+              <Plus size={15} />
             </button>
           </div>
         </div>

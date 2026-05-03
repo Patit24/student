@@ -403,6 +403,55 @@ export async function markStudentPaid(studentId, method = 'cash') {
 // STUDENT MANAGEMENT
 // ─────────────────────────────────────────────────────────────────────────────
 
+export async function createBatch(batchData) {
+  return await addDoc(collection(db, 'batches'), {
+    ...batchData,
+    created_at: serverTimestamp(),
+  });
+}
+
+/**
+ * Update a batch and automatically update the fee for all students enrolled in it.
+ */
+export async function updateBatch(batchId, batchData) {
+  const batchRef = doc(db, 'batches', batchId);
+  await updateDoc(batchRef, {
+    ...batchData,
+    updated_at: serverTimestamp()
+  });
+
+  // If fee is updated, propagate to all students
+  if (batchData.fee !== undefined) {
+    const q = query(collection(db, 'users'), where('role', '==', 'student'));
+    const snap = await getDocs(q);
+    
+    const batchUpdates = [];
+    snap.docs.forEach(studentDoc => {
+      const studentData = studentDoc.data();
+      const enrolledBatches = studentData.enrolled_batches || [];
+      let updated = false;
+      
+      const newEnrolled = enrolledBatches.map(eb => {
+        if (eb.batch_id === batchId) {
+          updated = true;
+          return { ...eb, monthly_fee: batchData.fee };
+        }
+        return eb;
+      });
+
+      if (updated || studentData.batch_id === batchId) {
+        batchUpdates.push(updateDoc(studentDoc.ref, {
+          enrolled_batches: newEnrolled,
+          // Update global monthly_fee if this is their primary batch
+          ...(studentData.batch_id === batchId ? { monthly_fee: batchData.fee } : {})
+        }));
+      }
+    });
+    
+    await Promise.all(batchUpdates);
+  }
+}
+
 /** Look up an existing student by phone in Firestore. */
 export async function lookupStudentByPhone(phone) {
   if (!db || !phone) return null;
@@ -493,9 +542,17 @@ export async function enrollStudentInBatch(studentId, tutorId, batchId, monthlyF
   const { arrayUnion } = await import('firebase/firestore');
   const studentRef = doc(db, 'users', studentId);
   
+  // First get the student to check if they are already in this batch
+  const studentSnap = await getDoc(studentRef);
+  if (studentSnap.exists()) {
+    const data = studentSnap.data();
+    const alreadyEnrolled = (data.enrolled_batches || []).some(eb => eb.batch_id === batchId);
+    if (alreadyEnrolled) return; // Don't add duplicate
+  }
+
   await updateDoc(studentRef, {
     tutorId: tutorId, // Set last tutor for compatibility
-    batch_id: batchId,
+    batch_id: batchId, // Set as primary batch
     enrolled_batches: arrayUnion({
       tutor_id: tutorId,
       batch_id: batchId,

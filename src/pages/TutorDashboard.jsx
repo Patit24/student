@@ -5,7 +5,7 @@ import {
   Video, Mic, MicOff, VideoOff, ScreenShare, MessageSquare, Users, 
   Lock, Unlock, Check, X, UserPlus, Calendar, Layout, Crown, 
   FileText, CheckSquare, Building2, AlertOctagon, ToggleLeft, 
-  ToggleRight, Image, Globe, Play, Plus, Trash2, MapPin, TrendingUp, CreditCard, Layers, Shield
+  ToggleRight, Image, Globe, Play, Plus, Trash2, MapPin, TrendingUp, CreditCard, Layers, Shield, Edit3
 } from 'lucide-react';
 import ChatSidebar from '../components/ChatSidebar';
 import ExamCreator from '../components/ExamCreator';
@@ -278,6 +278,9 @@ export default function TutorDashboard() {
 
   const [newBatchName, setNewBatchName] = useState('');
   const [newBatchLimit, setNewBatchLimit] = useState('');
+  const [newBatchFee, setNewBatchFee] = useState('2500');
+
+  const [editingBatch, setEditingBatch] = useState(null); // { id, name, limit, fee }
 
   const [studentName, setStudentName] = useState('');
   const [studentPhone, setStudentPhone] = useState('');
@@ -492,6 +495,7 @@ export default function TutorDashboard() {
     const batchPayload = {
       name:     newBatchName,
       limit:    parseInt(newBatchLimit),
+      fee:      parseInt(newBatchFee),
       assigned: [],
       tutorId:  currentUser.uid,
       created_at: new Date().toISOString(),
@@ -499,8 +503,8 @@ export default function TutorDashboard() {
 
     if (!isMockMode && db) {
       try {
-        const { addDoc, collection: col } = await import('firebase/firestore');
-        await addDoc(col(db, 'batches'), batchPayload);
+        const { createBatch } = await import('../db.service');
+        await createBatch(batchPayload);
         toast.success(`Batch "${newBatchName}" created ✅`);
       } catch (err) {
         toast.error(`Failed to create batch: ${err.message}`);
@@ -514,6 +518,38 @@ export default function TutorDashboard() {
 
     setNewBatchName('');
     setNewBatchLimit('');
+    setNewBatchFee('2500');
+  };
+
+  const handleEditBatch = async (e) => {
+    e.preventDefault();
+    if (!editingBatch) return;
+
+    if (!isMockMode && db) {
+      try {
+        const { updateBatch } = await import('../db.service');
+        await updateBatch(editingBatch.id, {
+          name: editingBatch.name,
+          limit: parseInt(editingBatch.limit),
+          fee: parseInt(editingBatch.fee)
+        });
+        toast.success(`Batch "${editingBatch.name}" updated ✅`);
+      } catch (err) {
+        toast.error(`Update failed: ${err.message}`);
+        return;
+      }
+    } else {
+      setMockBatches(prev => prev.map(b => b.id === editingBatch.id ? { ...b, ...editingBatch, limit: parseInt(editingBatch.limit), fee: parseInt(editingBatch.fee) } : b));
+      // Update mock students as well
+      setMockStudents(prev => prev.map(s => {
+        if (s.batch_id === editingBatch.id) {
+          return { ...s, monthly_fee: parseInt(editingBatch.fee) };
+        }
+        return s;
+      }));
+      toast.success(`Batch "${editingBatch.name}" updated (Mock Mode)`);
+    }
+    setEditingBatch(null);
   };
 
   const [phoneLookup,     setPhoneLookup]     = useState(null);
@@ -556,20 +592,50 @@ export default function TutorDashboard() {
     }
 
     if (phoneLookup?.found) {
-      const existingId = phoneLookup.id;
+      const selectedBatch = myBatches.find(b => b.id === studentBatchId);
+      const batchFee = selectedBatch?.fee || 2500;
+
       if (!isMockMode && db && existingId) {
         try {
           const { enrollStudentInBatch } = await import('../db.service');
-          await enrollStudentInBatch(existingId, currentUser.uid, studentBatchId);
+          await enrollStudentInBatch(existingId, currentUser.uid, studentBatchId, batchFee);
           toast.success(`${studentName} linked ✅`);
         } catch (err) {
           toast.error(`Link failed: ${err.message}`);
           return;
         }
       } else {
-        const linked = { id: existingId || `student-${Date.now()}`, name: studentName, phone: studentPhone, is_verified: false, needs_password_reset: true, tutorId: currentUser.uid, batch_id: studentBatchId, payment_status: 'unpaid', admission_date: admissionDate, payment_history: {} };
+        const linked = { 
+          id: existingId || `student-${Date.now()}`, 
+          name: studentName, 
+          phone: studentPhone, 
+          is_verified: false, 
+          needs_password_reset: true, 
+          tutorId: currentUser.uid, 
+          batch_id: studentBatchId, 
+          monthly_fee: batchFee,
+          payment_status: 'unpaid', 
+          admission_date: admissionDate, 
+          payment_history: {},
+          enrolled_batches: [
+            {
+              tutor_id: currentUser.uid,
+              batch_id: studentBatchId,
+              payment_status: 'active',
+              monthly_fee: batchFee,
+              outstanding_balance: 0,
+              payment_due_date: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 5).toISOString().split('T')[0]
+            }
+          ]
+        };
         if (!mockStudents.find(s => s.id === linked.id)) {
           setMockStudents(prev => [...prev, linked]);
+        } else {
+          // If student exists in mock, just add the batch
+          setMockStudents(prev => prev.map(s => s.id === linked.id ? { 
+            ...s, 
+            enrolled_batches: [...(s.enrolled_batches || []), linked.enrolled_batches[0]]
+          } : s));
         }
         toast.success(`${studentName} linked ✅`);
       }
@@ -580,11 +646,13 @@ export default function TutorDashboard() {
 
     const { generateTempPassword } = await import('../db.service');
     const tempPassword = generateTempPassword();
+    const selectedBatch = myBatches.find(b => b.id === studentBatchId);
+    const batchFee = selectedBatch?.fee || 2500;
 
     if (!isMockMode) {
       try {
         const { createStudentAccount } = await import('../db.service');
-        const { tempPassword: actualPassword } = await createStudentAccount(studentPhone, studentName, currentUser.uid, studentBatchId);
+        const { tempPassword: actualPassword } = await createStudentAccount(studentPhone, studentName, currentUser.uid, studentBatchId, batchFee);
         setCredentialModal({ name: studentName, phone: studentPhone, password: actualPassword });
         toast.success(`Account created!`);
       } catch (err) {
@@ -592,7 +660,29 @@ export default function TutorDashboard() {
         return;
       }
     } else {
-      const newStudent = { id: `student-${Date.now()}`, name: studentName, phone: studentPhone, batch_id: studentBatchId, is_verified: false, needs_password_reset: true, tutorId: currentUser.uid, payment_status: 'unpaid', admission_date: admissionDate, payment_history: {} };
+      const newStudent = { 
+        id: `student-${Date.now()}`, 
+        name: studentName, 
+        phone: studentPhone, 
+        batch_id: studentBatchId, 
+        monthly_fee: batchFee,
+        is_verified: false, 
+        needs_password_reset: true, 
+        tutorId: currentUser.uid, 
+        payment_status: 'unpaid', 
+        admission_date: admissionDate, 
+        payment_history: {},
+        enrolled_batches: [
+          {
+            tutor_id: currentUser.uid,
+            batch_id: studentBatchId,
+            payment_status: 'active',
+            monthly_fee: batchFee,
+            outstanding_balance: 0,
+            payment_due_date: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 5).toISOString().split('T')[0]
+          }
+        ]
+      };
       setMockStudents(prev => [...prev, newStudent]);
       setCredentialModal({ name: studentName, phone: studentPhone, password: tempPassword });
       toast.success(`Account created!`);
@@ -865,17 +955,54 @@ export default function TutorDashboard() {
 
       {activeTab === 'batches' && (
         <div className="glass-panel p-8">
-          <h3 className="mb-4">Batch Management</h3>
-          <form onSubmit={createBatch} className="flex gap-4 items-end mb-6 flex-wrap">
-            <input type="text" className="input-field" placeholder="Batch Name" value={newBatchName} onChange={e => setNewBatchName(e.target.value)} required />
-            <input type="number" className="input-field" placeholder="Limit" value={newBatchLimit} onChange={e => setNewBatchLimit(e.target.value)} required />
-            <button type="submit" className="btn btn-primary">Create Batch</button>
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="m-0">Batch Management</h3>
+            {editingBatch && (
+              <button className="btn btn-outline" onClick={() => setEditingBatch(null)}>Cancel Edit</button>
+            )}
+          </div>
+          
+          <form onSubmit={editingBatch ? handleEditBatch : createBatch} className="flex gap-4 items-end mb-8 flex-wrap p-6" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div className="flex-1 min-w-[200px]">
+              <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>BATCH NAME</label>
+              <input type="text" className="input-field m-0" placeholder="e.g. Physics Morning" value={editingBatch ? editingBatch.name : newBatchName} onChange={e => editingBatch ? setEditingBatch({...editingBatch, name: e.target.value}) : setNewBatchName(e.target.value)} required />
+            </div>
+            <div style={{ width: '100px' }}>
+              <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>LIMIT</label>
+              <input type="number" className="input-field m-0" placeholder="30" value={editingBatch ? editingBatch.limit : newBatchLimit} onChange={e => editingBatch ? setEditingBatch({...editingBatch, limit: e.target.value}) : setNewBatchLimit(e.target.value)} required />
+            </div>
+            <div style={{ width: '150px' }}>
+              <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.5rem', display: 'block' }}>MONTHLY FEE (₹)</label>
+              <input type="number" className="input-field m-0" placeholder="2500" value={editingBatch ? editingBatch.fee : newBatchFee} onChange={e => editingBatch ? setEditingBatch({...editingBatch, fee: e.target.value}) : setNewBatchFee(e.target.value)} required />
+            </div>
+            <button type="submit" className="btn btn-primary" style={{ padding: '0.8rem 2rem' }}>
+              {editingBatch ? 'Save Changes' : 'Create Batch'}
+            </button>
           </form>
-          <div className="flex-col gap-4">
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
             {myBatches.map(b => (
-              <div key={b.id} className="p-4 glass-panel" style={{ background: 'rgba(0,0,0,0.1)' }}>
-                <h4>{b.name}</h4>
-                <p className="text-muted">Capacity: {myStudents.filter(s => s.batch_id === b.id).length} / {b.limit}</p>
+              <div key={b.id} className="p-6 glass-panel" style={{ background: 'rgba(255,255,255,0.03)', position: 'relative' }}>
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h4 className="m-0" style={{ color: 'var(--primary)' }}>{b.name}</h4>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>Created: {new Date(b.created_at).toLocaleDateString()}</p>
+                  </div>
+                  <button className="btn btn-outline" style={{ padding: '0.3rem 0.6rem', fontSize: '0.75rem' }} onClick={() => setEditingBatch({ id: b.id, name: b.name, limit: b.limit, fee: b.fee || 2500 })}>
+                    <Edit3 size={14} /> Edit
+                  </button>
+                </div>
+                
+                <div className="flex gap-4 mt-6">
+                  <div style={{ flex: 1, padding: '0.75rem', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', textAlign: 'center' }}>
+                    <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', margin: 0 }}>Students</p>
+                    <p style={{ fontSize: '1.2rem', fontWeight: 800, margin: '0.2rem 0 0' }}>{myStudents.filter(s => s.batch_id === b.id).length} / {b.limit}</p>
+                  </div>
+                  <div style={{ flex: 1, padding: '0.75rem', background: 'rgba(34,197,94,0.08)', borderRadius: '12px', textAlign: 'center', border: '1px solid rgba(34,197,94,0.1)' }}>
+                    <p style={{ fontSize: '0.6rem', color: '#22C55E', textTransform: 'uppercase', margin: 0 }}>Monthly Fee</p>
+                    <p style={{ fontSize: '1.2rem', fontWeight: 800, margin: '0.2rem 0 0', color: '#22C55E' }}>₹{b.fee || 2500}</p>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
