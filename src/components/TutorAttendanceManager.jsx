@@ -119,7 +119,7 @@ export default function TutorAttendanceManager({ tutorId, batches, students, isM
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
-  const batchStudents = students.filter(s => s.batch_id === selectedBatch);
+  const batchStudents = students.filter(s => s.batch_id === selectedBatch || (s.enrolled_batches || []).some(eb => eb.batch_id === selectedBatch));
 
   // Generate Date Array
   const daysArray = Array.from({ length: daysInMonth }, (_, i) => {

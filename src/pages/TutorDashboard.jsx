@@ -542,8 +542,21 @@ export default function TutorDashboard() {
       setMockBatches(prev => prev.map(b => b.id === editingBatch.id ? { ...b, ...editingBatch, limit: parseInt(editingBatch.limit), fee: parseInt(editingBatch.fee) } : b));
       // Update mock students as well
       setMockStudents(prev => prev.map(s => {
-        if (s.batch_id === editingBatch.id) {
-          return { ...s, monthly_fee: parseInt(editingBatch.fee) };
+        let updatedEB = false;
+        const newEnrolled = (s.enrolled_batches || []).map(eb => {
+          if (eb.batch_id === editingBatch.id) {
+            updatedEB = true;
+            return { ...eb, monthly_fee: parseInt(editingBatch.fee) };
+          }
+          return eb;
+        });
+
+        if (s.batch_id === editingBatch.id || updatedEB) {
+          return { 
+            ...s, 
+            enrolled_batches: newEnrolled,
+            ...(s.batch_id === editingBatch.id ? { monthly_fee: parseInt(editingBatch.fee) } : {})
+          };
         }
         return s;
       }));
@@ -999,7 +1012,7 @@ export default function TutorDashboard() {
                 <div className="flex gap-4 mt-6">
                   <div style={{ flex: 1, padding: '0.75rem', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', textAlign: 'center' }}>
                     <p style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textTransform: 'uppercase', margin: 0 }}>Students</p>
-                    <p style={{ fontSize: '1.2rem', fontWeight: 800, margin: '0.2rem 0 0' }}>{myStudents.filter(s => s.batch_id === b.id).length} / {b.limit}</p>
+                    <p style={{ fontSize: '1.2rem', fontWeight: 800, margin: '0.2rem 0 0' }}>{myStudents.filter(s => s.batch_id === b.id || (s.enrolled_batches || []).some(eb => eb.batch_id === b.id)).length} / {b.limit}</p>
                   </div>
                   <div style={{ flex: 1, padding: '0.75rem', background: 'rgba(34,197,94,0.08)', borderRadius: '12px', textAlign: 'center', border: '1px solid rgba(34,197,94,0.1)' }}>
                     <p style={{ fontSize: '0.6rem', color: '#22C55E', textTransform: 'uppercase', margin: 0 }}>Monthly Fee</p>

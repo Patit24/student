@@ -493,7 +493,7 @@ export default function StudentManagePanel({ myStudents, myBatches, tutorName })
   const filtered = myStudents.filter(s => {
     const q = search.toLowerCase();
     const matchQ = !q || s.name?.toLowerCase().includes(q) || s.email?.toLowerCase().includes(q) || s.phone?.includes(q);
-    const matchB = !filterB || s.batch_id === filterB;
+    const matchB = !filterB || s.batch_id === filterB || (s.enrolled_batches || []).some(eb => eb.batch_id === filterB);
     const matchP = !filterP || s.payment_status === filterP;
     return matchQ && matchB && matchP;
   });
