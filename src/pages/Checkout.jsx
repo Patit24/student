@@ -10,8 +10,23 @@ export default function Checkout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentUser } = useAppContext();
-  const { showToast } = useToast();
-  
+  const toast = useToast();
+
+  // Robust notification helper to prevent "TypeError: r is not a function"
+  const safeToast = (msg, type = 'success') => {
+    if (toast && typeof toast[type] === 'function') {
+      toast[type](msg);
+    } else {
+      console.warn(`[Toast Fallback] ${type}: ${msg}`);
+      alert(msg);
+    }
+  };
+
+  const getApiUrl = () => {
+    if (import.meta.env.VITE_APP_API_URL) return import.meta.env.VITE_APP_API_URL.replace(/\/$/, "");
+    if (window.location.hostname === 'localhost') return 'http://localhost:4000';
+    return ''; 
+  };
   const product = location.state?.product;
   const isDigital = product?.type === 'Digital';
   const isBundle = product?.title?.toLowerCase().includes('bundle');
@@ -57,28 +72,20 @@ export default function Checkout() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handlePayment = async (e) => {
-    e.preventDefault();
-    if (paymentMethod === 'razorpay') {
-      await handleRazorpayPayment();
-    } else {
-      await handleCODPayment();
-    }
-  };
 
   const handleRazorpayPayment = async () => {
     setIsProcessing(true);
     const res = await loadRazorpayScript();
 
     if (!res) {
-      showToast('Razorpay SDK failed to load. Are you online?', 'error');
+      safeToast('Razorpay SDK failed to load. Are you online?', 'error');
       setIsProcessing(false);
       return;
     }
 
     try {
       // 1. Create order on backend
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:4000'}/api/marketplace/create-order`, {
+      const response = await fetch(`${getApiUrl()}/api/marketplace/create-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -88,6 +95,11 @@ export default function Checkout() {
           is_bundle_discount: isEligibleForBundleDiscount
         }),
       });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Server connection failed');
+      }
 
       const order = await response.json();
 
@@ -104,7 +116,6 @@ export default function Checkout() {
         description: `Purchase: ${product.title}`,
         order_id: order.order_id,
         handler: async (response) => {
-          // Success! Create Firestore order
           try {
             const orderData = {
               userId: currentUser?.uid || 'guest',
@@ -120,10 +131,10 @@ export default function Checkout() {
             };
             
             await createMarketplaceOrder(orderData);
-            showToast('Payment successful! Order confirmed. 🚀', 'success');
+            safeToast('Payment successful! Order confirmed. 🚀', 'success');
             navigate(currentUser ? '/student' : '/marketplace');
           } catch (err) {
-            showToast('Order registration failed. Please contact support.', 'error');
+            safeToast('Order registration failed. Please contact support.', 'error');
           }
         },
         prefill: {
@@ -136,36 +147,68 @@ export default function Checkout() {
 
       const rzp1 = new window.Razorpay(options);
       rzp1.on('payment.failed', (response) => {
-        showToast(response.error.description, 'error');
+        safeToast(response.error.description, 'error');
       });
       rzp1.open();
     } catch (error) {
-      showToast(error.message, 'error');
+      safeToast(error.message, 'error');
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const handleCODPayment = async () => {
+  const executeCODFlow = async () => {
     setIsProcessing(true);
     try {
       const orderData = {
-        userId: currentUser?.uid || 'guest',
-        items: [{ productId: product.id, title: product.title, type: product.type }],
-        totalAmount: finalPrice,
-        discountApplied: isEligibleForBundleDiscount ? 'STUDENT_BUNDLE_50' : null,
-        status: 'COD_Pending',
-        paymentMethod: 'COD',
-        customerDetails: formData
+        userId: currentUser.uid,
+        userName: formData.name,
+        userEmail: formData.email,
+        userPhone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        pincode: formData.pincode,
+        productId: product.id,
+        productTitle: product.title,
+        amount: finalPrice,
+        currency: 'INR',
+        payment_method: 'COD',
+        payment_status: 'Pending',
+        status: 'Order Placed',
+        created_at: new Date().toISOString()
       };
-      
+
       await createMarketplaceOrder(orderData);
-      showToast('Order placed successfully (Cash on Delivery)!', 'success');
-      navigate(currentUser ? '/student' : '/marketplace');
+      
+      // Fallback alert if toast fails
+      try {
+        safeToast('Order placed successfully (Cash on Delivery)!', 'success');
+      } catch (e) {
+        alert('Order placed successfully (Cash on Delivery)!');
+      }
+      
+      setTimeout(() => {
+        navigate(currentUser ? '/student' : '/marketplace');
+      }, 1500);
     } catch (error) {
-      showToast('Failed to place COD order.', 'error');
+      console.error('COD Error:', error);
+      try {
+        safeToast('Failed to place COD order.', 'error');
+      } catch (e) {
+        alert('Failed to place COD order.');
+      }
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handlePayment = async (e) => {
+    e.preventDefault();
+    if (paymentMethod === 'razorpay') {
+      await handleRazorpayPayment();
+    } else {
+      await executeCODFlow();
     }
   };
 

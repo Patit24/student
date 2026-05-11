@@ -49,6 +49,7 @@ export default function AdminDashboard() {
   const [verifyingTutor, setVerifyingTutor] = useState(null);
   const [selectedPlan, setSelectedPlan] = useState('growth');
   const [allCourses, setAllCourses] = useState([]);
+  const [marketplaceOrders, setMarketplaceOrders] = useState([]);
 
   useEffect(() => {
     const qTutors = query(collection(db, 'users'), where('role', '==', 'tutor'));
@@ -87,7 +88,12 @@ export default function AdminDashboard() {
     const unsubAspExam = onSnapshot(qExam, snap => {
       setAspirantExams(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
-    return () => { unsubAssets(); unsubCourses(); unsubAspMat(); unsubAspExam(); };
+    const qOrders = query(collection(db, 'orders'), orderBy('created_at', 'desc'));
+    const unsubOrders = onSnapshot(qOrders, snap => {
+      setMarketplaceOrders(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    });
+
+    return () => { unsubAssets(); unsubCourses(); unsubAspMat(); unsubAspExam(); unsubOrders(); };
   }, []);
 
   const totalRevenue = tutors.reduce((acc, tutor) => {
@@ -271,6 +277,7 @@ export default function AdminDashboard() {
               <button className={`tab-btn ${activeTab === 'courses' ? 'active' : ''}`} onClick={() => setActiveTab('courses')}><BookOpen size={18} /> Marketplace</button>
               <button className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')}><BarChart size={18} /> Analytics</button>
               <button className={`tab-btn ${activeTab === 'aspirant' ? 'active' : ''}`} onClick={() => setActiveTab('aspirant')}><Microscope size={18} /> {'NEET / JEE'}</button>
+              <button className={`tab-btn ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => setActiveTab('orders')}><PackageCheck size={18} /> Shop Orders</button>
             </div>
 
             {/* TAB: Tutors */}
@@ -554,6 +561,50 @@ export default function AdminDashboard() {
               </div>
             )}
 
+            {/* TAB: Marketplace Orders */}
+            {activeTab === 'orders' && (
+              <div className="glass-card p-8 animate-premium">
+                <h3 className="mb-6 flex items-center gap-2"><PackageCheck size={20} color="#f5c518" /> Marketplace Orders</h3>
+                <div className="table-responsive">
+                  <table className="premium-table">
+                    <thead>
+                      <tr>
+                        <th>Customer</th>
+                        <th>Product</th>
+                        <th>Amount</th>
+                        <th>Method</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {marketplaceOrders.map(order => (
+                        <tr key={order.id}>
+                          <td>
+                            <strong>{order.userName}</strong><br/>
+                            <small className="text-muted">{order.userPhone}</small>
+                          </td>
+                          <td>{order.productTitle}</td>
+                          <td>₹{order.amount}</td>
+                          <td><span className="badge-pending" style={{ background: 'rgba(255,255,255,0.05)' }}>{order.payment_method}</span></td>
+                          <td>
+                            <span className={order.payment_status === 'Paid' ? 'badge-active' : 'badge-pending'}>
+                              {order.payment_status}
+                            </span>
+                          </td>
+                          <td>{formatDate(order.created_at)}</td>
+                        </tr>
+                      ))}
+                      {marketplaceOrders.length === 0 && (
+                        <tr>
+                          <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: '#7a8ba8' }}>No orders found yet.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </main>
         </div>
 

@@ -56,6 +56,7 @@ export default function Navbar() {
         <div className="hide-on-mobile flex items-center gap-6">
           {currentUser ? (
             <>
+              <Link to="/orders" style={navLink}>My Orders</Link>
               <span style={{ color: '#7A8BA8', fontSize: '0.88rem' }}>
                 {currentUser.name}
                 <span style={{ marginLeft: '0.35rem', fontSize: '0.7rem', textTransform: 'uppercase', opacity: 0.6 }}>
@@ -119,9 +120,12 @@ export default function Navbar() {
           <Link to="/blogs" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>Blogs</Link>
           <hr style={{ borderColor: 'rgba(255,255,255,0.05)' }} />
           {currentUser ? (
-            <button onClick={handleLogout} className="btn btn-outline" style={{ justifyContent: 'center' }}>
-              <LogOut size={18} /> Logout
-            </button>
+            <>
+              <Link to="/orders" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>My Orders</Link>
+              <button onClick={handleLogout} className="btn btn-outline" style={{ justifyContent: 'center' }}>
+                <LogOut size={18} /> Logout
+              </button>
+            </>
           ) : (
             <>
               <Link to="/login" onClick={() => setIsMenuOpen(false)} className="btn btn-outline" style={{ justifyContent: 'center' }}>Log In</Link>

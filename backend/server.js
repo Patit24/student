@@ -33,9 +33,12 @@ try {
 }
 
 // --- Razorpay Init ---
+const rzp_key_id = process.env.RAZORPAY_KEY_ID || process.env.VITE_RAZORPAY_KEY_ID || '';
+const rzp_key_secret = process.env.RAZORPAY_KEY_SECRET || process.env.VITE_RAZORPAY_KEY_SECRET || '';
+
 const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID || '',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || '',
+  key_id: rzp_key_id,
+  key_secret: rzp_key_secret,
 });
 
 // --- Express App ---
@@ -105,7 +108,7 @@ app.post('/api/create-order', async (req, res) => {
       receipt: `ag_${tutor_id}_${Date.now()}`,
       notes: { tutor_id, plan_id },
     });
-    res.json({ order_id: order.id, amount: order.amount, key_id: process.env.RAZORPAY_KEY_ID });
+    res.json({ order_id: order.id, amount: order.amount, key_id: rzp_key_id });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -120,7 +123,7 @@ app.post('/api/resume/create-order', async (req, res) => {
       receipt: `resume_${uid}_${Date.now()}`,
       notes: { uid, type: 'resume_unlock' },
     });
-    res.json({ order_id: order.id, amount: order.amount, key_id: process.env.RAZORPAY_KEY_ID });
+    res.json({ order_id: order.id, amount: order.amount, key_id: rzp_key_id });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -256,7 +259,7 @@ app.post('/api/marketplace/create-order', async (req, res) => {
       receipt: `mk_${user_id || 'guest'}_${Date.now()}`.substring(0, 40),
       notes: { user_id: user_id || 'guest', product_id, is_bundle_discount: is_bundle_discount ? 'true' : 'false', type: 'marketplace' },
     });
-    res.json({ order_id: order.id, amount: order.amount, key_id: process.env.RAZORPAY_KEY_ID });
+    res.json({ order_id: order.id, amount: order.amount, key_id: rzp_key_id });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

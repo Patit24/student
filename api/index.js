@@ -23,9 +23,12 @@ app.use(express.json());
 const firebaseApp = initFirebase();
 
 // ── RAZORPAY INITIALIZATION ─────────────────────────────────────────────────
+const rzp_key_id = process.env.RAZORPAY_KEY_ID || process.env.VITE_RAZORPAY_KEY_ID || '';
+const rzp_key_secret = process.env.RAZORPAY_KEY_SECRET || process.env.VITE_RAZORPAY_KEY_SECRET || '';
+
 const razorpay = new (await import('razorpay')).default({
-  key_id: process.env.RAZORPAY_KEY_ID || '',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || '',
+  key_id: rzp_key_id,
+  key_secret: rzp_key_secret,
 });
 
 // ── MULTER CONFIG ───────────────────────────────────────────────────────────
@@ -106,7 +109,13 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     return res.status(503).json({ 
       error: 'Firebase not initialized', 
       debug_info: {
-        key_exists: !!process.env.FIREBASE_KEY_JSON,
+        key_exists: !!(process.env.FIREBASE_KEY_JSON && (function() {
+          let serviceAccount = JSON.parse(process.env.FIREBASE_KEY_JSON);
+          if (serviceAccount.private_key) {
+            serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+          }
+          return true;
+        })()),
         key_length: process.env.FIREBASE_KEY_JSON?.length || 0
       }
     });
@@ -126,6 +135,51 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
     stream.end(file.buffer);
   } catch (err) {
     res.status(500).send(err.message);
+  }
+});
+
+// 5. MARKETPLACE: RAZORPAY ORDERS
+app.post('/api/marketplace/create-order', async (req, res) => {
+  const { amount_inr, user_id, product_id, is_bundle_discount } = req.body;
+  try {
+    const order = await razorpay.orders.create({
+      amount: Math.round(amount_inr * 100),
+      currency: 'INR',
+      receipt: `mk_${user_id || 'guest'}_${Date.now()}`.substring(0, 40),
+      notes: { user_id: user_id || 'guest', product_id, is_bundle_discount: is_bundle_discount ? 'true' : 'false', type: 'marketplace' },
+    });
+    res.json({ order_id: order.id, amount: order.amount, key_id: process.env.RAZORPAY_KEY_ID });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 6. MARKETPLACE: GENERATE SIGNED URL
+app.post('/api/marketplace/generate-signed-url', async (req, res) => {
+  const { fileUrl } = req.body;
+  if (!fileUrl) return res.status(400).send('No file URL');
+
+  try {
+    let filePath = fileUrl;
+    if (fileUrl.includes('/o/')) {
+      filePath = decodeURIComponent(fileUrl.split('/o/')[1].split('?')[0]);
+    } else if (fileUrl.includes('storage.googleapis.com')) {
+      const parts = new URL(fileUrl).pathname.split('/');
+      filePath = parts.slice(2).join('/');
+    }
+
+    const bucket = admin.storage().bucket();
+    const file = bucket.file(filePath);
+
+    const [signedUrl] = await file.getSignedUrl({
+      version: 'v4',
+      action: 'read',
+      expires: Date.now() + 60 * 60 * 1000,
+    });
+
+    res.json({ signedUrl });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
