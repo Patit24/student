@@ -17,6 +17,7 @@ import { collection, query, where, onSnapshot, updateDoc, doc, deleteDoc, server
 import { db } from '../firebase';
 import AdminBlogManager from '../components/AdminBlogManager';
 import TutorCourseManager from '../components/TutorCourseManager';
+import ProductManager from '../components/admin/ProductManager';
 import './AdminDashboard.css';
 
 export default function AdminDashboard() {
@@ -403,8 +404,13 @@ export default function AdminDashboard() {
               </div>
             )}
 
+            {/* TAB: Marketplace */}
+            {activeTab === 'courses' && (
+              <ProductManager />
+            )}
+
             {/* Other Tabs Placeholder */}
-            {['blogs', 'courses', 'analytics'].includes(activeTab) && (
+            {['blogs', 'analytics'].includes(activeTab) && (
               <div className="glass-card p-20 text-center opacity-30">
                 <Loader2 className="animate-spin mb-4" size={48} />
                 <h3>Module Loading...</h3>

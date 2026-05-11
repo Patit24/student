@@ -19,6 +19,9 @@ import Blogs from './pages/Blogs';
 import BlogDetail from './pages/BlogDetail';
 import CourseDetail from './pages/CourseDetail';
 import Courses from './pages/Courses';
+import Marketplace from './pages/Marketplace';
+import ProductDetail from './pages/ProductDetail';
+import Checkout from './pages/Checkout';
 import NeetAspirant from './pages/NeetAspirant';
 import JeeAspirant from './pages/JeeAspirant';
 import Footer from './components/Footer';
@@ -49,6 +52,9 @@ function AppRoutes() {
       <Route path="/blog/:blogId" element={<BlogDetail />} />
       <Route path="/course/:courseId" element={<CourseDetail />} />
       <Route path="/courses" element={<Courses />} />
+      <Route path="/marketplace" element={<Marketplace />} />
+      <Route path="/product/:productId" element={<ProductDetail />} />
+      <Route path="/checkout" element={<Checkout />} />
       <Route path="/pricing" element={<Pricing />} />
       <Route path="/neet" element={<NeetAspirant />} />
       <Route path="/jee" element={<JeeAspirant />} />

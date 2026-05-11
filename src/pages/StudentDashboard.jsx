@@ -315,6 +315,21 @@ export default function StudentDashboard() {
                   </div>
                 </div>
 
+                {/* Marketplace Promotional Banner */}
+                <div className="sd-card sd-animate sd-animate-delay-3" style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(245,158,11,0.05) 100%)', border: '1px solid rgba(245,158,11,0.3)', padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div>
+                    <h4 className="flex items-center gap-2" style={{ fontWeight: 800, color: '#FBBF24', margin: '0 0 0.5rem' }}>
+                      <Package size={18} /> PPRE Student Exclusive
+                    </h4>
+                    <p style={{ margin: 0, fontSize: '0.9rem', color: '#F0F4FF' }}>
+                      Get an automatic <strong style={{ color: '#FBBF24' }}>50% OFF</strong> on all Shop Bundles as an active student!
+                    </p>
+                  </div>
+                  <button onClick={() => navigate('/marketplace')} className="btn-approve" style={{ background: '#F59E0B', color: '#000', fontWeight: 'bold', padding: '0.6rem 1.2rem', whiteSpace: 'nowrap', border: 'none' }}>
+                    Shop Now
+                  </button>
+                </div>
+
                 <div className="sd-card sd-notice sd-animate sd-animate-delay-2">
                   <h4 className="flex items-center gap-2 mb-4" style={{ fontWeight: 800 }}><MessageSquare size={18} color="#F5C518" /> Notice Board</h4>
                   <div className="flex-col gap-4">

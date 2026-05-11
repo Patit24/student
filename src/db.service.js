@@ -609,3 +609,44 @@ export async function deleteTutorCompletely(tutorId) {
   // 6. Delete Tutor Profile
   await deleteDoc(doc(db, 'users', tutorId));
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MARKETPLACE (Digital & Physical)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function createMarketplaceProduct(productData) {
+  return await addDoc(collection(db, 'products'), {
+    ...productData,
+    created_at: serverTimestamp()
+  });
+}
+
+export function subscribeMarketplaceProducts(callback) {
+  const q = query(collection(db, 'products'), orderBy('created_at', 'desc'));
+  return onSnapshot(q, snap => {
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  });
+}
+
+export async function getMarketplaceProductById(productId) {
+  const snap = await getDoc(doc(db, 'products', productId));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+
+export async function createMarketplaceOrder(orderData) {
+  return await addDoc(collection(db, 'orders'), {
+    ...orderData,
+    status: orderData.status || 'Pending',
+    created_at: serverTimestamp()
+  });
+}
+
+export function subscribeUserOrders(userId, callback) {
+  const q = query(collection(db, 'orders'), where('userId', '==', userId));
+  return onSnapshot(q, snap => {
+    // Sort descending by created_at client side to avoid composite index error
+    const orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    orders.sort((a, b) => (b.created_at?.toMillis() || 0) - (a.created_at?.toMillis() || 0));
+    callback(orders);
+  });
+}

@@ -244,6 +244,57 @@ app.get('/api/cron/process-fees', async (req, res) => {
   }
 });
 
+/**
+ * 5. MARKETPLACE: RAZORPAY ORDERS
+ */
+app.post('/api/marketplace/create-order', async (req, res) => {
+  const { amount_inr, user_id, product_id, is_bundle_discount } = req.body;
+  try {
+    const order = await razorpay.orders.create({
+      amount: Math.round(amount_inr * 100),
+      currency: 'INR',
+      receipt: `mk_${user_id || 'guest'}_${Date.now()}`.substring(0, 40),
+      notes: { user_id: user_id || 'guest', product_id, is_bundle_discount: is_bundle_discount ? 'true' : 'false', type: 'marketplace' },
+    });
+    res.json({ order_id: order.id, amount: order.amount, key_id: process.env.RAZORPAY_KEY_ID });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * 6. MARKETPLACE: GENERATE SIGNED URL FOR DIGITAL ASSETS
+ */
+app.post('/api/marketplace/generate-signed-url', async (req, res) => {
+  if (!firebaseReady) return res.status(500).json({ error: 'Firebase not ready' });
+  const { fileUrl, user_id } = req.body;
+
+  try {
+    // Basic extraction assuming Firebase Storage URLs format: https://firebasestorage.googleapis.com/v0/b/bucket-name/o/path%2Fto%2Ffile?alt=media
+    let filePath = fileUrl;
+    if (fileUrl.includes('/o/')) {
+      filePath = decodeURIComponent(fileUrl.split('/o/')[1].split('?')[0]);
+    } else if (fileUrl.includes('storage.googleapis.com')) {
+      const parts = new URL(fileUrl).pathname.split('/');
+      filePath = parts.slice(2).join('/');
+    }
+
+    const bucket = admin.storage().bucket();
+    const file = bucket.file(filePath);
+
+    // Generate signed URL valid for 60 minutes
+    const [signedUrl] = await file.getSignedUrl({
+      version: 'v4',
+      action: 'read',
+      expires: Date.now() + 60 * 60 * 1000, // 1 hour
+    });
+
+    res.json({ signedUrl });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Vercel handles the listening, but for local testing:
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 4000;
