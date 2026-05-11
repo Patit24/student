@@ -101,7 +101,7 @@
 }
 
 .input-group input:focus {
-  border-color: #6366F1;
+  border-color: var(--primary);
 }
 
 .payment-options {
@@ -124,8 +124,27 @@
 }
 
 .payment-option.selected {
-  border-color: #6366F1;
-  background: rgba(99, 102, 241, 0.1);
+  border-color: var(--primary);
+  background: rgba(79, 70, 229, 0.1);
+  box-shadow: 0 0 20px rgba(79, 70, 229, 0.1);
+}
+
+.payment-opt-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.pay-title {
+  display: block;
+  font-weight: 600;
+  color: #fff;
+}
+
+.pay-sub {
+  display: block;
+  font-size: 0.8rem;
+  color: #94A3B8;
 }
 
 .pay-now-btn {

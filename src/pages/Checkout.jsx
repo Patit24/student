@@ -32,6 +32,17 @@ export default function Checkout() {
     pincode: ''
   });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('razorpay'); // 'razorpay' or 'cod'
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
 
   if (!product) {
     return (
@@ -48,30 +59,114 @@ export default function Checkout() {
 
   const handlePayment = async (e) => {
     e.preventDefault();
+    if (paymentMethod === 'razorpay') {
+      await handleRazorpayPayment();
+    } else {
+      await handleCODPayment();
+    }
+  };
+
+  const handleRazorpayPayment = async () => {
     setIsProcessing(true);
-    
-    // Simulate payment processing
-    setTimeout(async () => {
-      try {
-        const orderData = {
-          userId: currentUser?.uid || 'guest',
-          items: [{ productId: product.id, title: product.title, type: product.type }],
-          totalAmount: finalPrice,
-          discountApplied: isEligibleForBundleDiscount ? 'STUDENT_BUNDLE_50' : null,
-          status: 'Success',
-          customerDetails: formData
-        };
-        
-        await createMarketplaceOrder(orderData);
-        showToast('Payment successful! Order confirmed.', 'success');
-        setIsProcessing(false);
-        // Navigate to success page or dashboard
-        navigate(currentUser ? '/student' : '/marketplace');
-      } catch (error) {
-        showToast('Payment failed. Please try again.', 'error');
-        setIsProcessing(false);
+    const res = await loadRazorpayScript();
+
+    if (!res) {
+      showToast('Razorpay SDK failed to load. Are you online?', 'error');
+      setIsProcessing(false);
+      return;
+    }
+
+    try {
+      // 1. Create order on backend
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:4000'}/api/marketplace/create-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount_inr: finalPrice,
+          user_id: currentUser?.uid || 'guest',
+          product_id: product.id,
+          is_bundle_discount: isEligibleForBundleDiscount
+        }),
+      });
+
+      const order = await response.json();
+
+      if (!order.order_id) {
+        throw new Error('Could not create Razorpay order');
       }
-    }, 2000);
+
+      // 2. Options for Razorpay
+      const options = {
+        key: order.key_id,
+        amount: order.amount,
+        currency: 'INR',
+        name: 'Antigravity Tuition OS',
+        description: `Purchase: ${product.title}`,
+        order_id: order.order_id,
+        handler: async (response) => {
+          // Success! Create Firestore order
+          try {
+            const orderData = {
+              userId: currentUser?.uid || 'guest',
+              items: [{ productId: product.id, title: product.title, type: product.type }],
+              totalAmount: finalPrice,
+              discountApplied: isEligibleForBundleDiscount ? 'STUDENT_BUNDLE_50' : null,
+              paymentId: response.razorpay_payment_id,
+              orderId: response.razorpay_order_id,
+              signature: response.razorpay_signature,
+              status: 'Paid',
+              paymentMethod: 'Razorpay',
+              customerDetails: formData
+            };
+            
+            await createMarketplaceOrder(orderData);
+            showToast('Payment successful! Order confirmed. 🚀', 'success');
+            navigate(currentUser ? '/student' : '/marketplace');
+          } catch (err) {
+            showToast('Order registration failed. Please contact support.', 'error');
+          }
+        },
+        prefill: {
+          name: formData.name,
+          email: formData.email,
+          contact: formData.phone,
+        },
+        theme: { color: '#4F46E5' },
+      };
+
+      const rzp1 = new window.Razorpay(options);
+      rzp1.on('payment.failed', (response) => {
+        showToast(response.error.description, 'error');
+      });
+      rzp1.open();
+    } catch (error) {
+      showToast(error.message, 'error');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleCODPayment = async () => {
+    setIsProcessing(true);
+    try {
+      const orderData = {
+        userId: currentUser?.uid || 'guest',
+        items: [{ productId: product.id, title: product.title, type: product.type }],
+        totalAmount: finalPrice,
+        discountApplied: isEligibleForBundleDiscount ? 'STUDENT_BUNDLE_50' : null,
+        status: 'COD_Pending',
+        paymentMethod: 'COD',
+        customerDetails: formData
+      };
+      
+      await createMarketplaceOrder(orderData);
+      showToast('Order placed successfully (Cash on Delivery)!', 'success');
+      navigate(currentUser ? '/student' : '/marketplace');
+    } catch (error) {
+      showToast('Failed to place COD order.', 'error');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -129,14 +224,32 @@ export default function Checkout() {
             <div className="form-group-section payment-section">
               <h3>Payment Method</h3>
               <div className="payment-options">
-                <div className="payment-option selected">
+                <div 
+                  className={`payment-option ${paymentMethod === 'razorpay' ? 'selected' : ''}`}
+                  onClick={() => setPaymentMethod('razorpay')}
+                >
                   <CreditCard size={24} />
-                  <span>Credit / Debit Card (Stripe)</span>
+                  <div className="payment-opt-info">
+                    <span className="pay-title">Online Payment</span>
+                    <span className="pay-sub">UPI, Cards, Netbanking (Razorpay)</span>
+                  </div>
                 </div>
-                {/* Add more options like UPI, Razorpay here */}
+                
+                {!isDigital && (
+                  <div 
+                    className={`payment-option ${paymentMethod === 'cod' ? 'selected' : ''}`}
+                    onClick={() => setPaymentMethod('cod')}
+                  >
+                    <Gift size={24} />
+                    <div className="payment-opt-info">
+                      <span className="pay-title">Cash on Delivery</span>
+                      <span className="pay-sub">Pay when you receive the product</span>
+                    </div>
+                  </div>
+                )}
               </div>
               <button type="submit" className="pay-now-btn" disabled={isProcessing}>
-                {isProcessing ? 'Processing Payment...' : `Pay ₹${finalPrice}`}
+                {isProcessing ? 'Initializing...' : (paymentMethod === 'razorpay' ? `Pay ₹${finalPrice}` : 'Confirm COD Order')}
                 <Lock size={16} />
               </button>
               <p className="secure-badge"><Shield size={14}/> 256-bit SSL Encrypted</p>
