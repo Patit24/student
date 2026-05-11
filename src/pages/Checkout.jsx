@@ -13,11 +13,14 @@ export default function Checkout() {
   const toast = useToast();
 
   // Robust notification helper to prevent "TypeError: r is not a function"
-  const safeToast = (msg, type = 'success') => {
-    if (toast && typeof toast[type] === 'function') {
-      toast[type](msg);
-    } else {
-      console.warn(`[Toast Fallback] ${type}: ${msg}`);
+  const safeToast = (msg, type = "success") => {
+    try {
+      if (toast && typeof toast[type] === "function") {
+        toast[type](msg);
+      } else {
+        alert(msg);
+      }
+    } catch (e) {
       alert(msg);
     }
   };
