@@ -657,3 +657,11 @@ export async function updateOrderStatus(orderId, status, deliveryDate) {
   if (deliveryDate) updates.expectedDelivery = deliveryDate;
   return await updateDoc(orderRef, updates);
 }
+
+export async function updateMarketplaceProduct(productId, productData) {
+  const productRef = doc(db, 'products', productId);
+  return await updateDoc(productRef, {
+    ...productData,
+    updated_at: serverTimestamp()
+  });
+}

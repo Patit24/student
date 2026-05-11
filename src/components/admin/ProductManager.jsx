@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Package, Zap, Upload, DollarSign, Image as ImageIcon, 
-  Trash2, Plus, Box
+  Trash2, Plus, Box, Edit3, X
 } from 'lucide-react';
-import { createMarketplaceProduct, subscribeMarketplaceProducts, uploadFileToStorage } from '../../db.service';
+import { 
+  createMarketplaceProduct, 
+  subscribeMarketplaceProducts, 
+  uploadFileToStorage, 
+  updateMarketplaceProduct 
+} from '../../db.service';
 import { useToast } from '../Toast';
 import { deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../../firebase';
@@ -23,6 +28,7 @@ export default function ProductManager() {
   const [stock, setStock] = useState('');
   const [images, setImages] = useState([]);
   const [fileUrl, setFileUrl] = useState('');
+  const [editingProduct, setEditingProduct] = useState(null);
 
   useEffect(() => {
     const unsub = subscribeMarketplaceProducts(setProducts);
@@ -64,7 +70,7 @@ export default function ProductManager() {
     }
   };
 
-  const handleAddProduct = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title || !originalPrice) {
       toast.error('Title and Original Price are required');
@@ -76,7 +82,7 @@ export default function ProductManager() {
       return;
     }
 
-    const newProduct = {
+    const productData = {
       type: productType,
       title,
       description,
@@ -88,24 +94,51 @@ export default function ProductManager() {
         format: 'Digital Download'
       } : {
         stock: parseInt(stock) || 0,
-        weight: '0.5kg' // Default mock weight
+        weight: '0.5kg'
       }
     };
 
     try {
-      await createMarketplaceProduct(newProduct);
-      toast.success(`${productType} Product Added! ✅`);
+      if (editingProduct) {
+        await updateMarketplaceProduct(editingProduct.id, productData);
+        toast.success('Product Updated! ✨');
+      } else {
+        await createMarketplaceProduct(productData);
+        toast.success(`${productType} Product Added! ✅`);
+      }
+      
       // Reset form
-      setTitle('');
-      setDescription('');
-      setOriginalPrice('');
-      setSalePrice('');
-      setStock('');
-      setImages([]);
-      setFileUrl('');
+      resetForm();
     } catch (err) {
-      toast.error('Failed to add product: ' + err.message);
+      toast.error('Failed to save product: ' + err.message);
     }
+  };
+
+  const resetForm = () => {
+    setTitle('');
+    setDescription('');
+    setOriginalPrice('');
+    setSalePrice('');
+    setStock('');
+    setImages([]);
+    setFileUrl('');
+    setEditingProduct(null);
+  };
+
+  const handleEditClick = (p) => {
+    setEditingProduct(p);
+    setProductType(p.type);
+    setTitle(p.title);
+    setDescription(p.description || '');
+    setOriginalPrice(p.originalPrice);
+    setSalePrice(p.salePrice || '');
+    setImages(p.images || []);
+    if (p.type === 'Digital') {
+      setFileUrl(p.metadata?.downloadUrl || '');
+    } else {
+      setStock(p.metadata?.stock || '');
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDeleteProduct = async (id) => {
@@ -143,12 +176,23 @@ export default function ProductManager() {
       </div>
 
       <div className="glass-card p-8" style={{ border: `1px solid ${productType === 'Digital' ? 'rgba(99,102,241,0.25)' : 'rgba(245,158,11,0.25)'}` }}>
-        <h3 className="flex items-center gap-2 mb-6">
-          <Plus size={20} color={productType === 'Digital' ? '#818CF8' : '#FBBF24'} /> 
-          Add New {productType} Product
-        </h3>
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="flex items-center gap-2" style={{ margin: 0 }}>
+            {editingProduct ? (
+              <Edit3 size={20} color="#818CF8" />
+            ) : (
+              <Plus size={20} color={productType === 'Digital' ? '#818CF8' : '#FBBF24'} />
+            )}
+            {editingProduct ? 'Edit Product' : `Add New ${productType} Product`}
+          </h3>
+          {editingProduct && (
+            <button className="btn-icon" onClick={resetForm} title="Cancel Edit">
+              <X size={18} />
+            </button>
+          )}
+        </div>
         
-        <form onSubmit={handleAddProduct} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="input-group">
             <label className="input-label">Product Title</label>
             <input className="input-field w-full" value={title} onChange={e => setTitle(e.target.value)} required />
@@ -204,8 +248,8 @@ export default function ProductManager() {
           </div>
 
           <div className="md:col-span-2 mt-4">
-            <button type="submit" className="btn-approve w-full" style={{ padding: '0.8rem', background: productType === 'Digital' ? 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)' : 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)', border: 'none', fontWeight: 'bold' }}>
-              Publish Product
+            <button type="submit" className="btn-approve w-full" style={{ padding: '0.8rem', background: editingProduct ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)' : (productType === 'Digital' ? 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)' : 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'), border: 'none', fontWeight: 'bold' }}>
+              {editingProduct ? 'Update Product' : 'Publish Product'}
             </button>
             {isUploading && <div className="mt-4"><div style={{ height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px' }}><div style={{ width: `${uploadProgress}%`, height: '100%', background: '#10B981', transition: 'width 0.3s' }} /></div></div>}
           </div>
@@ -229,7 +273,10 @@ export default function ProductManager() {
                   </p>
                 </div>
               </div>
-              <button className="btn-icon" onClick={() => handleDeleteProduct(p.id)}><Trash2 size={16} /></button>
+              <div className="flex gap-2">
+                <button className="btn-icon" onClick={() => handleEditClick(p)} title="Edit"><Edit3 size={16} /></button>
+                <button className="btn-icon" onClick={() => handleDeleteProduct(p.id)} title="Delete"><Trash2 size={16} /></button>
+              </div>
             </div>
           ))}
         </div>
