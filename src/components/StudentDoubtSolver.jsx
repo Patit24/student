@@ -9,9 +9,8 @@ import '../pages/StudentDashboard.css';
 
 export default function StudentDoubtSolver({ tutorId, studentId }) {
   const [activeMode, setActiveMode] = useState('chat'); // 'chat' or 'history'
-  const [engine, setEngine] = useState('gemini'); // 'gemini' or 'openai'
   const [messages, setMessages] = useState([
-    { role: 'ai', text: 'Welcome to Logic-Scan! I am now connected to real-time Gemini & ChatGPT. Snap a photo of any problem and I will solve it with logic.', type: 'welcome' }
+    { role: 'ai', text: 'Welcome! I am your Antigravity AI Tutor. Snap a photo of any problem or ask a question, and I will help you understand the logic step-by-step.', type: 'welcome' }
   ]);
   const [historyList, setHistoryList] = useState([]);
   const [input, setInput] = useState('');
@@ -64,14 +63,13 @@ export default function StudentDoubtSolver({ tutorId, studentId }) {
       setTimeout(() => setScanStep(2), 600);
       setTimeout(() => setScanStep(3), 1200);
 
-      const response = await solveDoubtWithAI(userMsg.text || "Solve this image", imageBase64, engine);
+      const response = await solveDoubtWithAI(userMsg.text || "Solve this image", imageBase64);
       
       const aiMsg = { 
         role: 'ai', 
         steps: response.steps, 
         solution: response.solution, 
-        text: response.solution,
-        engineUsed: engine
+        text: response.solution
       };
 
       setMessages(prev => [...prev, aiMsg]);
@@ -84,12 +82,11 @@ export default function StudentDoubtSolver({ tutorId, studentId }) {
         question: userMsg.text || 'Image Doubt',
         imageUrl: userMsg.image || null,
         response: aiMsg,
-        engineUsed: engine,
         createdAt: serverTimestamp()
       });
     } catch (err) {
       console.error("AI Solve Error:", err);
-      setMessages(prev => [...prev, { role: 'ai', text: `⚠️ Error: ${err.message}. Please check if API Keys are set in .env` }]);
+      setMessages(prev => [...prev, { role: 'ai', text: `⚠️ Error: ${err.message}. Please check if API Keys are set in environment variables.` }]);
       setScanStep(0);
     }
   };
@@ -102,13 +99,9 @@ export default function StudentDoubtSolver({ tutorId, studentId }) {
           <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #F5C518, #F97316)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000' }}>
             <Sparkles size={18} />
           </div>
-          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800 }}>Logic-Scan AI</h3>
+          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800 }}>Antigravity AI Tutor</h3>
         </div>
         <div className="flex gap-2">
-          <select value={engine} onChange={(e) => setEngine(e.target.value)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#F5C518', padding: '0.2rem 0.5rem', borderRadius: '6px', fontSize: '0.7rem', fontWeight: 800, cursor: 'pointer', outline: 'none' }}>
-            <option value="gemini" style={{ background: '#0D1425' }}>GEMINI 1.5</option>
-            <option value="openai" style={{ background: '#0D1425' }}>GPT-4o</option>
-          </select>
           <button onClick={() => setActiveMode('chat')} style={{ background: activeMode === 'chat' ? 'rgba(245,197,24,0.1)' : 'transparent', border: 'none', color: activeMode === 'chat' ? '#F5C518' : '#64748B', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>SOLVER</button>
           <button onClick={() => setActiveMode('history')} style={{ background: activeMode === 'history' ? 'rgba(245,197,24,0.1)' : 'transparent', border: 'none', color: activeMode === 'history' ? '#F5C518' : '#64748B', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><History size={14} /> HISTORY</button>
         </div>
@@ -171,7 +164,7 @@ export default function StudentDoubtSolver({ tutorId, studentId }) {
                   <p style={{ margin: 0, fontSize: '0.7rem', color: '#64748B' }}>{item.createdAt?.toDate().toLocaleDateString()}</p>
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <CheckCircle2 size={14} color="#22C55E" /> Solved via Logic-Scan
+                  <CheckCircle2 size={14} color="#22C55E" /> Solved via AI Doubt Solver
                   <ChevronRight size={14} />
                 </div>
               </div>

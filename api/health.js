@@ -2,7 +2,9 @@ import { initFirebase, lastFirebaseError } from './lib/firebase.js';
 
 export default async function handler(req, res) {
   const app = initFirebase();
-  const razorpayReady = !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
+  const rzpId = process.env.RAZORPAY_KEY_ID || process.env.VITE_RAZORPAY_KEY_ID;
+  const rzpSecret = process.env.RAZORPAY_KEY_SECRET || process.env.VITE_RAZORPAY_KEY_SECRET;
+  const razorpayReady = !!(rzpId && rzpSecret);
   
   const statusInfo = {
     status: app && razorpayReady ? 'ok' : 'error',

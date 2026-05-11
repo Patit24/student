@@ -53,6 +53,11 @@ app.get('/api/health', (req, res) => {
 // 2. Create Razorpay Order
 app.post('/api/create-order', async (req, res) => {
   const { amount_inr, tutor_id, plan_id, type, uid } = req.body;
+  
+  if (!rzp_key_id || !rzp_key_secret) {
+    return res.status(500).json({ error: 'Razorpay keys not configured. Please add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to your environment.' });
+  }
+
   try {
     const isResume = type === 'resume_unlock';
     const finalAmount = isResume ? 4900 : Math.round(amount_inr * 100);
@@ -64,7 +69,7 @@ app.post('/api/create-order', async (req, res) => {
       notes: { tutor_id, plan_id, uid, type }
     });
 
-    res.json({ order_id: order.id, amount: order.amount, key_id: process.env.RAZORPAY_KEY_ID });
+    res.json({ order_id: order.id, amount: order.amount, key_id: rzp_key_id });
   } catch (err) {
     res.status(502).json({ error: 'Razorpay Error', message: err.message });
   }
@@ -141,6 +146,11 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 // 5. MARKETPLACE: RAZORPAY ORDERS
 app.post('/api/marketplace/create-order', async (req, res) => {
   const { amount_inr, user_id, product_id, is_bundle_discount } = req.body;
+  
+  if (!rzp_key_id || !rzp_key_secret) {
+    return res.status(500).json({ error: 'Razorpay keys not configured. Please add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to your environment.' });
+  }
+
   try {
     const order = await razorpay.orders.create({
       amount: Math.round(amount_inr * 100),
@@ -148,7 +158,7 @@ app.post('/api/marketplace/create-order', async (req, res) => {
       receipt: `mk_${user_id || 'guest'}_${Date.now()}`.substring(0, 40),
       notes: { user_id: user_id || 'guest', product_id, is_bundle_discount: is_bundle_discount ? 'true' : 'false', type: 'marketplace' },
     });
-    res.json({ order_id: order.id, amount: order.amount, key_id: process.env.RAZORPAY_KEY_ID });
+    res.json({ order_id: order.id, amount: order.amount, key_id: rzp_key_id });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

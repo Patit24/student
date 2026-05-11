@@ -1,4 +1,7 @@
 import Razorpay from 'razorpay';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -7,11 +10,11 @@ export default async function handler(req, res) {
 
   const { amount_inr, user_id, product_id, is_bundle_discount } = req.body;
 
-  const rzp_key_id = process.env.RAZORPAY_KEY_ID || '';
-  const rzp_key_secret = process.env.RAZORPAY_KEY_SECRET || '';
+  const rzp_key_id = process.env.RAZORPAY_KEY_ID || process.env.VITE_RAZORPAY_KEY_ID || '';
+  const rzp_key_secret = process.env.RAZORPAY_KEY_SECRET || process.env.VITE_RAZORPAY_KEY_SECRET || '';
 
   if (!rzp_key_id || !rzp_key_secret) {
-    return res.status(500).json({ error: 'Razorpay keys not configured' });
+    return res.status(500).json({ error: 'Razorpay keys not configured. Please add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to your environment.' });
   }
 
   const razorpay = new Razorpay({

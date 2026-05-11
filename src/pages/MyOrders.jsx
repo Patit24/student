@@ -99,12 +99,18 @@ export default function MyOrders() {
                       )}
                     </div>
                     <div className="flex gap-3">
-                      <a href="tel:+91XXXXXXXXXX" className="btn btn-outline" style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}>
-                        <Phone size={14} /> Support
+                      <a href="tel:+919123456789" className="btn btn-outline" style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', borderRadius: '8px' }}>
+                        <Phone size={14} /> +91 91234 56789
                       </a>
-                      <button className="hp-btn-primary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}>
-                        <MessageSquare size={14} /> 24/7 Answer
-                      </button>
+                      <a 
+                        href="https://wa.me/919123456789?text=I%20have%20a%20query%20about%20order%20ID:%20" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="hp-btn-primary" 
+                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', borderRadius: '8px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                      >
+                        <MessageSquare size={14} /> 24/7 WhatsApp Support
+                      </a>
                     </div>
                   </div>
                 </div>

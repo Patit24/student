@@ -4,45 +4,40 @@ import OpenAI from "openai";
 const GEMINI_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const OPENAI_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
-console.log("AI Keys Check:", { 
-  gemini: GEMINI_KEY ? "EXISTS" : "MISSING", 
-  openai: OPENAI_KEY ? "EXISTS" : "MISSING" 
-});
+
 
 const genAI = GEMINI_KEY ? new GoogleGenerativeAI(GEMINI_KEY) : null;
 const openai = OPENAI_KEY ? new OpenAI({ apiKey: OPENAI_KEY, dangerouslyAllowBrowser: true }) : null;
 
-export const solveDoubtWithAI = async (text, imageBase64 = null, engine = 'gemini') => {
-  if (engine === 'gemini') {
-    if (!genAI) throw new Error("Gemini API Key missing in environment");
-    
-    // Ultimate Fallback Chain: Flash -> Flash-Latest -> Pro -> Pro-Latest
-    const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-1.5-pro", "gemini-1.5-pro-latest"];
+export const solveDoubtWithAI = async (text, imageBase64 = null) => {
+  // Primary Engine: Gemini (Multi-modal)
+  if (genAI) {
+    const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-1.5-pro"];
     
     const trySolve = async (modelIndex) => {
       const modelName = modelsToTry[modelIndex];
-      console.log(`🤖 Attempting AI solve with: ${modelName} (Attempt ${modelIndex + 1}/${modelsToTry.length})`);
-      
       try {
         const model = genAI.getGenerativeModel({ model: modelName });
+        const systemPrompt = `You are the Antigravity AI Tutor, an elite doubt-solving agent. 
+        Your mission is to provide crystal-clear, step-by-step logical explanations.
+        Always use LaTeX for mathematical expressions (e.g., $E=mc^2$).
+        Return ONLY valid JSON in this format: 
+        { 
+          "steps": [ { "title": "...", "desc": "..." } ], 
+          "solution": "Final concise answer" 
+        }`;
+
         let result;
         if (imageBase64) {
-          const prompt = `You are the PPR Education 'Logic-Scan' AI. Analyze this image and text: "${text}". 
-          Return JSON format: { "steps": [ { "title": "...", "desc": "..." } ], "solution": "..." }. 
-          Use LaTeX for math like $x^2$. Focus on logic breakdown.`;
-          
           const part = {
             inlineData: {
               data: imageBase64.split(',')[1],
               mimeType: "image/jpeg"
             }
           };
-          result = await model.generateContent([prompt, part]);
+          result = await model.generateContent([systemPrompt + `\n\nAnalyze this problem: ${text}`, part]);
         } else {
-          const prompt = `You are the PPR Education 'Logic-Scan' AI. Solve this: "${text}". 
-          Return JSON format: { "steps": [ { "title": "...", "desc": "..." } ], "solution": "..." }. 
-          Use LaTeX for math.`;
-          result = await model.generateContent(prompt);
+          result = await model.generateContent(systemPrompt + `\n\nSolve this: ${text}`);
         }
         
         const response = await result.response;
@@ -50,21 +45,20 @@ export const solveDoubtWithAI = async (text, imageBase64 = null, engine = 'gemin
         rawText = rawText.replace(/```json|```/g, '').trim();
         return JSON.parse(rawText);
       } catch (err) {
-        console.warn(`❌ Model ${modelName} failed:`, err.message);
-        if (modelIndex < modelsToTry.length - 1) {
-          return await trySolve(modelIndex + 1);
-        }
+        if (modelIndex < modelsToTry.length - 1) return await trySolve(modelIndex + 1);
         throw err;
       }
     };
-
     return await trySolve(0);
-  } else {
-    // OpenAI ChatGPT
-    if (!openai) throw new Error("OpenAI API Key missing in environment");
-    
+  }
+
+  // Secondary Engine: OpenAI (GPT-4o mini)
+  if (openai) {
     const messages = [
-      { role: "system", content: "You are the PPR Education 'Logic-Scan' AI. Return ONLY JSON: { \"steps\": [ { \"title\": \"...\", \"desc\": \"...\" } ], \"solution\": \"...\" }. Use LaTeX for math." }
+      { 
+        role: "system", 
+        content: "You are the Antigravity AI Tutor. Provide step-by-step logic in JSON format. Use LaTeX for math." 
+      }
     ];
 
     if (imageBase64) {
@@ -87,4 +81,6 @@ export const solveDoubtWithAI = async (text, imageBase64 = null, engine = 'gemin
 
     return JSON.parse(response.choices[0].message.content);
   }
+
+  throw new Error("No AI Service (Gemini/OpenAI) available. Check API keys.");
 };
