@@ -10,7 +10,7 @@ import '../pages/StudentDashboard.css';
 export default function StudentDoubtSolver({ tutorId, studentId }) {
   const [activeMode, setActiveMode] = useState('chat'); // 'chat' or 'history'
   const [messages, setMessages] = useState([
-    { role: 'ai', text: 'Welcome! I am your Antigravity AI Tutor. Snap a photo of any problem or ask a question, and I will help you understand the logic step-by-step.', type: 'welcome' }
+    { role: 'ai', text: 'Hello! I am your Antigravity Personal AI. I can help you solve complex doubts, plan your study schedule, or explain difficult concepts. How can I assist you today?', type: 'welcome' }
   ]);
   const [historyList, setHistoryList] = useState([]);
   const [input, setInput] = useState('');
@@ -99,10 +99,10 @@ export default function StudentDoubtSolver({ tutorId, studentId }) {
           <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #F5C518, #F97316)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#000' }}>
             <Sparkles size={18} />
           </div>
-          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800 }}>Antigravity AI Tutor</h3>
+          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800 }}>Antigravity Personal AI</h3>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => setActiveMode('chat')} style={{ background: activeMode === 'chat' ? 'rgba(245,197,24,0.1)' : 'transparent', border: 'none', color: activeMode === 'chat' ? '#F5C518' : '#64748B', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>SOLVER</button>
+          <button onClick={() => setActiveMode('chat')} style={{ background: activeMode === 'chat' ? 'rgba(245,197,24,0.1)' : 'transparent', border: 'none', color: activeMode === 'chat' ? '#F5C518' : '#64748B', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}>ASSISTANT</button>
           <button onClick={() => setActiveMode('history')} style={{ background: activeMode === 'history' ? 'rgba(245,197,24,0.1)' : 'transparent', border: 'none', color: activeMode === 'history' ? '#F5C518' : '#64748B', padding: '0.4rem 0.8rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><History size={14} /> HISTORY</button>
         </div>
       </div>
@@ -164,7 +164,7 @@ export default function StudentDoubtSolver({ tutorId, studentId }) {
                   <p style={{ margin: 0, fontSize: '0.7rem', color: '#64748B' }}>{item.createdAt?.toDate().toLocaleDateString()}</p>
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <CheckCircle2 size={14} color="#22C55E" /> Solved via AI Doubt Solver
+                  <CheckCircle2 size={14} color="#22C55E" /> Solved via Antigravity Personal AI
                   <ChevronRight size={14} />
                 </div>
               </div>

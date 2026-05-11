@@ -10,6 +10,12 @@ const genAI = GEMINI_KEY ? new GoogleGenerativeAI(GEMINI_KEY) : null;
 const openai = OPENAI_KEY ? new OpenAI({ apiKey: OPENAI_KEY, dangerouslyAllowBrowser: true }) : null;
 
 export const solveDoubtWithAI = async (text, imageBase64 = null) => {
+  // Check for keys - if missing, use Simulation Mode (Pedagogical Mock)
+  if (!GEMINI_KEY && !OPENAI_KEY) {
+    console.warn("AI Simulation Mode: No API keys found.");
+    return mockSolve(text);
+  }
+
   // Primary Engine: Gemini (Multi-modal)
   if (genAI) {
     const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-1.5-pro"];
@@ -18,13 +24,15 @@ export const solveDoubtWithAI = async (text, imageBase64 = null) => {
       const modelName = modelsToTry[modelIndex];
       try {
         const model = genAI.getGenerativeModel({ model: modelName });
-        const systemPrompt = `You are the Antigravity AI Tutor, an elite doubt-solving agent. 
+        const systemPrompt = `You are the Antigravity Personal AI, a state-of-the-art assistant for students.
+        You help with doubt solving, schedule management, and general study advice.
         Your mission is to provide crystal-clear, step-by-step logical explanations.
         Always use LaTeX for mathematical expressions (e.g., $E=mc^2$).
+        Never mention Gemini, Google, OpenAI, or ChatGPT. You are a proprietary Antigravity AI.
         Return ONLY valid JSON in this format: 
         { 
           "steps": [ { "title": "...", "desc": "..." } ], 
-          "solution": "Final concise answer" 
+          "solution": "Final concise answer or helpful guidance" 
         }`;
 
         let result;
@@ -35,9 +43,9 @@ export const solveDoubtWithAI = async (text, imageBase64 = null) => {
               mimeType: "image/jpeg"
             }
           };
-          result = await model.generateContent([systemPrompt + `\n\nAnalyze this problem: ${text}`, part]);
+          result = await model.generateContent([systemPrompt + `\n\nAnalyze this problem/query: ${text}`, part]);
         } else {
-          result = await model.generateContent(systemPrompt + `\n\nSolve this: ${text}`);
+          result = await model.generateContent(systemPrompt + `\n\nAssist with this: ${text}`);
         }
         
         const response = await result.response;
@@ -57,7 +65,7 @@ export const solveDoubtWithAI = async (text, imageBase64 = null) => {
     const messages = [
       { 
         role: "system", 
-        content: "You are the Antigravity AI Tutor. Provide step-by-step logic in JSON format. Use LaTeX for math." 
+        content: "You are the Antigravity Personal AI. Provide step-by-step logic in JSON format. Use LaTeX for math. Never mention OpenAI/ChatGPT." 
       }
     ];
 
@@ -82,5 +90,26 @@ export const solveDoubtWithAI = async (text, imageBase64 = null) => {
     return JSON.parse(response.choices[0].message.content);
   }
 
-  throw new Error("No AI Service (Gemini/OpenAI) available. Check API keys.");
+  return mockSolve(text);
+};
+
+// Pedagogical Mock for Simulation Mode
+const mockSolve = (text) => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        steps: [
+          { 
+            title: "Analyzing Requirement", 
+            desc: "I am currently in **Simulation Mode** (Antigravity Core V1). I have received your query: \"" + text + "\"" 
+          },
+          { 
+            title: "Pedagogical Note", 
+            desc: "To unlock my full **Neural Core (V2)** for deep problem solving, please ensure the system environment variables (API Keys) are configured by your administrator." 
+          }
+        ],
+        solution: "I am the Antigravity Personal AI. I am ready to assist you as soon as the Neural Core is activated!"
+      });
+    }, 1500);
+  });
 };
