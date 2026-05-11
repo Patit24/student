@@ -86,8 +86,17 @@ export default function MyOrders() {
                   <hr style={{ borderColor: 'rgba(255,255,255,0.05)', margin: '1.5rem 0' }} />
                   
                   <div className="flex justify-between items-center mobile-stack gap-4">
-                    <div className="flex items-center gap-2 text-xs text-muted">
-                      <Clock size={14} /> Status: <span className="text-white">{order.status || 'Processing'}</span>
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Clock size={14} color="#f5c518" /> 
+                        <span className="text-muted">Status:</span> 
+                        <span className="text-white font-bold">{order.status || 'Order Placed'}</span>
+                      </div>
+                      {order.expectedDelivery && (
+                        <div className="text-xs text-gold flex items-center gap-2">
+                          <CheckCircle size={12} /> Expected Delivery: {new Date(order.expectedDelivery).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        </div>
+                      )}
                     </div>
                     <div className="flex gap-3">
                       <a href="tel:+91XXXXXXXXXX" className="btn btn-outline" style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem' }}>

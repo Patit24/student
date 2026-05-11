@@ -650,3 +650,10 @@ export function subscribeUserOrders(userId, callback) {
     callback(orders);
   });
 }
+
+export async function updateOrderStatus(orderId, status, deliveryDate) {
+  const orderRef = doc(db, 'orders', orderId);
+  const updates = { status };
+  if (deliveryDate) updates.expectedDelivery = deliveryDate;
+  return await updateDoc(orderRef, updates);
+}

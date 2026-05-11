@@ -11,7 +11,7 @@ import {
   MessageSquare, Video, CheckSquare, ChevronRight, PackageCheck,
   TrendingDown, Info, Settings, ShieldAlert, Globe2, Microscope, Plus, Brain
 } from 'lucide-react';
-import { subscribeGlobalAssets, uploadGlobalAsset, deleteGlobalAsset, uploadFileToStorage } from '../db.service';
+import { subscribeGlobalAssets, uploadGlobalAsset, deleteGlobalAsset, uploadFileToStorage, updateOrderStatus } from '../db.service';
 import { useToast } from '../components/Toast';
 import { collection, query, where, onSnapshot, updateDoc, doc, deleteDoc, serverTimestamp, addDoc, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -560,8 +560,6 @@ export default function AdminDashboard() {
                 </div>
               </div>
             )}
-
-            {/* TAB: Marketplace Orders */}
             {activeTab === 'orders' && (
               <div className="glass-card p-8 animate-premium">
                 <h3 className="mb-6 flex items-center gap-2"><PackageCheck size={20} color="#f5c518" /> Marketplace Orders</h3>
@@ -572,9 +570,9 @@ export default function AdminDashboard() {
                         <th>Customer</th>
                         <th>Product</th>
                         <th>Amount</th>
-                        <th>Method</th>
                         <th>Status</th>
-                        <th>Date</th>
+                        <th>Expected Delivery</th>
+                        <th>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -586,13 +584,37 @@ export default function AdminDashboard() {
                           </td>
                           <td>{order.productTitle}</td>
                           <td>₹{order.amount}</td>
-                          <td><span className="badge-pending" style={{ background: 'rgba(255,255,255,0.05)' }}>{order.payment_method}</span></td>
                           <td>
-                            <span className={order.payment_status === 'Paid' ? 'badge-active' : 'badge-pending'}>
-                              {order.payment_status}
-                            </span>
+                            <select 
+                              className="input-premium" 
+                              style={{ padding: '0.3rem', fontSize: '0.8rem', background: '#111' }}
+                              value={order.status || 'Pending'}
+                              onChange={(e) => updateOrderStatus(order.id, e.target.value, order.expectedDelivery)}
+                            >
+                              <option value="Pending">Pending</option>
+                              <option value="Order Placed">Order Placed</option>
+                              <option value="Shipped">Shipped</option>
+                              <option value="Out for Delivery">Out for Delivery</option>
+                              <option value="Delivered">Delivered</option>
+                              <option value="Cancelled">Cancelled</option>
+                            </select>
                           </td>
-                          <td>{formatDate(order.created_at)}</td>
+                          <td>
+                            <input 
+                              type="date" 
+                              className="input-premium"
+                              style={{ padding: '0.3rem', fontSize: '0.8rem', background: '#111' }}
+                              value={order.expectedDelivery || ''}
+                              onChange={(e) => updateOrderStatus(order.id, order.status || 'Pending', e.target.value)}
+                            />
+                          </td>
+                          <td>
+                            <div className="flex gap-2">
+                              <span className={order.payment_status === 'Paid' ? 'badge-active' : 'badge-pending'}>
+                                {order.payment_status}
+                              </span>
+                            </div>
+                          </td>
                         </tr>
                       ))}
                       {marketplaceOrders.length === 0 && (
