@@ -281,66 +281,95 @@ export default function AdminDashboard() {
     }
   };
 
-  return (
     <div className="admin-premium-root">
-      <div className="container-fluid" style={{ width: '100%', padding: '0' }}>
+      <div className="container-fluid">
         
-        {/* Command Center Header */}
-        <header className="flex justify-between items-center mb-10 mobile-stack">
-          <div className="flex items-center gap-4">
-            <div className="glass-card p-3"><ShieldCheck size={32} color="#f5c518" /></div>
+        {/* Futuristic Header */}
+        <header className="flex justify-between items-center mb-12">
+          <div className="flex items-center gap-6">
+            <div className="glass-card p-4" style={{ borderRadius: '24px' }}>
+              <ShieldCheck size={40} color="var(--admin-accent)" />
+            </div>
             <div>
-              <h1 style={{ margin: 0, fontWeight: 900 }}>Command <span style={{ color: '#f5c518' }}>Center</span></h1>
-              <p style={{ margin: 0, color: '#7a8ba8', fontSize: '0.85rem' }}>Super Admin Authority • PPREducation</p>
+              <h1 className="text-4xl font-black tracking-tighter" style={{ margin: 0 }}>
+                COMMAND <span style={{ color: 'var(--admin-accent)' }}>CENTER</span>
+              </h1>
+              <p style={{ margin: 0, color: 'var(--admin-text-secondary)', fontWeight: 600, letterSpacing: '0.1em', fontSize: '0.7rem', textTransform: 'uppercase' }}>
+                Super Admin Authority • PPREducation 2026
+              </p>
             </div>
           </div>
-          <button onClick={handleLogout} className="btn-remove mobile-full"><LogOut size={18} /> Logout</button>
+          <button onClick={handleLogout} className="btn-premium">
+            <LogOut size={18} /> DEACTIVATE SESSION
+          </button>
         </header>
 
-        <div className="flex gap-6 mobile-stack flex-wrap" style={{ width: '100%' }}>
-          {/* Sidebar KPIs */}
+        <div className="flex gap-8 mobile-stack">
+          {/* Operations Sidebar */}
           <aside className="admin-sidebar">
-            <div className="flex gap-4 mb-8 mobile-stack flex-wrap">
-              <div className="flex-1 glass-card p-6">
-                <h4 className="stat-label">Total Assets</h4>
-                <span className="stat-value">{globalAssets.length}</span>
+            <div className="kpi-bento">
+              <div className="glass-card kpi-card">
+                <span className="text-[10px] text-secondary uppercase tracking-[0.2em] font-black">Active Assets</span>
+                <div className="kpi-value">{globalAssets.length}</div>
+                <div className="flex items-center gap-2 text-[10px] text-success font-bold">
+                  <TrendingUp size={12} /> +12.5% GROWTH
+                </div>
               </div>
-            </div>
-            <div className="glass-card stat-box">
-              <span className="stat-label">Total Tutors</span>
-              <div className="flex items-end justify-between">
-                <span className="stat-value">{tutors.length}</span>
-                <Users size={24} color="#7a8ba8" />
+              <div className="glass-card kpi-card">
+                <span className="text-[10px] text-secondary uppercase tracking-[0.2em] font-black">Registered Tutors</span>
+                <div className="kpi-value">{tutors.length}</div>
+                <div className="flex items-center gap-2 text-[10px] text-primary font-bold">
+                  <Users size={12} /> VERIFIED PARTNERS
+                </div>
               </div>
-            </div>
-            <div className="glass-card stat-box">
-              <span className="stat-label">Platform Revenue</span>
-              <div className="flex items-end justify-between">
-                <span className="stat-value">₹{totalRevenue.toLocaleString()}</span>
-                <DollarSign size={24} color="#7a8ba8" />
+              <div className="glass-card kpi-card">
+                <span className="text-[10px] text-secondary uppercase tracking-[0.2em] font-black">Gross Revenue</span>
+                <div className="kpi-value">₹{totalRevenue.toLocaleString()}</div>
+                <div className="flex items-center gap-2 text-[10px] text-accent font-bold">
+                  <Package size={12} /> MARKETPLACE VOLUME
+                </div>
               </div>
             </div>
           </aside>
 
-          {/* Main Content Area */}
-          <main className="flex-1 animate-premium">
-            
-            <div className="tab-nav mb-8">
-              <button className={`tab-btn ${activeTab === 'tutors' ? 'active' : ''}`} onClick={() => setActiveTab('tutors')}><Users size={18} /> Tutors</button>
-              <button className={`tab-btn ${activeTab === 'payouts' ? 'active' : ''}`} onClick={() => setActiveTab('payouts')}><ShieldCheck size={18} /> Profiles & Commission</button>
-              <button className={`tab-btn ${activeTab === 'materials' ? 'active' : ''}`} onClick={() => setActiveTab('materials')}><Package size={18} /> Global Library</button>
-              <button className={`tab-btn ${activeTab === 'blogs' ? 'active' : ''}`} onClick={() => setActiveTab('blogs')}><FileText size={18} /> Blogs</button>
-              <button className={`tab-btn ${activeTab === 'courses' ? 'active' : ''}`} onClick={() => setActiveTab('courses')}><BookOpen size={18} /> Marketplace</button>
-              <button className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')}><BarChart size={18} /> Analytics</button>
-              <button className={`tab-btn ${activeTab === 'aspirant' ? 'active' : ''}`} onClick={() => setActiveTab('aspirant')}><Microscope size={18} /> {'NEET / JEE'}</button>
-              <button className={`tab-btn ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => setActiveTab('orders')}><PackageCheck size={18} /> Shop Orders</button>
-              <button className={`tab-btn ${activeTab === 'coupons' ? 'active' : ''}`} onClick={() => setActiveTab('coupons')}><Gift size={18} /> Coupons</button>
-            </div>
+          {/* Operations Center */}
+          <main className="flex-1">
+            <nav className="tab-nav">
+              <button className={`tab-btn ${activeTab === 'tutors' ? 'active' : ''}`} onClick={() => setActiveTab('tutors')}>
+                <Users size={18} /> Tutors
+              </button>
+              <button className={`tab-btn ${activeTab === 'payouts' ? 'active' : ''}`} onClick={() => setActiveTab('payouts')}>
+                <ShieldCheck size={18} /> Payouts
+              </button>
+              <button className={`tab-btn ${activeTab === 'materials' ? 'active' : ''}`} onClick={() => setActiveTab('materials')}>
+                <Package size={18} /> Library
+              </button>
+              <button className={`tab-btn ${activeTab === 'blogs' ? 'active' : ''}`} onClick={() => setActiveTab('blogs')}>
+                <FileText size={18} /> Blogs
+              </button>
+              <button className={`tab-btn ${activeTab === 'courses' ? 'active' : ''}`} onClick={() => setActiveTab('courses')}>
+                <BookOpen size={18} /> Market
+              </button>
+              <button className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')}>
+                <BarChart size={18} /> Stats
+              </button>
+              <button className={`tab-btn ${activeTab === 'aspirant' ? 'active' : ''}`} onClick={() => setActiveTab('aspirant')}>
+                <Microscope size={18} /> NEET/JEE
+              </button>
+              <button className={`tab-btn ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => setActiveTab('orders')}>
+                <PackageCheck size={18} /> Orders
+              </button>
+              <button className={`tab-btn ${activeTab === 'coupons' ? 'active' : ''}`} onClick={() => setActiveTab('coupons')}>
+                <Gift size={18} /> Coupons
+              </button>
+            </nav>
 
-            {/* TAB: Tutors */}
-            {activeTab === 'tutors' && (
-              <div className="glass-card p-8 animate-premium">
-                <h3 className="mb-6 flex items-center gap-2"><Users size={20} color="#f5c518" /> Tutor Directory</h3>
+            <div className="glass-card p-8 animate-premium">
+              {activeTab === 'tutors' && (
+                <div>
+                  <h3 className="mb-8 flex items-center gap-3 text-xl font-black italic tracking-tighter">
+                    <Users size={24} color="var(--admin-accent)" /> TUTOR DIRECTORY
+                  </h3>
                 <div className="table-responsive">
                   <table className="premium-table">
                     <thead>
