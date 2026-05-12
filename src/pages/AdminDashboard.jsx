@@ -297,7 +297,7 @@ export default function AdminDashboard() {
           <button onClick={handleLogout} className="btn-remove mobile-full"><LogOut size={18} /> Logout</button>
         </header>
 
-        <div className="flex gap-10 mobile-stack flex-wrap">
+        <div className="flex gap-10 mobile-stack flex-wrap" style={{ width: '100%' }}>
           {/* Sidebar KPIs */}
           <aside className="admin-sidebar">
             <div className="flex gap-4 mb-8 mobile-stack flex-wrap">
@@ -325,7 +325,7 @@ export default function AdminDashboard() {
           {/* Main Content Area */}
           <main className="flex-1 animate-premium">
             
-            <div className="tab-nav mb-8 table-responsive" style={{ whiteSpace: 'nowrap' }}>
+            <div className="tab-nav mb-8">
               <button className={`tab-btn ${activeTab === 'tutors' ? 'active' : ''}`} onClick={() => setActiveTab('tutors')}><Users size={18} /> Tutors</button>
               <button className={`tab-btn ${activeTab === 'payouts' ? 'active' : ''}`} onClick={() => setActiveTab('payouts')}><ShieldCheck size={18} /> Profiles & Commission</button>
               <button className={`tab-btn ${activeTab === 'materials' ? 'active' : ''}`} onClick={() => setActiveTab('materials')}><Package size={18} /> Global Library</button>
