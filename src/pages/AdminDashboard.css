@@ -2,9 +2,8 @@
   min-height: 100vh;
   background: radial-gradient(circle at top right, #1a253d 0%, #0a0e1a 100%);
   color: #f0f4ff;
-  padding: 2rem;
+  padding: 1.5rem 2%; /* Fluid padding */
   font-family: 'Inter', sans-serif;
-  overflow-x: hidden;
   width: 100%;
 }
 
@@ -20,11 +19,11 @@
 }
 
 .admin-sidebar {
-  width: 280px;
-  min-width: 280px;
+  width: 240px;
+  min-width: 240px;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 main.flex-1 {

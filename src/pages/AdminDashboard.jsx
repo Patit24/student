@@ -283,7 +283,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="admin-premium-root">
-      <div className="container" style={{ width: '100%', maxWidth: '1440px', padding: '0 1rem' }}>
+      <div className="container-fluid" style={{ width: '100%', padding: '0' }}>
         
         {/* Command Center Header */}
         <header className="flex justify-between items-center mb-10 mobile-stack">
@@ -297,7 +297,7 @@ export default function AdminDashboard() {
           <button onClick={handleLogout} className="btn-remove mobile-full"><LogOut size={18} /> Logout</button>
         </header>
 
-        <div className="flex gap-10 mobile-stack flex-wrap" style={{ width: '100%' }}>
+        <div className="flex gap-6 mobile-stack flex-wrap" style={{ width: '100%' }}>
           {/* Sidebar KPIs */}
           <aside className="admin-sidebar">
             <div className="flex gap-4 mb-8 mobile-stack flex-wrap">
