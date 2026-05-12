@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { subscribeMarketplaceProducts } from '../db.service';
 import { Search, ShoppingBag, Download, Package } from 'lucide-react';
+import { useAppContext } from '../context/AuthContext';
 import './Marketplace.css';
 import ProductCard from '../components/ProductCard';
 
@@ -21,11 +22,17 @@ export default function Marketplace() {
 
   const categories = ['All', ...new Set(products.map(p => p.category).filter(Boolean))];
 
+  const { currentUser } = useAppContext();
+
   const filteredProducts = products.filter(p => {
     const matchType = filterType === 'All' || p.type === filterType;
     const matchCategory = selectedCategory === 'All' || p.category === selectedCategory;
     const matchSearch = p.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
                         p.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Restriction: Students cannot see Beauty products
+    if (currentUser?.role === 'student' && p.type === 'Beauty') return false;
+    
     return matchType && matchCategory && matchSearch;
   });
 

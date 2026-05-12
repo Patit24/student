@@ -57,7 +57,7 @@ export default function Signup() {
         return;
       }
 
-      navigate(role === 'tutor' ? '/pricing' : '/student');
+      navigate(role === 'tutor' ? '/pricing' : role === 'buyer' ? '/marketplace' : '/student');
     } catch (err) {
       console.error('Signup error:', err);
       setError(friendlyError(err.code));
@@ -81,6 +81,10 @@ export default function Signup() {
             <label className="flex items-center gap-2" style={{ cursor: 'pointer' }}>
               <input type="radio" value="tutor" checked={role === 'tutor'} onChange={() => setRole('tutor')} />
               <span>Tutor</span>
+            </label>
+            <label className="flex items-center gap-2" style={{ cursor: 'pointer' }}>
+              <input type="radio" value="buyer" checked={role === 'buyer'} onChange={() => setRole('buyer')} />
+              <span>Normal User</span>
             </label>
           </div>
 

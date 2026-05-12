@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { 
   ChevronRight, 
   Star, 
@@ -18,11 +18,21 @@ import {
   ZapIcon,
   Sparkles
 } from 'lucide-react';
-import { getProductById, getMarketplaceProducts } from '../services/marketplaceService';
+import { useAppContext } from '../context/AuthContext';
+import { getMarketplaceProductById, getMarketplaceProducts } from '../db.service';
 import './BeautyProductDetail.css';
 
 const BeautyProductDetail = () => {
   const { productId } = useParams();
+  const { currentUser } = useAppContext();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (currentUser?.role === 'student') {
+      navigate('/student');
+    }
+  }, [currentUser, navigate]);
+
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
@@ -34,7 +44,7 @@ const BeautyProductDetail = () => {
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const data = await getProductById(productId);
+        const data = await getMarketplaceProductById(productId);
         setProduct(data);
         
         // Fetch recommendations (same category)

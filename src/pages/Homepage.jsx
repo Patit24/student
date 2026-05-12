@@ -647,7 +647,7 @@ export default function Homepage() {
     </section>
 
     {/* ── BEAUTY PRODUCTS ── */}
-    {beautyProducts.length > 0 && (
+    {beautyProducts.length > 0 && currentUser?.role !== 'student' && (
       <section className="hp-section beauty-showcase" style={{ background: '#fff', color: '#000', padding: '8rem 2rem' }}>
         <div className="container">
           <div className="flex justify-between items-end mb-12">

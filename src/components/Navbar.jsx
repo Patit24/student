@@ -20,7 +20,8 @@ export default function Navbar() {
 
   const dashPath =
     currentUser?.role === 'super_admin' ? '/admin-panel' :
-    currentUser?.role === 'tutor' ? '/tutor' : '/student';
+    currentUser?.role === 'tutor' ? '/tutor' : 
+    currentUser?.role === 'buyer' ? '/marketplace' : '/student';
 
   const navLink = {
     textDecoration: 'none',
@@ -72,7 +73,7 @@ export default function Navbar() {
               <Link to="/" style={navLink}>Home</Link>
               <Link to="/search" style={navLink}>Find Tutors</Link>
               <Link to="/courses" style={navLink}>Courses</Link>
-              <Link to="/marketplace" style={navLink}>Shop</Link>
+              {currentUser?.role !== 'student' && <Link to="/marketplace" style={navLink}>Shop</Link>}
               <Link to="/about" style={navLink}>About</Link>
               <Link to="/blogs" style={navLink}>Blogs</Link>
               <Link to="/login" className="btn btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>Log In</Link>
@@ -115,7 +116,7 @@ export default function Navbar() {
           <Link to="/" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>Home</Link>
           <Link to="/search" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>Find Tutors</Link>
           <Link to="/courses" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>Courses</Link>
-          <Link to="/marketplace" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>Shop</Link>
+          {currentUser?.role !== 'student' && <Link to="/marketplace" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>Shop</Link>}
           <Link to="/about" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>About</Link>
           <Link to="/blogs" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>Blogs</Link>
           <hr style={{ borderColor: 'rgba(255,255,255,0.05)' }} />

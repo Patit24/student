@@ -78,6 +78,10 @@ function AppRoutes() {
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/tutor"   element={<TutorDashboard />} />
         </>
+      ) : currentUser.role === 'buyer' ? (
+        <>
+          <Route path="/marketplace" element={<Marketplace />} />
+        </>
       ) : (
         <>
           <Route path="/student" element={<StudentDashboard />} />
@@ -90,6 +94,7 @@ function AppRoutes() {
         !currentUser ? "/" : 
         currentUser.role === 'super_admin' ? "/admin-panel" : 
         currentUser.role === 'tutor' ? (currentUser.subscription_status === 'active' ? "/tutor" : "/pricing") :
+        currentUser.role === 'buyer' ? "/marketplace" :
         "/student"
       } />} />
     </Routes>

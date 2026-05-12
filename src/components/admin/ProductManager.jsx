@@ -108,8 +108,6 @@ export default function ProductManager() {
       metadata: productType === 'Digital' ? {
         downloadUrl: fileUrl,
         format: 'Digital Download'
-      } : {
-        weight: '0.5kg'
       } : productType === 'Beauty' ? {
         brand,
         shades,
