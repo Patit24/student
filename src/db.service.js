@@ -654,8 +654,12 @@ export function subscribeUserOrders(userId, callback) {
 export async function updateOrderStatus(orderId, status, deliveryDate) {
   const orderRef = doc(db, 'orders', orderId);
   const updates = { status };
-  if (deliveryDate) updates.expectedDelivery = deliveryDate;
+  if (deliveryDate !== undefined) updates.expectedDelivery = deliveryDate;
   return await updateDoc(orderRef, updates);
+}
+
+export async function deleteMarketplaceOrder(orderId) {
+  await deleteDoc(doc(db, 'orders', orderId));
 }
 
 export async function updateMarketplaceProduct(productId, productData) {
@@ -664,4 +668,38 @@ export async function updateMarketplaceProduct(productId, productData) {
     ...productData,
     updated_at: serverTimestamp()
   });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COUPONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function createCoupon(couponData) {
+  return await addDoc(collection(db, 'coupons'), {
+    ...couponData,
+    code: couponData.code.toUpperCase().trim(),
+    status: couponData.status || 'active',
+    created_at: serverTimestamp()
+  });
+}
+
+export function subscribeCoupons(callback) {
+  const q = query(collection(db, 'coupons'), orderBy('created_at', 'desc'));
+  return onSnapshot(q, snap => {
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  });
+}
+
+export async function deleteCoupon(id) {
+  await deleteDoc(doc(db, 'coupons', id));
+}
+
+export async function getCouponByCode(code) {
+  if (!code) return null;
+  const q = query(collection(db, 'coupons'), where('code', '==', code.toUpperCase().trim()));
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  const data = snap.docs[0].data();
+  if (data.status !== 'active') return null;
+  return { id: snap.docs[0].id, ...data };
 }

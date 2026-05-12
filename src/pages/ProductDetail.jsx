@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getMarketplaceProductById } from '../db.service';
 import { CheckCircle, Shield, Truck, Zap, ShoppingCart, Star } from 'lucide-react';
+import { useAppContext } from '../context/AuthContext';
 import './ProductDetail.css';
 
 export default function ProductDetail() {
   const { productId } = useParams();
   const navigate = useNavigate();
+  const { currentUser } = useAppContext();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState('');
@@ -43,7 +45,10 @@ export default function ProductDetail() {
   const isDigital = product.type === 'Digital';
 
   const handleCheckout = () => {
-    // Navigating to checkout with product state
+    if (!currentUser) {
+      navigate('/login', { state: { redirectTo: '/checkout', product } });
+      return;
+    }
     navigate('/checkout', { state: { product } });
   };
 

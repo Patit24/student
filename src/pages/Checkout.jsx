@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAppContext } from '../context/AuthContext';
-import { createMarketplaceOrder } from '../db.service';
-import { Shield, Lock, CreditCard, Gift, ArrowLeft } from 'lucide-react';
+import { createMarketplaceOrder, getCouponByCode } from '../db.service';
+import { Shield, Lock, CreditCard, Gift, ArrowLeft, Tag, X } from 'lucide-react';
 import { useToast } from '../components/Toast';
 import './Checkout.css';
 
@@ -51,6 +51,42 @@ export default function Checkout() {
   });
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('razorpay'); // 'razorpay' or 'cod'
+  const [couponInput, setCouponInput] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+
+  const baseSubtotal = isEligibleForBundleDiscount ? basePrice * 0.5 : basePrice;
+  let couponDiscountAmount = 0;
+  if (appliedCoupon) {
+    if (appliedCoupon.type === 'fixed') {
+      couponDiscountAmount = appliedCoupon.value;
+    } else {
+      couponDiscountAmount = baseSubtotal * (appliedCoupon.value / 100);
+    }
+  }
+
+  const subtotalAfterCoupon = Math.max(0, baseSubtotal - couponDiscountAmount);
+  const codFee = (!isDigital && paymentMethod === 'cod') ? 40 : 0;
+  const currentFinalPrice = subtotalAfterCoupon + codFee;
+
+  const handleApplyCoupon = async () => {
+    if (!couponInput.trim()) return;
+    try {
+      const coupon = await getCouponByCode(couponInput);
+      if (coupon) {
+        setAppliedCoupon(coupon);
+        safeToast(`Coupon "${coupon.code}" applied!`, 'success');
+      } else {
+        safeToast('Invalid or expired coupon code', 'error');
+      }
+    } catch (err) {
+      safeToast('Error validating coupon', 'error');
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput('');
+  };
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
@@ -92,10 +128,11 @@ export default function Checkout() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount_inr: finalPrice,
+          amount_inr: currentFinalPrice,
           user_id: currentUser?.uid || 'guest',
           product_id: product.id,
-          is_bundle_discount: isEligibleForBundleDiscount
+          is_bundle_discount: isEligibleForBundleDiscount,
+          coupon_code: appliedCoupon?.code || null
         }),
       });
 
@@ -122,15 +159,24 @@ export default function Checkout() {
           try {
             const orderData = {
               userId: currentUser?.uid || 'guest',
-              items: [{ productId: product.id, title: product.title, type: product.type }],
-              totalAmount: finalPrice,
-              discountApplied: isEligibleForBundleDiscount ? 'STUDENT_BUNDLE_50' : null,
+              userName: formData.name,
+              userEmail: formData.email,
+              userPhone: formData.phone,
+              address: formData.address,
+              city: formData.city,
+              state: formData.state,
+              pincode: formData.pincode,
+              productId: product.id,
+              productTitle: product.title,
+              amount: currentFinalPrice,
               paymentId: response.razorpay_payment_id,
               orderId: response.razorpay_order_id,
               signature: response.razorpay_signature,
-              status: 'Paid',
-              paymentMethod: 'Razorpay',
-              customerDetails: formData
+              payment_status: 'Paid',
+              payment_method: 'Razorpay',
+              status: 'Order Placed',
+              discountApplied: appliedCoupon ? appliedCoupon.code : (isEligibleForBundleDiscount ? 'STUDENT_BUNDLE_50' : null),
+              created_at: new Date().toISOString()
             };
             
             await createMarketplaceOrder(orderData);
@@ -174,7 +220,10 @@ export default function Checkout() {
         pincode: formData.pincode,
         productId: product.id,
         productTitle: product.title,
-        amount: finalPrice,
+        amount: currentFinalPrice,
+        subtotal: baseSubtotal,
+        couponDiscount: couponDiscountAmount,
+        codFee: codFee,
         currency: 'INR',
         payment_method: 'COD',
         payment_status: 'Pending',
@@ -295,7 +344,7 @@ export default function Checkout() {
                 )}
               </div>
               <button type="submit" className="pay-now-btn" disabled={isProcessing}>
-                {isProcessing ? 'Initializing...' : (paymentMethod === 'razorpay' ? `Pay ₹${finalPrice}` : 'Confirm COD Order')}
+                {isProcessing ? 'Initializing...' : (paymentMethod === 'razorpay' ? `Pay ₹${currentFinalPrice}` : 'Confirm COD Order')}
                 <Lock size={16} />
               </button>
               <p className="secure-badge"><Shield size={14}/> 256-bit SSL Encrypted</p>
@@ -315,9 +364,24 @@ export default function Checkout() {
             </div>
             
             <div className="coupon-code">
-              <Gift size={18} />
-              <input type="text" placeholder="Discount Code" />
-              <button>Apply</button>
+              {appliedCoupon ? (
+                <div className="applied-coupon-pill">
+                  <Tag size={16} />
+                  <span>{appliedCoupon.code} Applied</span>
+                  <button type="button" onClick={removeCoupon} className="remove-coupon-btn"><X size={14} /></button>
+                </div>
+              ) : (
+                <>
+                  <Gift size={18} />
+                  <input 
+                    type="text" 
+                    placeholder="Discount Code" 
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                  />
+                  <button type="button" onClick={handleApplyCoupon}>Apply</button>
+                </>
+              )}
             </div>
             
             <div className="summary-totals">
@@ -337,15 +401,27 @@ export default function Checkout() {
                   <span>-₹{bundleDiscountAmount}</span>
                 </div>
               )}
-              {!isDigital && (
+              {couponDiscountAmount > 0 && (
+                <div className="totals-row discount">
+                  <span>Coupon Discount</span>
+                  <span>-₹{couponDiscountAmount}</span>
+                </div>
+              )}
+              {!isDigital && paymentMethod === 'cod' && (
+                <div className="totals-row">
+                  <span>COD Handling Fee</span>
+                  <span>₹40</span>
+                </div>
+              )}
+              {!isDigital && paymentMethod !== 'cod' && (
                 <div className="totals-row">
                   <span>Shipping</span>
-                  <span>Calculated at next step</span>
+                  <span style={{ color: '#10B981' }}>FREE</span>
                 </div>
               )}
               <div className="totals-row total">
                 <span>Total</span>
-                <span>₹{finalPrice}</span>
+                <span>₹{currentFinalPrice}</span>
               </div>
             </div>
           </div>

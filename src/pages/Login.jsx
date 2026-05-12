@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAppContext } from '../context/AuthContext';
 import { Shield, BookOpen, GraduationCap, Users, Zap, ChevronRight, Eye, EyeOff } from 'lucide-react';
 import './Login.css';
@@ -32,6 +32,7 @@ export default function Login() {
   const [detectedRole, setDetectedRole] = useState(null); // animate role badge
   const { login } = useAppContext();
   const navigate  = useNavigate();
+  const location  = useLocation();
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -46,8 +47,16 @@ export default function Login() {
       setDetectedRole(role);
 
       setTimeout(() => {
+        const redirectTo = location.state?.redirectTo;
+        const product = location.state?.product;
+
+        if (redirectTo) {
+          navigate(redirectTo, { state: { product } });
+          return;
+        }
+
         if (role === 'super_admin') navigate('/admin');
-        else if (role === 'tutor' && user.subscription_status !== 'active') navigate('/pricing');
+        else if (role === 'tutor' && user.subscription_status !== 'active' && user.subscription_status !== 'pending_verification') navigate('/pricing');
         else if (role === 'tutor') navigate('/tutor');
         else {
           // Student logic: check if enrolled in any batch
@@ -147,7 +156,7 @@ export default function Login() {
 
         <p className="login-signup-link">
           <Link to="/forgot-password" style={{ fontSize: '0.85rem', display: 'block', marginBottom: '0.5rem' }}>Forgot Password?</Link>
-          Don't have an account? <Link to="/signup" id="login-goto-signup">Sign Up</Link>
+          Don't have an account? <Link to="/signup" state={location.state} id="login-goto-signup">Sign Up</Link>
         </p>
 
       </div>

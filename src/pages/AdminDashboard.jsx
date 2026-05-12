@@ -9,9 +9,9 @@ import {
   Lock, ArrowRight, UserCheck, Upload, Zap, Globe,
   BookOpen, Star, Loader2, FileText, BarChart, Download,
   MessageSquare, Video, CheckSquare, ChevronRight, PackageCheck,
-  TrendingDown, Info, Settings, ShieldAlert, Globe2, Microscope, Plus, Brain
+  TrendingDown, Info, Settings, ShieldAlert, Globe2, Microscope, Plus, Brain, Gift
 } from 'lucide-react';
-import { subscribeGlobalAssets, uploadGlobalAsset, deleteGlobalAsset, uploadFileToStorage, updateOrderStatus } from '../db.service';
+import { subscribeGlobalAssets, uploadGlobalAsset, deleteGlobalAsset, uploadFileToStorage, updateOrderStatus, subscribeCoupons, createCoupon, deleteCoupon, deleteMarketplaceOrder } from '../db.service';
 import { useToast } from '../components/Toast';
 import { collection, query, where, onSnapshot, updateDoc, doc, deleteDoc, serverTimestamp, addDoc, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -50,6 +50,10 @@ export default function AdminDashboard() {
   const [selectedPlan, setSelectedPlan] = useState('growth');
   const [allCourses, setAllCourses] = useState([]);
   const [marketplaceOrders, setMarketplaceOrders] = useState([]);
+
+  // Coupon state
+  const [coupons, setCoupons] = useState([]);
+  const [couponForm, setCouponForm] = useState({ code: '', discountValue: '', type: 'fixed' });
 
   useEffect(() => {
     const qTutors = query(collection(db, 'users'), where('role', '==', 'tutor'));
@@ -92,8 +96,9 @@ export default function AdminDashboard() {
     const unsubOrders = onSnapshot(qOrders, snap => {
       setMarketplaceOrders(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
+    const unsubCoupons = subscribeCoupons(setCoupons);
 
-    return () => { unsubAssets(); unsubCourses(); unsubAspMat(); unsubAspExam(); unsubOrders(); };
+    return () => { unsubAssets(); unsubCourses(); unsubAspMat(); unsubAspExam(); unsubOrders(); unsubCoupons(); };
   }, []);
 
   const totalRevenue = tutors.reduce((acc, tutor) => {
@@ -231,6 +236,51 @@ export default function AdminDashboard() {
     reader.readAsBinaryString(file);
   };
 
+  const handleStatusChange = async (order, newStatus, deliveryDate) => {
+    try {
+      const finalDate = deliveryDate === null ? order.expectedDelivery : deliveryDate;
+      await updateOrderStatus(order.id, newStatus, finalDate);
+      toast.success('Order updated! ✨');
+      
+      if (newStatus === 'Order Placed' && order.userPhone && newStatus !== order.status) {
+        const message = `Hello ${order.userName},\n\nYour order for *${order.productTitle}* has been successfully placed! We will notify you once it ships.`;
+        const waUrl = `https://wa.me/${order.userPhone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+        window.open(waUrl, '_blank');
+      }
+    } catch (err) {
+      toast.error('Failed to update status: ' + err.message);
+    }
+  };
+
+  const handleDeleteOrder = async (orderId) => {
+    if (window.confirm('Are you sure you want to delete this order?')) {
+      try {
+        await deleteMarketplaceOrder(orderId);
+        toast.success('Order deleted successfully');
+      } catch (err) {
+        toast.error('Failed to delete order');
+      }
+    }
+  };
+
+  const handleCreateCoupon = async () => {
+    if (!couponForm.code.trim() || !couponForm.discountValue) {
+      toast.error('Please fill code and discount value');
+      return;
+    }
+    try {
+      await createCoupon({
+        code: couponForm.code,
+        type: couponForm.type,
+        value: Number(couponForm.discountValue)
+      });
+      toast.success('Coupon created! 🎫');
+      setCouponForm({ code: '', discountValue: '', type: 'fixed' });
+    } catch (err) {
+      toast.error('Error creating coupon: ' + err.message);
+    }
+  };
+
   return (
     <div className="admin-premium-root">
       <div className="container" style={{ maxWidth: '1440px' }}>
@@ -278,6 +328,7 @@ export default function AdminDashboard() {
               <button className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')}><BarChart size={18} /> Analytics</button>
               <button className={`tab-btn ${activeTab === 'aspirant' ? 'active' : ''}`} onClick={() => setActiveTab('aspirant')}><Microscope size={18} /> {'NEET / JEE'}</button>
               <button className={`tab-btn ${activeTab === 'orders' ? 'active' : ''}`} onClick={() => setActiveTab('orders')}><PackageCheck size={18} /> Shop Orders</button>
+              <button className={`tab-btn ${activeTab === 'coupons' ? 'active' : ''}`} onClick={() => setActiveTab('coupons')}><Gift size={18} /> Coupons</button>
             </div>
 
             {/* TAB: Tutors */}
@@ -580,7 +631,12 @@ export default function AdminDashboard() {
                         <tr key={order.id}>
                           <td>
                             <strong>{order.userName}</strong><br/>
-                            <small className="text-muted">{order.userPhone}</small>
+                            <small className="text-muted">{order.userPhone}</small><br/>
+                            {order.address && (
+                              <div style={{ fontSize: '0.7rem', color: '#7a8ba8', marginTop: '4px', maxWidth: '200px' }}>
+                                {order.address}, {order.city}, {order.state} - {order.pincode}
+                              </div>
+                            )}
                           </td>
                           <td>{order.productTitle}</td>
                           <td>₹{order.amount}</td>
@@ -589,7 +645,7 @@ export default function AdminDashboard() {
                               className="input-premium" 
                               style={{ padding: '0.3rem', fontSize: '0.8rem', background: '#111' }}
                               value={order.status || 'Pending'}
-                              onChange={(e) => updateOrderStatus(order.id, e.target.value, order.expectedDelivery)}
+                              onChange={(e) => handleStatusChange(order, e.target.value, null)}
                             >
                               <option value="Pending">Pending</option>
                               <option value="Order Placed">Order Placed</option>
@@ -605,14 +661,19 @@ export default function AdminDashboard() {
                               className="input-premium"
                               style={{ padding: '0.3rem', fontSize: '0.8rem', background: '#111' }}
                               value={order.expectedDelivery || ''}
-                              onChange={(e) => updateOrderStatus(order.id, order.status || 'Pending', e.target.value)}
+                              onChange={(e) => handleStatusChange(order, order.status || 'Pending', e.target.value)}
                             />
                           </td>
                           <td>
-                            <div className="flex gap-2">
+                            <div className="flex items-center gap-2">
                               <span className={order.payment_status === 'Paid' ? 'badge-active' : 'badge-pending'}>
                                 {order.payment_status}
                               </span>
+                              {order.payment_status === 'COD' && (
+                                <button className="btn-icon" style={{ color: '#EF4444' }} onClick={() => handleDeleteOrder(order.id)} title="Delete COD Order">
+                                  <Trash2 size={16} />
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -624,6 +685,78 @@ export default function AdminDashboard() {
                       )}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'coupons' && (
+              <div className="flex-col gap-8 animate-premium">
+                <div className="glass-card p-8">
+                  <h3 className="mb-6 flex items-center gap-2"><Gift size={20} color="#f5c518" /> Coupon Management</h3>
+                  <div className="flex gap-4 mb-8 mobile-stack">
+                    <input 
+                      type="text" 
+                      placeholder="CODE (e.g. SAVE20)" 
+                      className="input-field flex-1" 
+                      value={couponForm.code} 
+                      onChange={e => setCouponForm({...couponForm, code: e.target.value.toUpperCase()})}
+                    />
+                    <select 
+                      className="input-field" 
+                      style={{ maxWidth: '150px' }}
+                      value={couponForm.type}
+                      onChange={e => setCouponForm({...couponForm, type: e.target.value})}
+                    >
+                      <option value="fixed">Fixed (₹)</option>
+                      <option value="percentage">Percentage (%)</option>
+                    </select>
+                    <input 
+                      type="number" 
+                      placeholder="Value" 
+                      className="input-field" 
+                      style={{ maxWidth: '150px' }}
+                      value={couponForm.discountValue} 
+                      onChange={e => setCouponForm({...couponForm, discountValue: e.target.value})}
+                    />
+                    <button className="btn-approve flex items-center gap-2" onClick={handleCreateCoupon}>
+                      <Plus size={18} /> Create
+                    </button>
+                  </div>
+
+                  <div className="table-responsive">
+                    <table className="premium-table">
+                      <thead>
+                        <tr>
+                          <th>Code</th>
+                          <th>Type</th>
+                          <th>Value</th>
+                          <th>Status</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {coupons.map(c => (
+                          <tr key={c.id}>
+                            <td><strong>{c.code}</strong></td>
+                            <td>{c.type === 'fixed' ? 'Fixed Amount' : 'Percentage'}</td>
+                            <td>{c.type === 'fixed' ? `₹${c.value}` : `${c.value}%`}</td>
+                            <td><span className="badge-active">{c.status}</span></td>
+                            <td>
+                              <button className="btn-icon" onClick={async () => {
+                                if (window.confirm('Delete coupon?')) {
+                                  await deleteCoupon(c.id);
+                                  toast.success('Deleted');
+                                }
+                              }}><Trash2 size={16} /></button>
+                            </td>
+                          </tr>
+                        ))}
+                        {coupons.length === 0 && (
+                          <tr><td colSpan="5" className="text-center p-8 text-muted">No coupons found.</td></tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             )}

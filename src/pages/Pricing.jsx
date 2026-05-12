@@ -140,6 +140,7 @@ export default function Pricing() {
       setSuccess(true);
       setUpiModal({ show: false, plan: null });
       toast.success('Payment proof submitted! Admin will verify within 30 minutes. 🚀');
+      setTimeout(() => navigate('/tutor'), 2500);
     } catch (err) {
       toast.error('Submission failed: ' + err.message);
     } finally {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useAppContext } from '../context/AuthContext';
 import { Eye, EyeOff, Zap, User, Phone, Mail, Shield } from 'lucide-react';
 
@@ -17,6 +17,7 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const { signup } = useAppContext();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Update role if query param changes
   useEffect(() => {
@@ -47,6 +48,15 @@ export default function Signup() {
       setLoading(true);
       // If tutor, we pass email too (the context signup will need to handle this)
       await signup(phone, password, role, name, email);
+      
+      const redirectTo = location.state?.redirectTo;
+      const product = location.state?.product;
+      
+      if (redirectTo) {
+        navigate(redirectTo, { state: { product } });
+        return;
+      }
+
       navigate(role === 'tutor' ? '/pricing' : '/student');
     } catch (err) {
       console.error('Signup error:', err);

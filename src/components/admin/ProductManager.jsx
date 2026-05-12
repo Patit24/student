@@ -28,6 +28,7 @@ export default function ProductManager() {
   const [stock, setStock] = useState('');
   const [images, setImages] = useState([]);
   const [fileUrl, setFileUrl] = useState('');
+  const [category, setCategory] = useState('');
   const [editingProduct, setEditingProduct] = useState(null);
 
   useEffect(() => {
@@ -72,8 +73,8 @@ export default function ProductManager() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!title || !originalPrice) {
-      toast.error('Title and Original Price are required');
+    if (!title || !originalPrice || !category) {
+      toast.error('Title, Original Price, and Category are required');
       return;
     }
 
@@ -85,6 +86,7 @@ export default function ProductManager() {
     const productData = {
       type: productType,
       title,
+      category: category.trim(),
       description,
       originalPrice: parseFloat(originalPrice),
       salePrice: salePrice ? parseFloat(salePrice) : null,
@@ -117,6 +119,7 @@ export default function ProductManager() {
   const resetForm = () => {
     setTitle('');
     setDescription('');
+    setCategory('');
     setOriginalPrice('');
     setSalePrice('');
     setStock('');
@@ -129,6 +132,7 @@ export default function ProductManager() {
     setEditingProduct(p);
     setProductType(p.type);
     setTitle(p.title);
+    setCategory(p.category || '');
     setDescription(p.description || '');
     setOriginalPrice(p.originalPrice);
     setSalePrice(p.salePrice || '');
@@ -197,10 +201,15 @@ export default function ProductManager() {
             <label className="input-label">Product Title</label>
             <input className="input-field w-full" value={title} onChange={e => setTitle(e.target.value)} required />
           </div>
-          
+
           <div className="input-group">
+            <label className="input-label">Category (e.g. Books, Kits, Notes)</label>
+            <input className="input-field w-full" value={category} onChange={e => setCategory(e.target.value)} required placeholder="e.g. Test Series" />
+          </div>
+          
+          <div className="input-group md:col-span-2">
             <label className="input-label">Description</label>
-            <textarea className="input-field w-full" value={description} onChange={e => setDescription(e.target.value)} rows="1" />
+            <textarea className="input-field w-full" value={description} onChange={e => setDescription(e.target.value)} rows="2" />
           </div>
 
           <div className="flex gap-4">

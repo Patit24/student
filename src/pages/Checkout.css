@@ -262,6 +262,40 @@
   cursor: pointer;
 }
 
+.applied-coupon-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.8rem;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 6px;
+  color: #10B981;
+  font-weight: 600;
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+.remove-coupon-btn {
+  margin-left: auto;
+  background: rgba(255, 255, 255, 0.05);
+  border: none;
+  color: #94A3B8;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.remove-coupon-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #EF4444;
+}
+
 .summary-totals {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding-top: 1.5rem;

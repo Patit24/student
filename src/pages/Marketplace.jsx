@@ -8,6 +8,7 @@ export default function Marketplace() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState('All'); // All, Digital, Physical
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -18,11 +19,14 @@ export default function Marketplace() {
     return () => unsubscribe();
   }, []);
 
+  const categories = ['All', ...new Set(products.map(p => p.category).filter(Boolean))];
+
   const filteredProducts = products.filter(p => {
     const matchType = filterType === 'All' || p.type === filterType;
+    const matchCategory = selectedCategory === 'All' || p.category === selectedCategory;
     const matchSearch = p.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
                         p.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchType && matchSearch;
+    return matchType && matchCategory && matchSearch;
   });
 
   if (loading) {
@@ -72,6 +76,18 @@ export default function Marketplace() {
             </button>
           </div>
         </div>
+
+        <div className="category-filters">
+          {categories.map(cat => (
+            <button
+              key={cat}
+              className={`cat-pill ${selectedCategory === cat ? 'active' : ''}`}
+              onClick={() => setSelectedCategory(cat)}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
 
       {filteredProducts.length === 0 ? (
@@ -109,6 +125,7 @@ function ProductCard({ product }) {
       </div>
       
       <div className="product-content">
+        <div className="product-category-tag">{product.category || 'General'}</div>
         <h3 className="product-title">{product.title}</h3>
         <div className="product-rating">
           <Star size={14} className="star-icon filled" />

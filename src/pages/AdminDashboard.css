@@ -605,3 +605,44 @@
   .cinematic-title { font-size: 1.5rem; margin-bottom: 1.5rem; }
   .tutor-profile-snapshot { flex-direction: column; text-align: center; }
 }
+
+.input-premium {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: #fff;
+  padding: 0.8rem 1rem;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.input-premium:focus {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: #f5c518;
+  outline: none;
+  box-shadow: 0 0 15px rgba(245, 197, 24, 0.1);
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #7a8ba8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.text-muted {
+  color: #7a8ba8;
+}
