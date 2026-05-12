@@ -16,18 +16,22 @@
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
-/* Sidebar Stats */
 .admin-sidebar {
   width: 280px;
+  min-width: 280px;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
+main.flex-1 {
+  min-width: 0; /* Critical for preventing flex items from overflowing */
+}
+
 .stat-box {
   padding: 1.8rem;
   position: relative;
-  overflow-x: hidden;
+  overflow: hidden;
   padding-bottom: 5rem;
 }
 
@@ -582,13 +586,18 @@
   margin-top: 1.5rem;
   line-height: 1.5;
 }
-/* ── MOBILE RESPONSIVE OVERRIDES ── */
+@media (max-width: 1200px) {
+  .admin-sidebar { width: 240px; min-width: 240px; }
+  .flex.gap-10 { gap: 2rem; }
+}
+
 @media (max-width: 1024px) {
   .admin-premium-root { padding: 1rem; }
-  .admin-sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; }
+  .admin-sidebar { width: 100%; min-width: 100%; flex-direction: row; flex-wrap: wrap; }
   .stat-box { flex: 1; min-width: 250px; padding: 1.25rem; padding-bottom: 3rem; }
   .verification-card { width: 95%; padding: 1.5rem; }
   .cinematic-title { font-size: 1.8rem; }
+  .flex.gap-10 { gap: 1.5rem; }
 }
 
 @media (max-width: 768px) {

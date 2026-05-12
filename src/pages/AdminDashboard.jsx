@@ -283,7 +283,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="admin-premium-root">
-      <div className="container" style={{ maxWidth: '1440px' }}>
+      <div className="container" style={{ width: '100%', maxWidth: '1440px', padding: '0 1rem' }}>
         
         {/* Command Center Header */}
         <header className="flex justify-between items-center mb-10 mobile-stack">
@@ -323,7 +323,7 @@ export default function AdminDashboard() {
           </aside>
 
           {/* Main Content Area */}
-          <main style={{ flex: 1 }}>
+          <main className="flex-1 animate-premium">
             
             <div className="tab-nav mb-8 table-responsive" style={{ whiteSpace: 'nowrap' }}>
               <button className={`tab-btn ${activeTab === 'tutors' ? 'active' : ''}`} onClick={() => setActiveTab('tutors')}><Users size={18} /> Tutors</button>
@@ -727,7 +727,6 @@ export default function AdminDashboard() {
                     </button>
                   </div>
 
-                  <div className="table-responsive">
                   <div className="table-responsive">
                     <table className="premium-table">
                       <thead>
