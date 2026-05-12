@@ -15,8 +15,10 @@ import {
   ChevronUp,
   Award,
   Leaf,
-  ZapIcon,
-  Sparkles
+  Zap,
+  Sparkles,
+  FileText,
+  Play
 } from 'lucide-react';
 import { useAppContext } from '../context/AuthContext';
 import { getMarketplaceProductById, getMarketplaceProducts } from '../db.service';
@@ -185,7 +187,7 @@ const BeautyProductDetail = () => {
           <div className="beauty-accordions">
             <div className="accordion-item">
               <button className="accordion-header" onClick={() => toggleSection('super-ingredients')}>
-                <div className="flex items-center gap-2"><ZapIcon size={18} /> Super Ingredients</div>
+                <div className="flex items-center gap-2"><Zap size={18} /> Super Ingredients</div>
                 {expandedSection === 'super-ingredients' ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
               </button>
               {expandedSection === 'super-ingredients' && (

@@ -1,46 +1,56 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Star, Package, Download } from 'lucide-react';
+import { Star, Package, Download, ShoppingBag } from 'lucide-react';
 import './ProductCard.css';
 
 export default function ProductCard({ product }) {
   const isDigital = product.type === 'Digital';
+  const isBeauty = product.type === 'Beauty';
+  
   const defaultImg = isDigital 
     ? 'https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&q=80&w=400' 
+    : isBeauty
+    ? 'https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&q=80&w=400'
     : 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?auto=format&fit=crop&q=80&w=400';
   
   const imgUrl = (product.images && product.images.length > 0) ? product.images[0] : defaultImg;
+  const productLink = isBeauty ? `/beauty-product/${product.id}` : `/product/${product.id}`;
 
   return (
     <div className="product-card">
-      <div className="product-image-wrapper">
-        <img src={imgUrl} alt={product.title} className="product-image" />
-        <div className="product-badge">
-          {isDigital ? <><Download size={12}/> Digital</> : <><Package size={12}/> Physical</>}
+      <div className="product-image-container">
+        <img src={imgUrl} alt={product.title} className="product-card-img" />
+        <div className="product-type-badge">
+          {isDigital ? <Download size={10}/> : isBeauty ? <Star size={10} fill="currentColor"/> : <Package size={10}/>}
+          <span>{product.type}</span>
+        </div>
+        <div className="product-card-overlay">
+          <Link to={productLink} className="quick-view-overlay-btn">
+            View Details
+          </Link>
         </div>
       </div>
       
-      <div className="product-content">
-        <div className="product-category-tag">{product.category || 'General'}</div>
-        <h3 className="product-title">{product.title}</h3>
-        <div className="product-rating">
-          <Star size={14} className="star-icon filled" />
-          <Star size={14} className="star-icon filled" />
-          <Star size={14} className="star-icon filled" />
-          <Star size={14} className="star-icon filled" />
-          <Star size={14} className="star-icon half" />
-          <span>(4.8)</span>
+      <div className="product-info">
+        <div className="product-meta">
+          <span className="product-cat">{product.category || 'General'}</span>
+          <div className="product-rating-small">
+            <Star size={12} fill="#F5C518" stroke="#F5C518" />
+            <span>4.8</span>
+          </div>
         </div>
         
-        <div className="product-footer">
-          <div className="product-pricing">
-            <span className="sale-price">₹{product.salePrice || product.originalPrice}</span>
+        <h3 className="product-name" title={product.title}>{product.title}</h3>
+        
+        <div className="product-price-row">
+          <div className="price-tag">
+            <span className="current-price">₹{product.salePrice || product.originalPrice}</span>
             {product.salePrice && product.salePrice < product.originalPrice && (
-              <span className="original-price">₹{product.originalPrice}</span>
+              <span className="old-price">₹{product.originalPrice}</span>
             )}
           </div>
-          <Link to={`/product/${product.id}`} className="view-btn">
-            Quick View
+          <Link to={productLink} className="buy-icon-btn" title="View Product">
+            <ShoppingBag size={18} />
           </Link>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { subscribeMarketplaceProducts } from '../db.service';
-import { Search, ShoppingBag, Download, Package } from 'lucide-react';
+import { Search, ShoppingBag, Download, Package, Star } from 'lucide-react';
 import { useAppContext } from '../context/AuthContext';
 import './Marketplace.css';
 import ProductCard from '../components/ProductCard';
@@ -45,57 +45,62 @@ export default function Marketplace() {
   }
 
   return (
-    <div className="marketplace-container page-animate">
-      <div className="marketplace-header">
-        <div className="header-content">
-          <h1>Student Resource <span>Marketplace</span></h1>
-          <p>Discover premium study materials, lab kits, and interactive courses to boost your learning.</p>
-        </div>
-        
-        <div className="marketplace-controls">
-          <div className="search-bar">
-            <Search size={18} className="search-icon" />
-            <input 
-              type="text" 
-              placeholder="Search for books, courses, kits..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+    <div className="marketplace-wrapper page-animate">
+      <div className="marketplace-hero">
+        <div className="hero-glow"></div>
+        <div className="container">
+          <div className="hero-text">
+            <span className="hero-eyebrow">Premium Resources</span>
+            <h1>The Student <span>Asset Store</span></h1>
+            <p>Elevate your academic journey with curated tools, courses, and physical lab kits designed for excellence.</p>
           </div>
-          <div className="filter-group">
-            <button 
-              className={`filter-btn ${filterType === 'All' ? 'active' : ''}`}
-              onClick={() => setFilterType('All')}
-            >
-              All Formats
-            </button>
-            <button 
-              className={`filter-btn ${filterType === 'Digital' ? 'active' : ''}`}
-              onClick={() => setFilterType('Digital')}
-            >
-              <Download size={16} /> Digital PDFs
-            </button>
-            <button 
-              className={`filter-btn ${filterType === 'Physical' ? 'active' : ''}`}
-              onClick={() => setFilterType('Physical')}
-            >
-              <Package size={16} /> Physical Kits
-            </button>
-          </div>
-        </div>
-
-        <div className="category-filters">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              className={`cat-pill ${selectedCategory === cat ? 'active' : ''}`}
-              onClick={() => setSelectedCategory(cat)}
-            >
-              {cat}
-            </button>
-          ))}
         </div>
       </div>
+
+      <div className="marketplace-toolbar">
+        <div className="container">
+          <div className="toolbar-inner">
+            <div className="search-box">
+              <Search size={20} className="search-icon" />
+              <input 
+                type="text" 
+                placeholder="Find resources..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            
+            <div className="filter-tabs">
+              {['All', 'Digital', 'Physical', 'Beauty'].map(type => (
+                <button 
+                  key={type}
+                  className={`tab-btn ${filterType === type ? 'active' : ''}`}
+                  onClick={() => setFilterType(type)}
+                >
+                  {type === 'Digital' && <Download size={14} />}
+                  {type === 'Physical' && <Package size={14} />}
+                  {type === 'Beauty' && <Star size={14} />}
+                  {type === 'All' ? 'Everything' : type}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="category-strip">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                className={`category-pill ${selectedCategory === cat ? 'active' : ''}`}
+                onClick={() => setSelectedCategory(cat)}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="container">
 
       {filteredProducts.length === 0 ? (
         <div className="empty-state">

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Package, Zap, Upload, DollarSign, Image as ImageIcon, 
-  Trash2, Plus, Box, Edit3, X
+  Trash2, Plus, Box, Edit3, X, Star
 } from 'lucide-react';
 import { 
   createMarketplaceProduct, 

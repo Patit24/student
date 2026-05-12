@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  BookOpen, Zap, Shield, Play, Users, Star, ShoppingBag,
+  BookOpen, Zap, Shield, Play, Users, Star, ShoppingBag, Heart,
   ChevronRight, MonitorPlay, Brain, Lock, CheckCircle, Search, MapPin, FileText, CheckSquare,
   Monitor, Globe, Activity, Plus, Download
 } from 'lucide-react';
