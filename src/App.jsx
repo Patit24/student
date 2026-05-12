@@ -25,6 +25,7 @@ import Checkout from './pages/Checkout';
 import NeetAspirant from './pages/NeetAspirant';
 import JeeAspirant from './pages/JeeAspirant';
 import MyOrders from './pages/MyOrders';
+import BeautyProductDetail from './pages/BeautyProductDetail';
 import Footer from './components/Footer';
 import { AlertTriangle, Lock } from 'lucide-react';
 import './index.css';
@@ -60,6 +61,7 @@ function AppRoutes() {
       <Route path="/neet" element={<NeetAspirant />} />
       <Route path="/jee" element={<JeeAspirant />} />
       <Route path="/orders" element={<MyOrders />} />
+      <Route path="/beauty-product/:productId" element={<BeautyProductDetail />} />
 
       {!currentUser ? (
         <>

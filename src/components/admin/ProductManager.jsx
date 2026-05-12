@@ -31,6 +31,20 @@ export default function ProductManager() {
   const [category, setCategory] = useState('');
   const [editingProduct, setEditingProduct] = useState(null);
 
+  // Beauty Specific Fields
+  const [brand, setBrand] = useState('');
+  const [shades, setShades] = useState([]); // [{name, hex}]
+  const [shadeName, setShadeName] = useState('');
+  const [shadeHex, setShadeHex] = useState('#000000');
+  const [size, setSize] = useState('');
+  const [ingredients, setIngredients] = useState('');
+  const [howToUse, setHowToUse] = useState('');
+  const [brandStory, setBrandStory] = useState('');
+  const [superIngredients, setSuperIngredients] = useState([]);
+  const [superIngInput, setSuperIngInput] = useState('');
+  const [manufacturer, setManufacturer] = useState('');
+  const [countryOfOrigin, setCountryOfOrigin] = useState('');
+
   useEffect(() => {
     const unsub = subscribeMarketplaceProducts(setProducts);
     return () => unsub();
@@ -95,6 +109,19 @@ export default function ProductManager() {
         downloadUrl: fileUrl,
         format: 'Digital Download'
       } : {
+        weight: '0.5kg'
+      } : productType === 'Beauty' ? {
+        brand,
+        shades,
+        size,
+        ingredients,
+        superIngredients,
+        howToUse,
+        brandStory,
+        manufacturer,
+        countryOfOrigin,
+        stock: parseInt(stock) || 0
+      } : {
         stock: parseInt(stock) || 0,
         weight: '0.5kg'
       }
@@ -126,6 +153,15 @@ export default function ProductManager() {
     setImages([]);
     setFileUrl('');
     setEditingProduct(null);
+    setBrand('');
+    setShades([]);
+    setSize('');
+    setIngredients('');
+    setSuperIngredients([]);
+    setHowToUse('');
+    setBrandStory('');
+    setManufacturer('');
+    setCountryOfOrigin('');
   };
 
   const handleEditClick = (p) => {
@@ -139,6 +175,17 @@ export default function ProductManager() {
     setImages(p.images || []);
     if (p.type === 'Digital') {
       setFileUrl(p.metadata?.downloadUrl || '');
+    } else if (p.type === 'Beauty') {
+      setBrand(p.metadata?.brand || '');
+      setShades(p.metadata?.shades || []);
+      setSize(p.metadata?.size || '');
+      setIngredients(p.metadata?.ingredients || '');
+      setSuperIngredients(p.metadata?.superIngredients || []);
+      setHowToUse(p.metadata?.howToUse || '');
+      setBrandStory(p.metadata?.brandStory || '');
+      setManufacturer(p.metadata?.manufacturer || '');
+      setCountryOfOrigin(p.metadata?.countryOfOrigin || '');
+      setStock(p.metadata?.stock || '');
     } else {
       setStock(p.metadata?.stock || '');
     }
@@ -177,9 +224,20 @@ export default function ProductManager() {
         >
           <Box size={16} /> Physical Product
         </button>
+        <button 
+          className={`tab-btn ${productType === 'Beauty' ? 'active' : ''}`} 
+          onClick={() => setProductType('Beauty')}
+          style={{ 
+            background: productType === 'Beauty' ? 'rgba(236,72,153,0.12)' : '', 
+            borderColor: productType === 'Beauty' ? '#EC4899' : '', 
+            color: productType === 'Beauty' ? '#F472B6' : '' 
+          }}
+        >
+          <Star size={16} /> Beauty Product
+        </button>
       </div>
 
-      <div className="glass-card p-8" style={{ border: `1px solid ${productType === 'Digital' ? 'rgba(99,102,241,0.25)' : 'rgba(245,158,11,0.25)'}` }}>
+      <div className="glass-card p-8" style={{ border: `1px solid ${productType === 'Digital' ? 'rgba(99,102,241,0.25)' : productType === 'Beauty' ? 'rgba(236,72,153,0.25)' : 'rgba(245,158,11,0.25)'}` }}>
         <div className="flex justify-between items-center mb-6">
           <h3 className="flex items-center gap-2" style={{ margin: 0 }}>
             {editingProduct ? (
@@ -223,7 +281,7 @@ export default function ProductManager() {
             </div>
           </div>
 
-          {productType === 'Physical' ? (
+          {productType === 'Physical' || productType === 'Beauty' ? (
             <div className="input-group">
               <label className="input-label flex items-center gap-1"><Package size={14}/> Stock Quantity</label>
               <input type="number" className="input-field w-full" value={stock} onChange={e => setStock(e.target.value)} required />
@@ -239,6 +297,94 @@ export default function ProductManager() {
                 {fileUrl && <span style={{ color: '#10B981', fontSize: '0.85rem' }}>✓ File Ready</span>}
               </div>
             </div>
+          )}
+
+          {productType === 'Beauty' && (
+            <>
+              <div className="input-group">
+                <label className="input-label">Brand Name</label>
+                <input className="input-field w-full" value={brand} onChange={e => setBrand(e.target.value)} placeholder="e.g. Rom&nd" />
+              </div>
+              <div className="input-group">
+                <label className="input-label">Size / Volume</label>
+                <input className="input-field w-full" value={size} onChange={e => setSize(e.target.value)} placeholder="e.g. 3.5 g" />
+              </div>
+              <div className="input-group" style={{ gridColumn: 'span 2' }}>
+                <label className="input-label">Manage Shades/Colors</label>
+                <div className="flex gap-2 mb-2">
+                  <input className="input-field flex-1" placeholder="Shade Name" value={shadeName} onChange={e => setShadeName(e.target.value)} />
+                  <input type="color" className="w-12 h-10 border-none bg-transparent cursor-pointer" value={shadeHex} onChange={e => setShadeHex(e.target.value)} />
+                  <button type="button" className="btn-approve px-4" onClick={() => {
+                    if (shadeName) {
+                      setShades([...shades, { name: shadeName, hex: shadeHex }]);
+                      setShadeName('');
+                    }
+                  }}>Add</button>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  {shades.map((s, i) => (
+                    <div key={i} className="flex items-center gap-2 bg-[rgba(255,255,255,0.05)] p-2 rounded-lg border border-[rgba(255,255,255,0.1)]">
+                      <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: s.hex }} />
+                      <span className="text-xs">{s.name}</span>
+                      <button type="button" onClick={() => setShades(shades.filter((_, idx) => idx !== i))} className="text-red-400 hover:text-red-300"><X size={14}/></button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="input-group" style={{ gridColumn: 'span 2' }}>
+                <label className="input-label">Super Ingredients (Enter to add)</label>
+                <div className="flex gap-2 mb-2">
+                  <input 
+                    className="input-field flex-1" 
+                    value={superIngInput} 
+                    onChange={e => setSuperIngInput(e.target.value)}
+                    onKeyPress={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (superIngInput) {
+                          setSuperIngredients([...superIngredients, superIngInput]);
+                          setSuperIngInput('');
+                        }
+                      }
+                    }}
+                  />
+                  <button type="button" className="btn-approve px-4" onClick={() => {
+                    if (superIngInput) {
+                      setSuperIngredients([...superIngredients, superIngInput]);
+                      setSuperIngInput('');
+                    }
+                  }}>Add</button>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  {superIngredients.map((ing, i) => (
+                    <div key={i} className="flex items-center gap-2 bg-pink-900/20 px-3 py-1 rounded-full border border-pink-500/30">
+                      <span className="text-xs text-pink-300">{ing}</span>
+                      <button type="button" onClick={() => setSuperIngredients(superIngredients.filter((_, idx) => idx !== i))} className="text-pink-500 hover:text-pink-400"><X size={12}/></button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="input-group" style={{ gridColumn: 'span 2' }}>
+                <label className="input-label">Ingredients Description</label>
+                <textarea className="input-field w-full" value={ingredients} onChange={e => setIngredients(e.target.value)} rows="2" placeholder="Detailed list of ingredients..." />
+              </div>
+              <div className="input-group" style={{ gridColumn: 'span 2' }}>
+                <label className="input-label">How to Use</label>
+                <textarea className="input-field w-full" value={howToUse} onChange={e => setHowToUse(e.target.value)} rows="2" />
+              </div>
+              <div className="input-group" style={{ gridColumn: 'span 2' }}>
+                <label className="input-label">Brand Story</label>
+                <textarea className="input-field w-full" value={brandStory} onChange={e => setBrandStory(e.target.value)} rows="2" placeholder="Tell the brand's history..." />
+              </div>
+              <div className="input-group">
+                <label className="input-label">Manufacturer</label>
+                <input className="input-field w-full" value={manufacturer} onChange={e => setManufacturer(e.target.value)} />
+              </div>
+              <div className="input-group">
+                <label className="input-label">Country of Origin</label>
+                <input className="input-field w-full" value={countryOfOrigin} onChange={e => setCountryOfOrigin(e.target.value)} />
+              </div>
+            </>
           )}
 
           <div className="input-group" style={{ gridColumn: 'span 2' }}>

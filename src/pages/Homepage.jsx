@@ -133,11 +133,13 @@ export default function Homepage() {
 
   const [globalAssets, setGlobalAssets] = useState([]);
   const [marketplaceProducts, setMarketplaceProducts] = useState([]);
+  const [beautyProducts, setBeautyProducts] = useState([]);
 
   useEffect(() => {
     async function loadShop() {
       const prods = await getMarketplaceProducts();
-      setMarketplaceProducts(prods.slice(0, 8));
+      setMarketplaceProducts(prods.filter(p => p.type !== 'Beauty').slice(0, 8));
+      setBeautyProducts(prods.filter(p => p.type === 'Beauty').slice(0, 8));
     }
     loadShop();
   }, []);
@@ -644,23 +646,47 @@ export default function Homepage() {
       </div>
     </section>
 
-    {/* ── TRENDING PRODUCTS ── */}
-    <section className="hp-section" style={{ background: '#080c16', padding: '6rem 2rem' }}>
-      <div className="container">
-        <ProductCarousel 
-          title="Trending Resources" 
-          subtitle="Top-rated study materials and kits preferred by thousands of aspirants."
-          products={marketplaceProducts} 
-        />
-        <div className="flex justify-center mt-8">
-          <Link to="/marketplace" className="hp-btn-outline" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}>
-            Browse Full Marketplace <ShoppingBag size={18} className="ml-2" />
-          </Link>
+    {/* ── BEAUTY PRODUCTS ── */}
+    {beautyProducts.length > 0 && (
+      <section className="hp-section beauty-showcase" style={{ background: '#fff', color: '#000', padding: '8rem 2rem' }}>
+        <div className="container">
+          <div className="flex justify-between items-end mb-12">
+            <div className="beauty-head">
+              <span style={{ color: '#8b5cf6', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', fontSize: '0.8rem' }}>Luxury Selection</span>
+              <h2 style={{ fontSize: '3rem', fontWeight: 700, margin: '10px 0', color: '#000' }}>Premium <span style={{ fontFamily: 'serif', italic: 'true' }}>Beauty</span> Collection</h2>
+              <p style={{ color: '#666', fontSize: '1.1rem' }}>Curated beauty essentials from world-class brands.</p>
+            </div>
+            <Link to="/marketplace?category=Beauty" className="view-all-beauty">View All <ChevronRight size={20} /></Link>
+          </div>
+          
+          <div className="beauty-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '30px' }}>
+            {beautyProducts.map((p, i) => (
+              <Link to={`/beauty-product/${p.id}`} key={p.id} className="beauty-card" style={{ textDecoration: 'none', color: 'inherit' }}>
+                <div className="beauty-img-wrap" style={{ aspectRatio: '3/4', borderRadius: '16px', overflow: 'hidden', position: 'relative', background: '#f8f8f8' }}>
+                  <img src={p.images?.[0]} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <div className="beauty-overlay">
+                    <button className="beauty-wishlist"><Heart size={20} /></button>
+                  </div>
+                  {p.metadata?.brand && <div className="brand-tag">{p.metadata.brand}</div>}
+                </div>
+                <div className="beauty-info" style={{ padding: '20px 0' }}>
+                  <h4 style={{ fontSize: '1.2rem', fontWeight: 600, margin: '0 0 8px 0' }}>{p.name}</h4>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-1 bg-black text-white px-2 py-0.5 rounded text-xs font-bold">
+                      4.2 <Star size={10} fill="white" />
+                    </div>
+                    <span style={{ color: '#666', fontSize: '0.8rem' }}>(120)</span>
+                  </div>
+                  <div className="beauty-price" style={{ fontSize: '1.2rem', fontWeight: 700 }}>₹{p.price}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    )}
 
-      {/* ── FINAL CTA ── */}
+    {/* ── FINAL CTA ── */}
       <section className="hp-final-cta">
         <div className="hp-final-inner">
           <h2>Ready to Achieve Your<br /><span className="hp-yellow">Dream Rank?</span></h2>
