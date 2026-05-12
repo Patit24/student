@@ -396,9 +396,9 @@ export default function AdminDashboard() {
                               </div>
                             </td>
                             <td>
-                              {t.subscription_status === 'active' ? <span className="badge-active">Live ({t.subscription_tier?.toUpperCase()})</span> 
-                              : t.subscription_status === 'pending_verification' ? <span className="badge-pending" style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}>⏳ Pending ({t.pending_plan?.toUpperCase()})</span>
-                              : <span className="badge-pending">Review</span>}
+                              {t.subscription_status === 'active' ? <span className="badge badge-success">Live ({t.subscription_tier?.toUpperCase()})</span> 
+                              : t.subscription_status === 'pending_verification' ? <span className="badge badge-pending">⏳ Pending ({t.pending_plan?.toUpperCase()})</span>
+                              : <span className="badge badge-pending">Review</span>}
                             </td>
                             <td style={{ textAlign: 'right' }}>
                               <div style={{ display: 'inline-flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
@@ -422,16 +422,16 @@ export default function AdminDashboard() {
                   <h3 className="mb-6"><ShieldCheck size={20} color="#f5c518" /> Commission Configuration</h3>
                   <div className="grid grid-cols-1 gap-6">
                     {tutors.map(t => (
-                      <div key={t.id} className="glass-card p-6" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                      <div key={t.id} className="glass-card p-6" style={{ background: 'rgba(255,255,255,0.01)' }}>
                         <div className="flex justify-between items-center mb-6">
                           <div className="flex items-center gap-3">
-                            <div className="avatar-sm" style={{ background: 'var(--primary)', color: '#000', fontWeight: 900 }}>{t.name.charAt(0)}</div>
+                            <div className="avatar-sm" style={{ background: 'var(--admin-accent)', color: '#000', fontWeight: 900 }}>{t.name.charAt(0)}</div>
                             <div>
                               <div style={{ fontWeight: 800 }}>{t.name}</div>
-                              <div style={{ fontSize: '0.75rem', color: '#7a8ba8' }}>UPI: {t.banking?.upiId || 'Not Set'}</div>
+                              <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-secondary)' }}>UPI: {t.banking?.upiId || 'Not Set'}</div>
                             </div>
                           </div>
-                          <div className="badge-active">PLATFORM FEE: ACTIVE</div>
+                          <div className="badge badge-success">PLATFORM FEE: ACTIVE</div>
                         </div>
                         <div className="grid grid-cols-2 gap-6">
                           <div className="input-group">
@@ -554,10 +554,10 @@ export default function AdminDashboard() {
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                       {aspirantMaterials.filter(m => m.stream === aspStream).map(m => (
-                        <div key={m.id} className="flex justify-between items-center" style={{ padding: '0.8rem 1rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px' }}>
+                        <div key={m.id} className="flex justify-between items-center" style={{ padding: '0.8rem 1rem', background: 'var(--admin-card-hover)', border: '1px solid var(--admin-border)', borderRadius: '10px' }}>
                           <div>
-                            <p style={{ margin: 0, fontWeight: 700, color: '#F0F4FF', fontSize: '0.9rem' }}>{m.title}</p>
-                            <p style={{ margin: 0, fontSize: '0.72rem', color: '#7A8BA8' }}>{m.subject} · Class {m.class_name} · {m.file_name}</p>
+                            <p style={{ margin: 0, fontWeight: 700, color: 'var(--admin-text-primary)', fontSize: '0.9rem' }}>{m.title}</p>
+                            <p style={{ margin: 0, fontSize: '0.72rem', color: 'var(--admin-text-secondary)' }}>{m.subject} · Class {m.class_name} · {m.file_name}</p>
                           </div>
                           <button className="btn-icon" onClick={async () => { await deleteDoc(doc(db, 'aspirant_materials', m.id)); toast.success('Deleted'); }}><Trash2 size={16} /></button>
                         </div>
@@ -699,7 +699,7 @@ export default function AdminDashboard() {
                           </td>
                           <td>
                             <div className="flex items-center gap-2">
-                              <span className={order.payment_status === 'Paid' ? 'badge-active' : 'badge-pending'}>
+                              <span className={order.payment_status === 'Paid' ? 'badge badge-success' : 'badge badge-pending'}>
                                 {order.payment_status}
                               </span>
                               {order.payment_status === 'COD' && (

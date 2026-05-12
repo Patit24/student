@@ -269,14 +269,14 @@ export default function ProductManager() {
         <h4 className="mb-4" style={{ color: '#94A3B8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           📦 Active Marketplace Products ({products.length})
         </h4>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {products.map(p => (
-            <div key={p.id} className="flex justify-between items-center" style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px' }}>
+            <div key={p.id} className="flex justify-between items-center" style={{ padding: '1rem', background: 'var(--admin-card-hover)', border: '1px solid var(--admin-border)', borderRadius: '12px' }}>
               <div className="flex items-center gap-4">
                 <img src={p.images?.[0] || 'https://via.placeholder.com/50'} style={{ width: '50px', height: '50px', borderRadius: '8px', objectFit: 'cover' }} alt="" />
                 <div>
-                  <p style={{ margin: 0, fontWeight: 700, color: '#F0F4FF', fontSize: '1rem' }}>{p.title}</p>
-                  <p style={{ margin: 0, fontSize: '0.75rem', color: '#7A8BA8' }}>
+                  <p style={{ margin: 0, fontWeight: 700, color: 'var(--admin-text-primary)', fontSize: '1rem' }}>{p.title}</p>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--admin-text-secondary)' }}>
                     {p.type} • ₹{p.salePrice || p.originalPrice} 
                     {p.type === 'Physical' && ` • Stock: ${p.metadata?.stock}`}
                   </p>
