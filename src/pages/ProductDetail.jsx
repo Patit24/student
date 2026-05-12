@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getMarketplaceProductById } from '../db.service';
+import { getMarketplaceProductById, getMarketplaceProducts } from '../db.service';
 import { CheckCircle, Shield, Truck, Zap, ShoppingCart, Star } from 'lucide-react';
 import { useAppContext } from '../context/AuthContext';
+import ProductCarousel from '../components/ProductCarousel';
 import './ProductDetail.css';
 
 export default function ProductDetail() {
@@ -10,19 +11,29 @@ export default function ProductDetail() {
   const navigate = useNavigate();
   const { currentUser } = useAppContext();
   const [product, setProduct] = useState(null);
+  const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState('');
 
   useEffect(() => {
-    async function loadProduct() {
+    async function loadData() {
       const data = await getMarketplaceProductById(productId);
       if (data) {
         setProduct(data);
         setActiveImage(data.images?.[0] || '');
+        
+        // Load related products
+        const allProducts = await getMarketplaceProducts();
+        const filtered = allProducts
+          .filter(p => p.id !== productId)
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 8);
+        setRelatedProducts(filtered);
       }
       setLoading(false);
     }
-    loadProduct();
+    loadData();
+    window.scrollTo(0, 0);
   }, [productId]);
 
   if (loading) {
@@ -169,6 +180,15 @@ export default function ProductDetail() {
             <p>"The content is structured so well. The instant delivery for the digital notes was flawless."</p>
           </div>
         </div>
+      </div>
+
+      {/* Related Products Carousel */}
+      <div className="pdp-related">
+        <ProductCarousel 
+          title="Students Also Bought" 
+          subtitle="Explore more premium resources curated for your success."
+          products={relatedProducts} 
+        />
       </div>
     </div>
   );

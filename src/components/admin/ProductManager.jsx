@@ -196,7 +196,7 @@ export default function ProductManager() {
           )}
         </div>
         
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-6">
           <div className="input-group">
             <label className="input-label">Product Title</label>
             <input className="input-field w-full" value={title} onChange={e => setTitle(e.target.value)} required />
@@ -207,7 +207,7 @@ export default function ProductManager() {
             <input className="input-field w-full" value={category} onChange={e => setCategory(e.target.value)} required placeholder="e.g. Test Series" />
           </div>
           
-          <div className="input-group md:col-span-2">
+          <div className="input-group" style={{ gridColumn: 'span 2' }}>
             <label className="input-label">Description</label>
             <textarea className="input-field w-full" value={description} onChange={e => setDescription(e.target.value)} rows="2" />
           </div>
@@ -241,14 +241,14 @@ export default function ProductManager() {
             </div>
           )}
 
-          <div className="input-group md:col-span-2">
+          <div className="input-group" style={{ gridColumn: 'span 2' }}>
             <label className="input-label flex items-center gap-1"><ImageIcon size={14}/> Product Images</label>
-            <div className="flex gap-4 items-center">
+            <div className="flex gap-4 items-center mobile-stack">
               <input type="file" id="image-upload" multiple hidden accept="image/*" onChange={handleImageUpload} />
-              <label htmlFor="image-upload" className="btn-approve flex items-center gap-2 cursor-pointer" style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px dashed rgba(255,255,255,0.2)' }}>
+              <label htmlFor="image-upload" className="btn-approve flex items-center gap-2 cursor-pointer mobile-full" style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px dashed rgba(255,255,255,0.2)' }}>
                 <ImageIcon size={16} /> Upload Photos
               </label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {images.map((img, i) => (
                   <img key={i} src={img} alt="preview" style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover' }} />
                 ))}
@@ -256,7 +256,7 @@ export default function ProductManager() {
             </div>
           </div>
 
-          <div className="md:col-span-2 mt-4">
+          <div style={{ gridColumn: 'span 2' }} className="mt-4">
             <button type="submit" className="btn-approve w-full" style={{ padding: '0.8rem', background: editingProduct ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)' : (productType === 'Digital' ? 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)' : 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)'), border: 'none', fontWeight: 'bold' }}>
               {editingProduct ? 'Update Product' : 'Publish Product'}
             </button>
@@ -269,7 +269,7 @@ export default function ProductManager() {
         <h4 className="mb-4" style={{ color: '#94A3B8', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           📦 Active Marketplace Products ({products.length})
         </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           {products.map(p => (
             <div key={p.id} className="flex justify-between items-center" style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '12px' }}>
               <div className="flex items-center gap-4">

@@ -297,9 +297,15 @@ export default function AdminDashboard() {
           <button onClick={handleLogout} className="btn-remove mobile-full"><LogOut size={18} /> Logout</button>
         </header>
 
-        <div className="flex gap-10 mobile-stack">
+        <div className="flex gap-10 mobile-stack flex-wrap">
           {/* Sidebar KPIs */}
           <aside className="admin-sidebar">
+            <div className="flex gap-4 mb-8 mobile-stack flex-wrap">
+              <div className="flex-1 glass-card p-6">
+                <h4 className="stat-label">Total Assets</h4>
+                <span className="stat-value">{globalAssets.length}</span>
+              </div>
+            </div>
             <div className="glass-card stat-box">
               <span className="stat-label">Total Tutors</span>
               <div className="flex items-end justify-between">
@@ -319,7 +325,7 @@ export default function AdminDashboard() {
           {/* Main Content Area */}
           <main style={{ flex: 1 }}>
             
-            <div className="tab-nav mb-8 overflow-x-auto">
+            <div className="tab-nav mb-8 table-responsive" style={{ whiteSpace: 'nowrap' }}>
               <button className={`tab-btn ${activeTab === 'tutors' ? 'active' : ''}`} onClick={() => setActiveTab('tutors')}><Users size={18} /> Tutors</button>
               <button className={`tab-btn ${activeTab === 'payouts' ? 'active' : ''}`} onClick={() => setActiveTab('payouts')}><ShieldCheck size={18} /> Profiles & Commission</button>
               <button className={`tab-btn ${activeTab === 'materials' ? 'active' : ''}`} onClick={() => setActiveTab('materials')}><Package size={18} /> Global Library</button>
@@ -488,13 +494,11 @@ export default function AdminDashboard() {
                 {/* Upload Study Material */}
                 <div className="glass-card p-8" style={{ border: `1px solid ${aspStream === 'neet' ? 'rgba(34,197,94,0.25)' : 'rgba(129,140,248,0.25)'}` }}>
                   <h3 className="flex items-center gap-2 mb-6"><Upload size={20} color={aspStream === 'neet' ? '#22C55E' : '#818CF8'} /> Upload {aspStream.toUpperCase()} Study Material</h3>
-                  <div className="flex gap-4 mb-4 mobile-stack">
-                    <input className="input-field flex-1" placeholder="Material Title" value={aspMatTitle} onChange={e => setAspMatTitle(e.target.value)} />
-                    <input className="input-field" placeholder="Subject (e.g. Biology)" value={aspMatSubject} onChange={e => setAspMatSubject(e.target.value)} style={{ maxWidth: '200px' }} />
+                  <div className="flex gap-4 mb-6 mobile-stack flex-wrap">
+                    <input className="input-field flex-1" placeholder="Material Title..." value={aspMatTitle} onChange={e => setAspMatTitle(e.target.value)} />
+                    <input className="input-field" placeholder="Subject..." value={aspMatSubject} onChange={e => setAspMatSubject(e.target.value)} style={{ maxWidth: '150px' }} />
                     <select className="input-field" value={aspMatClass} onChange={e => setAspMatClass(e.target.value)} style={{ maxWidth: '120px' }}>
-                      <option value="11th">11th</option>
-                      <option value="12th">12th</option>
-                      <option value="11th & 12th">Both</option>
+                      {[11, 12, 'Dropper'].map(c => <option key={c} value={c}>Class {c}</option>)}
                     </select>
                   </div>
                   <input type="file" id={`asp-mat-file-${aspStream}`} hidden onChange={async (e) => {
@@ -537,12 +541,12 @@ export default function AdminDashboard() {
                 <div className="glass-card p-8" style={{ border: `1px solid ${aspStream === 'neet' ? 'rgba(34,197,94,0.25)' : 'rgba(129,140,248,0.25)'}` }}>
                   <h3 className="flex items-center gap-2 mb-6"><CheckSquare size={20} color={aspStream === 'neet' ? '#22C55E' : '#818CF8'} /> Create {aspStream.toUpperCase()} Mock Exam</h3>
                   
-                  <div className="flex gap-4 mb-6">
+                  <div className="flex gap-4 mb-6 mobile-stack flex-wrap">
                     <input type="file" id="exam-excel-upload" hidden accept=".xlsx, .xls" onChange={handleExcelUpload} />
-                    <label htmlFor="exam-excel-upload" className="btn-approve flex-1 flex items-center justify-center gap-2 cursor-pointer" style={{ background: 'rgba(255,255,255,0.05)', border: '1px dashed rgba(255,255,255,0.2)', color: '#F0F4FF' }}>
+                    <label htmlFor="exam-excel-upload" className="btn-approve flex-1 flex items-center justify-center gap-2 cursor-pointer mobile-full" style={{ background: 'rgba(255,255,255,0.05)', border: '1px dashed rgba(255,255,255,0.2)', color: '#F0F4FF' }}>
                       <FileText size={18} /> Bulk Upload via Excel
                     </label>
-                    <button className="btn-approve" onClick={() => {
+                    <button className="btn-approve mobile-full" onClick={() => {
                       const template = [
                         ['Question', 'Option A', 'Option B', 'Option C', 'Option D', 'Correct (A/B/C/D)'],
                         ['What is the capital of France?', 'London', 'Paris', 'Berlin', 'Madrid', 'B'],
@@ -565,7 +569,7 @@ export default function AdminDashboard() {
                         <input className="input-field flex-1" placeholder="Enter question..." value={q.question} onChange={e => { const nq = [...aspQuestions]; nq[qi].question = e.target.value; setAspQuestions(nq); }} />
                         {aspQuestions.length > 1 && <button style={{ background: 'none', border: 'none', color: '#EF4444', cursor: 'pointer' }} onClick={() => setAspQuestions(aspQuestions.filter((_, i) => i !== qi))}><Trash2 size={14} /></button>}
                       </div>
-                      <div className="flex gap-2 mobile-stack mb-2">
+                      <div className="flex gap-2 mobile-stack mb-2 flex-wrap">
                         {q.options.map((opt, oi) => (
                           <input key={oi} className="input-field flex-1" placeholder={`Option ${String.fromCharCode(65 + oi)}`} value={opt} onChange={e => { const nq = [...aspQuestions]; nq[qi].options[oi] = e.target.value; setAspQuestions(nq); }} style={{ fontSize: '0.82rem' }} />
                         ))}
@@ -575,7 +579,7 @@ export default function AdminDashboard() {
                       </select>
                     </div>
                   ))}
-                  <div className="flex gap-4 mt-4">
+                  <div className="flex gap-4 mt-4 mobile-stack">
                     <button className="btn-approve" style={{ padding: '0.6rem 1.5rem', fontSize: '0.85rem' }} onClick={() => setAspQuestions([...aspQuestions, { question: '', options: ['', '', '', ''], correct: 0 }])}><Plus size={16} /> Add Question</button>
                     <button className="btn-approve" style={{ padding: '0.6rem 1.5rem', fontSize: '0.85rem', background: aspStream === 'neet' ? 'rgba(34,197,94,0.15)' : 'rgba(129,140,248,0.15)', color: aspStream === 'neet' ? '#22C55E' : '#818CF8' }} onClick={async () => {
                       if (!aspExamTitle.trim()) { toast.error('Enter exam title'); return; }
@@ -693,7 +697,7 @@ export default function AdminDashboard() {
               <div className="flex-col gap-8 animate-premium">
                 <div className="glass-card p-8">
                   <h3 className="mb-6 flex items-center gap-2"><Gift size={20} color="#f5c518" /> Coupon Management</h3>
-                  <div className="flex gap-4 mb-8 mobile-stack">
+                  <div className="flex gap-4 mb-8 mobile-stack flex-wrap">
                     <input 
                       type="text" 
                       placeholder="CODE (e.g. SAVE20)" 
@@ -723,6 +727,7 @@ export default function AdminDashboard() {
                     </button>
                   </div>
 
+                  <div className="table-responsive">
                   <div className="table-responsive">
                     <table className="premium-table">
                       <thead>
@@ -756,6 +761,7 @@ export default function AdminDashboard() {
                         )}
                       </tbody>
                     </table>
+                  </div>
                   </div>
                 </div>
               </div>

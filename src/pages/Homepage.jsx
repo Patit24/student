@@ -1,18 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  BookOpen, Zap, Shield, Play, Users, Star,
+  BookOpen, Zap, Shield, Play, Users, Star, ShoppingBag,
   ChevronRight, MonitorPlay, Brain, Lock, CheckCircle, Search, MapPin, FileText, CheckSquare,
   Monitor, Globe, Activity, Plus, Download
 } from 'lucide-react';
 import { useAppContext } from '../context/AuthContext';
-import { subscribeGlobalAssets, markAssetPurchased } from '../db.service';
+import { getMarketplaceProducts, subscribeGlobalAssets, markAssetPurchased } from '../db.service';
+import ProductCarousel from '../components/ProductCarousel';
 import { useToast } from '../components/Toast';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import neetWatermark from '../assets/neet_dna_watermark.png';
 import jeeWatermark from '../assets/jee_grid_watermark.png';
-import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { collection, query, orderBy, limit, onSnapshot, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import './Homepage.css';
 
@@ -131,6 +132,15 @@ export default function Homepage() {
   const [blogRef, blogVis] = useReveal();
 
   const [globalAssets, setGlobalAssets] = useState([]);
+  const [marketplaceProducts, setMarketplaceProducts] = useState([]);
+
+  useEffect(() => {
+    async function loadShop() {
+      const prods = await getMarketplaceProducts();
+      setMarketplaceProducts(prods.slice(0, 8));
+    }
+    loadShop();
+  }, []);
 
   useEffect(() => {
     if (isMockMode) {
@@ -629,6 +639,22 @@ export default function Homepage() {
         <div className="flex justify-center mt-16">
           <Link to="/blogs" className="hp-btn-outline group" style={{ padding: '1rem 2.5rem', borderRadius: '99px', background: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             Discover More Articles <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
+      </div>
+    </section>
+
+    {/* ── TRENDING PRODUCTS ── */}
+    <section className="hp-section" style={{ background: '#080c16', padding: '6rem 2rem' }}>
+      <div className="container">
+        <ProductCarousel 
+          title="Trending Resources" 
+          subtitle="Top-rated study materials and kits preferred by thousands of aspirants."
+          products={marketplaceProducts} 
+        />
+        <div className="flex justify-center mt-8">
+          <Link to="/marketplace" className="hp-btn-outline" style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '12px' }}>
+            Browse Full Marketplace <ShoppingBag size={18} className="ml-2" />
           </Link>
         </div>
       </div>

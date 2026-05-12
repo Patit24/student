@@ -628,6 +628,12 @@ export function subscribeMarketplaceProducts(callback) {
   });
 }
 
+export async function getMarketplaceProducts() {
+  const q = query(collection(db, 'products'), orderBy('created_at', 'desc'));
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
 export async function getMarketplaceProductById(productId) {
   const snap = await getDoc(doc(db, 'products', productId));
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
