@@ -790,10 +790,10 @@ export default function AdminDashboard() {
                       </tbody>
                     </table>
                   </div>
-                  </div>
                 </div>
               </div>
             )}
+            </div> {/* Closing the main glass-card from line 367 */}
           </main>
         </div>
 
