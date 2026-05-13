@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { useAppContext } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { createMarketplaceOrder, getCouponByCode } from '../db.service';
-import { Shield, Lock, CreditCard, Gift, ArrowLeft, Tag, X } from 'lucide-react';
+import { Shield, Lock, CreditCard, Gift, ArrowLeft, Tag, X, ShoppingBag } from 'lucide-react';
 import { useToast } from '../components/Toast';
 import './Checkout.css';
 
@@ -10,6 +11,7 @@ export default function Checkout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { currentUser } = useAppContext();
+  const { cart, cartTotal, clearCart } = useCart();
   const toast = useToast();
 
   // Robust notification helper to prevent "TypeError: r is not a function"
@@ -30,15 +32,24 @@ export default function Checkout() {
     if (window.location.hostname === 'localhost') return 'http://localhost:4000';
     return ''; 
   };
+
   const product = location.state?.product;
-  const isDigital = product?.type === 'Digital';
-  const isBundle = product?.title?.toLowerCase().includes('bundle');
+  const isCartCheckout = !product && cart.length > 0;
+  const checkoutItems = product ? [{ ...product, quantity: 1 }] : cart;
+
+  const isDigital = checkoutItems.some(item => item.type === 'Digital');
+  const isBundle = checkoutItems.some(item => item.title?.toLowerCase().includes('bundle'));
   const isTuitionStudent = currentUser?.enrolled_batches?.length > 0 || currentUser?.batch_id;
   
-  const basePrice = product?.salePrice || product?.originalPrice || 0;
+  const baseSubtotal = useMemo(() => {
+    if (product) {
+      return product.salePrice || product.originalPrice || 0;
+    }
+    return cartTotal;
+  }, [product, cartTotal]);
+
   const isEligibleForBundleDiscount = isBundle && isTuitionStudent;
-  const finalPrice = isEligibleForBundleDiscount ? basePrice * 0.5 : basePrice;
-  const bundleDiscountAmount = isEligibleForBundleDiscount ? basePrice * 0.5 : 0;
+  const bundleDiscountAmount = isEligibleForBundleDiscount ? baseSubtotal * 0.5 : 0;
   
   const [formData, setFormData] = useState({
     name: currentUser?.name || '',
@@ -54,19 +65,20 @@ export default function Checkout() {
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
 
-  const baseSubtotal = isEligibleForBundleDiscount ? basePrice * 0.5 : basePrice;
+  const subtotalAfterBundle = baseSubtotal - bundleDiscountAmount;
+  
   let couponDiscountAmount = 0;
   if (appliedCoupon) {
     if (appliedCoupon.type === 'fixed') {
       couponDiscountAmount = appliedCoupon.value;
     } else {
-      couponDiscountAmount = baseSubtotal * (appliedCoupon.value / 100);
+      couponDiscountAmount = subtotalAfterBundle * (appliedCoupon.value / 100);
     }
   }
 
-  const subtotalAfterCoupon = Math.max(0, baseSubtotal - couponDiscountAmount);
+  const subtotalAfterCoupon = Math.max(0, subtotalAfterBundle - couponDiscountAmount);
   const codFee = (!isDigital && paymentMethod === 'cod') ? 40 : 0;
-  const currentFinalPrice = subtotalAfterCoupon + codFee;
+  const currentFinalPrice = Math.round(subtotalAfterCoupon + codFee);
 
   const handleApplyCoupon = async () => {
     if (!couponInput.trim()) return;
@@ -98,10 +110,12 @@ export default function Checkout() {
     });
   };
 
-  if (!product) {
+  if (!product && cart.length === 0) {
     return (
       <div className="checkout-empty">
+        <ShoppingBag size={64} style={{ opacity: 0.2, marginBottom: '1.5rem' }} />
         <h2>Your cart is empty</h2>
+        <p>Add some products to your bag before checking out.</p>
         <Link to="/marketplace" className="btn btn-primary mt-4">Browse Marketplace</Link>
       </div>
     );
@@ -110,7 +124,6 @@ export default function Checkout() {
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
 
   const handleRazorpayPayment = async () => {
     setIsProcessing(true);
@@ -130,7 +143,8 @@ export default function Checkout() {
         body: JSON.stringify({
           amount_inr: currentFinalPrice,
           user_id: currentUser?.uid || 'guest',
-          product_id: product.id,
+          product_id: product?.id || 'cart_checkout',
+          items: checkoutItems.map(item => ({ id: item.id, title: item.title || item.name, quantity: item.quantity, price: item.salePrice || item.originalPrice || item.price })),
           is_bundle_discount: isEligibleForBundleDiscount,
           coupon_code: appliedCoupon?.code || null
         }),
@@ -153,7 +167,7 @@ export default function Checkout() {
         amount: order.amount,
         currency: 'INR',
         name: 'Antigravity Tuition OS',
-        description: `Purchase: ${product.title}`,
+        description: product ? `Purchase: ${product.title}` : `Order with ${cartCount} items`,
         order_id: order.order_id,
         handler: async (response) => {
           try {
@@ -166,8 +180,13 @@ export default function Checkout() {
               city: formData.city,
               state: formData.state,
               pincode: formData.pincode,
-              productId: product.id,
-              productTitle: product.title,
+              items: checkoutItems.map(item => ({ 
+                id: item.id, 
+                title: item.title || item.name, 
+                quantity: item.quantity, 
+                price: item.salePrice || item.originalPrice || item.price,
+                type: item.type
+              })),
               amount: currentFinalPrice,
               paymentId: response.razorpay_payment_id,
               orderId: response.razorpay_order_id,
@@ -180,6 +199,7 @@ export default function Checkout() {
             };
             
             await createMarketplaceOrder(orderData);
+            clearCart();
             safeToast('Payment successful! Order confirmed. 🚀', 'success');
             navigate(currentUser ? '/student' : '/marketplace');
           } catch (err) {
@@ -210,7 +230,7 @@ export default function Checkout() {
     setIsProcessing(true);
     try {
       const orderData = {
-        userId: currentUser.uid,
+        userId: currentUser?.uid || 'guest',
         userName: formData.name,
         userEmail: formData.email,
         userPhone: formData.phone,
@@ -218,8 +238,13 @@ export default function Checkout() {
         city: formData.city,
         state: formData.state,
         pincode: formData.pincode,
-        productId: product.id,
-        productTitle: product.title,
+        items: checkoutItems.map(item => ({ 
+          id: item.id, 
+          title: item.title || item.name, 
+          quantity: item.quantity, 
+          price: item.salePrice || item.originalPrice || item.price,
+          type: item.type
+        })),
         amount: currentFinalPrice,
         subtotal: baseSubtotal,
         couponDiscount: couponDiscountAmount,
@@ -232,24 +257,16 @@ export default function Checkout() {
       };
 
       await createMarketplaceOrder(orderData);
+      clearCart();
       
-      // Fallback alert if toast fails
-      try {
-        safeToast('Order placed successfully (Cash on Delivery)!', 'success');
-      } catch (e) {
-        alert('Order placed successfully (Cash on Delivery)!');
-      }
+      safeToast('Order placed successfully (Cash on Delivery)!', 'success');
       
       setTimeout(() => {
         navigate(currentUser ? '/student' : '/marketplace');
       }, 1500);
     } catch (error) {
       console.error('COD Error:', error);
-      try {
-        safeToast('Failed to place COD order.', 'error');
-      } catch (e) {
-        alert('Failed to place COD order.');
-      }
+      safeToast('Failed to place COD order.', 'error');
     } finally {
       setIsProcessing(false);
     }
@@ -355,12 +372,19 @@ export default function Checkout() {
         <div className="checkout-summary-section">
           <div className="summary-card">
             <h3>Order Summary</h3>
-            <div className="summary-item-card">
-              <img src={product.images?.[0] || 'https://via.placeholder.com/60'} alt={product.title} />
-              <div className="summary-item-info">
-                <h4>{product.title}</h4>
-                <span>{product.type} Product</span>
-              </div>
+            
+            <div className="summary-items-list">
+              {checkoutItems.map((item, idx) => (
+                <div key={idx} className="summary-item-card">
+                  <img src={item.images?.[0] || item.image || 'https://via.placeholder.com/60'} alt={item.title || item.name} />
+                  <div className="summary-item-info">
+                    <h4>{item.title || item.name}</h4>
+                    <div className="item-price-qty">
+                      <span>₹{item.salePrice || item.originalPrice || item.price} × {item.quantity}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
             
             <div className="coupon-code">
@@ -387,14 +411,9 @@ export default function Checkout() {
             <div className="summary-totals">
               <div className="totals-row">
                 <span>Subtotal</span>
-                <span>₹{product.originalPrice}</span>
+                <span>₹{baseSubtotal}</span>
               </div>
-              {product.salePrice && product.salePrice < product.originalPrice && (
-                <div className="totals-row discount">
-                  <span>Discount</span>
-                  <span>-₹{product.originalPrice - product.salePrice}</span>
-                </div>
-              )}
+              
               {isEligibleForBundleDiscount && (
                 <div className="totals-row discount" style={{ color: '#10B981', fontWeight: 600 }}>
                   <span>Student Bundle Offer (50% OFF)</span>

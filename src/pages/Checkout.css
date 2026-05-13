@@ -199,10 +199,41 @@
   margin-bottom: 1.5rem;
 }
 
+.summary-items-list {
+  max-height: 350px;
+  overflow-y: auto;
+  margin-bottom: 2rem;
+  padding-right: 0.5rem;
+}
+
+.summary-items-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.summary-items-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+}
+
+.summary-items-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
 .summary-item-card {
   display: flex;
   gap: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.2rem;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 0.75rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: transform 0.2s;
+}
+
+.summary-item-card:hover {
+  transform: translateX(4px);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .summary-item-card img {
@@ -214,17 +245,25 @@
 }
 
 .summary-item-info h4 {
-  font-size: 1.1rem;
+  font-size: 1rem;
   color: #fff;
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.25rem 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.summary-item-info span {
+.item-price-qty {
   font-size: 0.85rem;
   color: #94A3B8;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 0.2rem 0.6rem;
-  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.item-price-qty span:last-child {
+  font-weight: 600;
+  color: #F5C518;
 }
 
 .coupon-code {
