@@ -18,6 +18,7 @@ export default function ProductCard({ product }) {
 
   return (
     <div className="product-card">
+      <div className="card-glow"></div>
       <div className="product-image-container">
         <img src={imgUrl} alt={product.title} className="product-card-img" />
         <div className="product-type-badge">

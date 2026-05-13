@@ -109,7 +109,7 @@ export default function Marketplace() {
           <p>Try adjusting your filters or search query.</p>
         </div>
       ) : (
-        <div className="products-grid">
+        <div className="product-grid">
           {filteredProducts.map(product => (
             <ProductCard key={product.id} product={product} />
           ))}
