@@ -758,11 +758,3 @@ export async function deductWalletAndMarkPaid(userId, batchId, amount) {
   });
 }
 
-/** Update student points in their user document */
-export async function updateUserPoints(userId, pointsIncrement) {
-  const ref = doc(db, 'users', userId);
-  return await updateDoc(ref, {
-    points: increment(pointsIncrement),
-    updated_at: serverTimestamp()
-  });
-}
