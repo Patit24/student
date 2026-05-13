@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider, useAppContext } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
 import { ToastProvider } from './components/Toast';
 import Navbar from './components/Navbar';
 import Homepage from './pages/Homepage';
@@ -21,6 +22,7 @@ import CourseDetail from './pages/CourseDetail';
 import Courses from './pages/Courses';
 import Marketplace from './pages/Marketplace';
 import ProductDetail from './pages/ProductDetail';
+import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import NeetAspirant from './pages/NeetAspirant';
 import JeeAspirant from './pages/JeeAspirant';
@@ -61,10 +63,8 @@ function AppRoutes() {
       <Route path="/neet" element={<NeetAspirant />} />
       <Route path="/jee" element={<JeeAspirant />} />
       <Route path="/orders" element={<MyOrders />} />
-import Cart from './pages/Cart';
-
-      <Route path="/beauty-product/:productId" element={<BeautyProductDetail />} />
       <Route path="/cart" element={<Cart />} />
+      <Route path="/beauty-product/:productId" element={<BeautyProductDetail />} />
 
       {!currentUser ? (
         <>
@@ -136,8 +136,6 @@ function GlobalFeeBanner() {
     </div>
   );
 }
-
-import { CartProvider } from './context/CartContext';
 
 function App() {
   return (
