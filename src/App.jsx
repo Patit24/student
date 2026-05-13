@@ -61,7 +61,10 @@ function AppRoutes() {
       <Route path="/neet" element={<NeetAspirant />} />
       <Route path="/jee" element={<JeeAspirant />} />
       <Route path="/orders" element={<MyOrders />} />
+import Cart from './pages/Cart';
+
       <Route path="/beauty-product/:productId" element={<BeautyProductDetail />} />
+      <Route path="/cart" element={<Cart />} />
 
       {!currentUser ? (
         <>
@@ -134,17 +137,21 @@ function GlobalFeeBanner() {
   );
 }
 
+import { CartProvider } from './context/CartContext';
+
 function App() {
   return (
     <AppProvider>
-      <ToastProvider>
-        <Router>
-          <GlobalFeeBanner />
-          <Navbar />
-          <AppRoutes />
-          <Footer />
-        </Router>
-      </ToastProvider>
+      <CartProvider>
+        <ToastProvider>
+          <Router>
+            <GlobalFeeBanner />
+            <Navbar />
+            <AppRoutes />
+            <Footer />
+          </Router>
+        </ToastProvider>
+      </CartProvider>
     </AppProvider>
   );
 }

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { getMarketplaceProductById, getMarketplaceProducts } from '../db.service';
-import { CheckCircle, Shield, Truck, Zap, ShoppingCart, Star } from 'lucide-react';
+import { CheckCircle, Shield, Truck, Zap, ShoppingCart, Star, ShoppingBag } from 'lucide-react';
 import { useAppContext } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import ProductCarousel from '../components/ProductCarousel';
 import './ProductDetail.css';
 
@@ -10,6 +11,7 @@ export default function ProductDetail() {
   const { productId } = useParams();
   const navigate = useNavigate();
   const { currentUser } = useAppContext();
+  const { addToCart } = useCart();
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -55,12 +57,16 @@ export default function ProductDetail() {
 
   const isDigital = product.type === 'Digital';
 
-  const handleCheckout = () => {
+  const handleBuyNow = () => {
     if (!currentUser) {
       navigate('/login', { state: { redirectTo: '/checkout', product } });
       return;
     }
     navigate('/checkout', { state: { product } });
+  };
+
+  const handleAddToBag = () => {
+    addToCart(product);
   };
 
   return (
@@ -147,8 +153,11 @@ export default function ProductDetail() {
           </div>
 
           <div className="pdp-action-area">
-            <button className="add-to-cart-btn" onClick={handleCheckout}>
-              <ShoppingCart size={20} /> Buy Now
+            <button className="add-to-bag-pdp-btn" onClick={handleAddToBag}>
+              <ShoppingBag size={20} /> Add to Bag
+            </button>
+            <button className="buy-now-pdp-btn" onClick={handleBuyNow}>
+              <Zap size={20} /> Buy Now
             </button>
             <p className="secure-checkout-text"><Shield size={14} /> Secure Checkout</p>
           </div>

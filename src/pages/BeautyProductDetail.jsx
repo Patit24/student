@@ -21,12 +21,14 @@ import {
   Play
 } from 'lucide-react';
 import { useAppContext } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { getMarketplaceProductById, getMarketplaceProducts } from '../db.service';
 import './BeautyProductDetail.css';
 
 const BeautyProductDetail = () => {
   const { productId } = useParams();
   const { currentUser } = useAppContext();
+  const { addToCart } = useCart();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -69,6 +71,15 @@ const BeautyProductDetail = () => {
 
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);
+  };
+
+  const handleAddToCart = () => {
+    addToCart({ ...product, selectedShade: shades[selectedShade] }, quantity);
+  };
+
+  const handleBuyNow = () => {
+    addToCart({ ...product, selectedShade: shades[selectedShade] }, quantity);
+    navigate('/cart');
   };
 
   return (
@@ -154,8 +165,11 @@ const BeautyProductDetail = () => {
               <span>{quantity}</span>
               <button onClick={() => setQuantity(quantity + 1)}><Plus size={16}/></button>
             </div>
-            <button className="add-to-bag-btn">
+            <button onClick={handleAddToCart} className="add-to-bag-btn">
               <ShoppingBag size={20} /> Add to Bag
+            </button>
+            <button onClick={handleBuyNow} className="buy-now-btn-premium">
+              <Zap size={20} /> Buy Now
             </button>
           </div>
 

@@ -255,8 +255,28 @@
 }
 
 .add-to-bag-btn {
+  padding: 12px 24px;
+  background: transparent;
+  color: #000;
+  border: 1px solid #000;
+  border-radius: 8px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-to-bag-btn:hover {
+  background: #f5f5f5;
+  transform: translateY(-2px);
+}
+
+.buy-now-btn-premium {
   flex: 1;
-  background: #000;
+  background: linear-gradient(135deg, #000, #333);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -266,12 +286,14 @@
   justify-content: center;
   gap: 12px;
   cursor: pointer;
-  transition: transform 0.2s, background 0.2s;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-.add-to-bag-btn:hover {
-  background: #222;
+.buy-now-btn-premium:hover {
+  background: #000;
   transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
 }
 
 .trust-badges {

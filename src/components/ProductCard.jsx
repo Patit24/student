@@ -1,9 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Star, Package, Download, ShoppingBag } from 'lucide-react';
+import { Star, Package, Download, ShoppingBag, Plus } from 'lucide-react';
+import { useCart } from '../context/CartContext';
 import './ProductCard.css';
 
 export default function ProductCard({ product }) {
+  const { addToCart } = useCart();
   const isDigital = product.type === 'Digital';
   const isBeauty = product.type === 'Beauty';
   
@@ -15,6 +17,12 @@ export default function ProductCard({ product }) {
   
   const imgUrl = (product.images && product.images.length > 0) ? product.images[0] : defaultImg;
   const productLink = isBeauty ? `/beauty-product/${product.id}` : `/product/${product.id}`;
+
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart(product);
+  };
 
   return (
     <div className="product-card">
@@ -50,9 +58,15 @@ export default function ProductCard({ product }) {
               <span className="old-price">₹{product.originalPrice}</span>
             )}
           </div>
-          <Link to={productLink} className="buy-icon-btn" title="View Product">
-            <ShoppingBag size={18} />
-          </Link>
+          
+          <div className="product-card-actions">
+            <button onClick={handleAddToCart} className="add-to-bag-btn" title="Add to Bag">
+              <Plus size={16} />
+            </button>
+            <Link to={productLink} className="buy-now-btn">
+              Buy Now
+            </Link>
+          </div>
         </div>
       </div>
     </div>

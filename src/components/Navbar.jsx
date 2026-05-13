@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AuthContext';
-import { BookOpen, LogOut, Shield, Zap, Menu, X } from 'lucide-react';
+import { useCart } from '../context/CartContext';
+import { BookOpen, LogOut, Shield, Zap, Menu, X, ShoppingBag } from 'lucide-react';
 import logoImg from '../assets/logopng.png';
 
 export default function Navbar() {
   const { currentUser, logout, isMockMode } = useAppContext();
+  const { cartCount } = useCart();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -57,6 +59,17 @@ export default function Navbar() {
         <div className="hide-on-mobile flex items-center gap-6">
           {currentUser ? (
             <>
+              <Link to="/cart" style={{ position: 'relative', color: '#fff', textDecoration: 'none', display: 'flex', alignItems: 'center', padding: '0 10px' }}>
+                <ShoppingBag size={20} />
+                {cartCount > 0 && (
+                  <span style={{
+                    position: 'absolute', top: '-8px', right: '-2px',
+                    background: '#6366F1', color: '#fff', fontSize: '0.65rem',
+                    fontWeight: 800, padding: '2px 6px', borderRadius: '100px',
+                    boxShadow: '0 4px 10px rgba(99, 102, 241, 0.4)'
+                  }}>{cartCount}</span>
+                )}
+              </Link>
               <Link to="/orders" style={navLink}>My Orders</Link>
               <span style={{ color: '#7A8BA8', fontSize: '0.88rem' }}>
                 {currentUser.name}
@@ -119,6 +132,7 @@ export default function Navbar() {
           {currentUser?.role !== 'student' && <Link to="/marketplace" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>Shop</Link>}
           <Link to="/about" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>About</Link>
           <Link to="/blogs" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>Blogs</Link>
+          <Link to="/cart" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>Cart ({cartCount})</Link>
           <hr style={{ borderColor: 'rgba(255,255,255,0.05)' }} />
           {currentUser ? (
             <>
