@@ -60,10 +60,17 @@ export default function ProductCard({ product }) {
           </div>
           
           <div className="product-card-actions">
-            <button onClick={handleAddToCart} className="add-to-bag-btn" title="Add to Bag">
-              <Plus size={16} />
+            <button 
+              onClick={handleAddToCart} 
+              className={`add-to-bag-btn ${isBeauty ? 'secondary-action' : ''}`}
+            >
+              <ShoppingBag size={14} />
+              <span>Add to Bag</span>
             </button>
-            <Link to={productLink} className="buy-now-btn">
+            <Link 
+              to={productLink} 
+              className={`buy-now-btn ${isBeauty ? 'primary-action' : ''}`}
+            >
               Buy Now
             </Link>
           </div>

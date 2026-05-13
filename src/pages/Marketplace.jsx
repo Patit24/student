@@ -30,8 +30,7 @@ export default function Marketplace() {
     const matchSearch = p.title?.toLowerCase().includes(searchQuery.toLowerCase()) || 
                         p.description?.toLowerCase().includes(searchQuery.toLowerCase());
     
-    // Restriction: Students cannot see Beauty products
-    if (currentUser?.role === 'student' && p.type === 'Beauty') return false;
+    // Restriction: Removed (All users can see Beauty products now)
     
     return matchType && matchCategory && matchSearch;
   });

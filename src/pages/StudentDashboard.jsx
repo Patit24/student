@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAppContext } from '../context/AuthContext';
+import { useAppContext, useLogout, useEnrollment, usePayments, useRedeemPoints, usePayFeesWithWallet } from '../context/AuthContext';
 import { Play, Download, MessageSquare, FileText, Shield, Calendar as CalendarIcon, CheckCircle, CreditCard, AlertTriangle, LogOut, Users, Video, Package, Eye, EyeOff, Lock, ChevronRight, XCircle, Activity, TrendingUp, BookOpen, Star, Zap, Sparkles, ClipboardList, Clock } from 'lucide-react';
 import StudentMaterialsPanel from '../components/StudentMaterialsPanel';
 import StudentDoubtSolver from '../components/StudentDoubtSolver';
@@ -64,7 +64,12 @@ function PasswordResetGate() {
 }
 
 export default function StudentDashboard() {
-  const { currentUser, verifyOTP, sendOTP, mockSessions, mockNotices, mockStudents, mockBatches, mockTutors, mockExams, mockSubmissions, logout, isMockMode } = useAppContext();
+  const { currentUser, verifyOTP, sendOTP, mockSessions, mockNotices, mockStudents, mockTutors, mockExams, mockSubmissions, isMockMode } = useAppContext();
+  const { logout } = useLogout();
+  const { enrollments } = useEnrollment();
+  const { payments } = usePayments();
+  const { redeemPointsToWallet } = useRedeemPoints();
+  const { payFeesWithWallet } = usePayFeesWithWallet();
   const toast = useToast();
   const navigate = useNavigate();
   const [globalAssets, setGlobalAssets] = useState([]);
@@ -98,6 +103,46 @@ export default function StudentDashboard() {
   const [otpError, setOtpError] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedExam, setSelectedExam] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Rewards Actions
+  const handleRedeem = async () => {
+    if (currentUser?.points < 1000) {
+      toast.error('Minimum 1000 points required to redeem');
+      return;
+    }
+    try {
+      setIsProcessing(true);
+      await redeemPointsToWallet();
+      toast.success('Successfully redeemed 1000 points to ₹100!');
+    } catch (err) {
+      toast.error(err.message || 'Redemption failed');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handlePayWithWallet = async () => {
+    if (!selectedEnrollment) return;
+    const amountToPay = selectedEnrollment.outstanding_balance || selectedEnrollment.monthly_fee;
+
+    if (currentUser?.wallet_balance < amountToPay) {
+      toast.error('Insufficient wallet balance');
+      return;
+    }
+
+    if (!window.confirm(`Confirm payment of ₹${amountToPay} using your Reward Wallet?`)) return;
+
+    try {
+      setIsProcessing(true);
+      await payFeesWithWallet(selectedEnrollment.id, amountToPay);
+      toast.success('Payment successful using Reward Wallet!');
+    } catch (err) {
+      toast.error(err.message || 'Payment failed');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const mySessions = mockSessions.filter(s => s.batch_id === selectedEnrollment?.batch_id);
   const liveSession = mySessions.find(s => s.is_live);
@@ -448,8 +493,24 @@ export default function StudentDashboard() {
                     Transfer <strong style={{ color: '#F5C518' }}>₹{selectedEnrollment?.outstanding_balance || selectedEnrollment?.monthly_fee}</strong> to <strong style={{ color: '#F0F4FF' }}>{currentTutor?.name}</strong> and upload Transaction ID for approval.
                   </p>
                   <button className="sd-pay-btn" onClick={() => setShowBankingModal(true)}>
-                    <CreditCard size={18} /> Get Bank & UPI Details
+                    <CreditCard size={18} /> Pay Online Now
                   </button>
+
+                  {(currentUser?.wallet_balance || 0) >= (selectedEnrollment?.outstanding_balance || selectedEnrollment?.monthly_fee) && (
+                    <div style={{ marginTop: '1.5rem', background: 'rgba(34,197,94,0.08)', padding: '1.2rem', borderRadius: '18px', border: '1px solid rgba(34,197,94,0.2)' }}>
+                      <p style={{ fontSize: '0.8rem', color: '#22C55E', margin: '0 0 1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Sparkles size={14} /> You have enough rewards!
+                      </p>
+                      <button 
+                        className="sd-pay-btn" 
+                        style={{ background: 'linear-gradient(135deg, #22C55E 0%, #10B981 100%)', color: 'white', boxShadow: '0 4px 20px rgba(34, 197, 94, 0.3)' }} 
+                        onClick={handlePayWithWallet}
+                        disabled={isProcessing}
+                      >
+                        {isProcessing ? 'Processing...' : <><Zap size={18} /> Pay with Wallet</>}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -485,6 +546,48 @@ export default function StudentDashboard() {
 
           {/* ── Right Sidebar ── */}
           <div className="flex-col gap-4">
+            {/* Rewards Sidebar Card */}
+            <div className="sd-card sd-sidebar-card sd-animate" style={{ marginBottom: '1.5rem' }}>
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="flex items-center gap-2 m-0" style={{ fontWeight: 800 }}>
+                  <Sparkles size={16} color="#F5C518" /> My Rewards
+                </h4>
+                <div className="sd-notice-badge gold">
+                  <Star size={10} fill="currentColor" /> Premium
+                </div>
+              </div>
+              <div className="flex flex-col gap-3">
+                <div className="reward-stat-item">
+                  <div className="reward-icon-bg pts"><Zap size={14} /></div>
+                  <div style={{ flex: 1 }}>
+                    <p className="reward-label">Exam Points</p>
+                    <p className="reward-value">{currentUser?.points || 0} pts</p>
+                  </div>
+                  {(currentUser?.points || 0) >= 1000 && (
+                    <button 
+                      onClick={handleRedeem} 
+                      className="redeem-mini-btn"
+                      disabled={isProcessing}
+                    >
+                      {isProcessing ? '...' : 'Redeem'}
+                    </button>
+                  )}
+                </div>
+                <div className="reward-stat-item">
+                  <div className="reward-icon-bg wallet"><CreditCard size={14} /></div>
+                  <div style={{ flex: 1 }}>
+                    <p className="reward-label">Reward Wallet</p>
+                    <p className="reward-value">₹{currentUser?.wallet_balance || 0}</p>
+                  </div>
+                </div>
+                {currentUser?.points < 1000 && currentUser?.points > 0 && (
+                  <p style={{ fontSize: '0.65rem', color: '#64748B', margin: '0.5rem 0 0', textAlign: 'center' }}>
+                    Need {1000 - currentUser.points} more points to redeem ₹100
+                  </p>
+                )}
+              </div>
+            </div>
+
             {/* Active Batch Card */}
             <div className="sd-card sd-sidebar-card sd-animate sd-animate-delay-1">
               <p className="sd-batch-label"><span className="dot"></span> Active Batch</p>

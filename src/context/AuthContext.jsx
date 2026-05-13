@@ -33,6 +33,31 @@ const AppContext = createContext();
 export function useAppContext() { return useContext(AppContext); }
 export const useAuth = useAppContext;
 
+export const useLogout = () => {
+  const { logout } = useAppContext();
+  return { logout };
+};
+
+export const useEnrollment = () => {
+  const { mockBatches } = useAppContext();
+  return { enrollments: mockBatches };
+};
+
+export const usePayments = () => {
+  const { mockSubmissions } = useAppContext();
+  return { payments: mockSubmissions };
+};
+
+export const useRedeemPoints = () => {
+  const { redeemPointsToWallet } = useAppContext();
+  return { redeemPointsToWallet };
+};
+
+export const usePayFeesWithWallet = () => {
+  const { payFeesWithWallet } = useAppContext();
+  return { payFeesWithWallet };
+};
+
 // ── localStorage cache helpers ────────────────────────────────────────────────
 const LS_BATCHES  = 'ag_batches';
 const LS_STUDENTS = 'ag_students';
@@ -488,6 +513,53 @@ export function AppProvider({ children }) {
     }
   };
 
+  const awardExamPoints = async (pts) => {
+    if (isMockMode) {
+      setMockUser(prev => ({ ...prev, points: (prev.points || 0) + pts }));
+      return;
+    }
+    if (!currentUser?.uid) return;
+    const { updateUserPoints } = await import('../db.service');
+    await updateUserPoints(currentUser.uid, pts);
+  };
+
+  const redeemPointsToWallet = async () => {
+    const points = currentUser?.points || 0;
+    if (points < 1000) throw new Error('Insufficient points for redemption (min 1000)');
+    const inr = Math.floor(points / 1000) * 100;
+    const ptsToRedeem = Math.floor(points / 1000) * 1000;
+    
+    if (isMockMode) {
+      setMockUser(prev => ({ 
+        ...prev, 
+        points: (prev.points || 0) - ptsToRedeem,
+        wallet_balance: (prev.wallet_balance || 0) + inr
+      }));
+      return;
+    }
+    const { redeemPointsForWallet } = await import('../db.service');
+    await redeemPointsForWallet(currentUser.uid, ptsToRedeem, inr);
+  };
+  const payFeesWithWallet = async (batchId, amount) => {
+    if (!currentUser?.wallet_balance || currentUser.wallet_balance < amount) {
+      throw new Error('Insufficient wallet balance');
+    }
+    
+    if (isMockMode) {
+      const updatedUser = { 
+        ...currentUser, 
+        wallet_balance: (currentUser.wallet_balance || 0) - amount,
+        payment_status: 'paid'
+      };
+      setMockUser(updatedUser);
+      setCurrentUser(updatedUser);
+      return;
+    }
+    
+    const { deductWalletAndMarkPaid } = await import('../db.service');
+    await deductWalletAndMarkPaid(currentUser.uid, batchId, amount);
+  };
+
   // ─────────────────────────────────────────────────────────────────────────
   // FIREBASE AUTH + LIVE LISTENERS
   // ─────────────────────────────────────────────────────────────────────────
@@ -689,6 +761,7 @@ export function AppProvider({ children }) {
     signup, login, logout, sendOTP, verifyOTP, forgotPassword, updateUserPassword,
     purchasedAssets,
     updateTutorSubscription, updateBranding, updateTutorProfile,
+    awardExamPoints, redeemPointsToWallet, payFeesWithWallet,
     updatePaymentStatus, updateBankingDetails, setAutoRestriction,
     isMockMode,
     mockTutors,  setMockTutors,

@@ -5,7 +5,7 @@
  */
 import { 
   collection, addDoc, query, where, onSnapshot, doc, getDoc, getDocs,
-  updateDoc, deleteDoc, setDoc, orderBy, serverTimestamp 
+  updateDoc, deleteDoc, setDoc, orderBy, serverTimestamp, increment 
 } from 'firebase/firestore';
 import { ref as storageRef, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { db, storage } from './firebase';
@@ -708,4 +708,61 @@ export async function getCouponByCode(code) {
   const data = snap.docs[0].data();
   if (data.status !== 'active') return null;
   return { id: snap.docs[0].id, ...data };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// USER REWARDS & WALLET
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Update user points (awards/deductions) */
+export async function updateUserPoints(userId, points) {
+  const ref = doc(db, 'users', userId);
+  return await updateDoc(ref, {
+    points: increment(points),
+    updated_at: serverTimestamp()
+  });
+}
+
+/** Increment user wallet balance */
+export async function updateUserWallet(userId, amount) {
+  const ref = doc(db, 'users', userId);
+  return await updateDoc(ref, {
+    wallet_balance: increment(amount),
+    updated_at: serverTimestamp()
+  });
+}
+
+/** Redeem points for wallet balance (1000 points = 100 INR) */
+export async function redeemPointsForWallet(userId, pointsToRedeem, walletIncrement) {
+  const ref = doc(db, 'users', userId);
+  return await updateDoc(ref, {
+    points: increment(-pointsToRedeem),
+    wallet_balance: increment(walletIncrement),
+    updated_at: serverTimestamp()
+  });
+}
+/** Deduct wallet balance and mark student as paid for a specific period */
+export async function deductWalletAndMarkPaid(userId, batchId, amount) {
+  const ref = doc(db, 'users', userId);
+  const today = new Date();
+  const nextDue = new Date(today.getFullYear(), today.getMonth() + 1, 5).toISOString().split('T')[0];
+  
+  return await updateDoc(ref, {
+    wallet_balance: increment(-amount),
+    payment_status: 'paid',
+    payment_method: 'wallet',
+    outstanding_balance: 0,
+    payment_due_date: nextDue,
+    paid_at: serverTimestamp(),
+    updated_at: serverTimestamp()
+  });
+}
+
+/** Update student points in their user document */
+export async function updateUserPoints(userId, pointsIncrement) {
+  const ref = doc(db, 'users', userId);
+  return await updateDoc(ref, {
+    points: increment(pointsIncrement),
+    updated_at: serverTimestamp()
+  });
 }

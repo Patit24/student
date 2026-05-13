@@ -1,16 +1,23 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   BookOpen, FileText, Download, Clock, Trophy, ChevronRight, ChevronLeft,
   Microscope, Heart, Atom, Leaf, Brain, Play, CheckCircle, XCircle, Timer, ArrowLeft,
+  Camera, Shield, AlertCircle, Coins, Wallet
 } from 'lucide-react';
 import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
+import { useAppContext } from '../context/AuthContext';
+import { useToast } from '../components/Toast';
 import './NeetAspirant.css';
 
 const SUBJECT_ICONS = { Biology: Leaf, Chemistry: Atom, Physics: Brain, General: Microscope };
 
 export default function NeetAspirant() {
+  const navigate = useNavigate();
+  const { currentUser, awardExamPoints, redeemPointsToWallet } = useAppContext();
+  const toast = useToast();
+  
   const [activeTab, setActiveTab] = useState('materials');
   const [quizState, setQuizState] = useState('idle');
   const [currentQ, setCurrentQ] = useState(0);
@@ -18,11 +25,13 @@ export default function NeetAspirant() {
   const [timer, setTimer] = useState(600);
   const [showAnswer, setShowAnswer] = useState(false);
   const [selectedExam, setSelectedExam] = useState(null);
+  const [stream, setStream] = useState(null);
+  const videoRef = useRef(null);
 
   // Firestore data
   const [materials, setMaterials] = useState([]);
   const [exams, setExams] = useState([]);
-  const [pastExams, setPastExams] = useState([]); // Will hook up to real results later
+  const [pastExams, setPastExams] = useState([]);
 
   useEffect(() => {
     const qMat = query(collection(db, 'aspirant_materials'), where('stream', '==', 'neet'));
@@ -49,9 +58,69 @@ export default function NeetAspirant() {
     return () => clearInterval(t);
   }, [quizState, timer]);
 
-  const startQuiz = () => {
-    setQuizState('active'); setCurrentQ(0); setAnswers({}); setTimer(600); setShowAnswer(false);
+  const startQuiz = async () => {
+    if (!currentUser) {
+      toast.error('Please sign in to take the exam');
+      return;
+    }
+    
+    try {
+      // 1. Request Camera
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      setStream(mediaStream);
+      
+      // 2. Request Fullscreen
+      if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+      }
+      
+      // 3. Set State
+      setQuizState('active'); 
+      setCurrentQ(0); 
+      setAnswers({}); 
+      setTimer(questions.length > 0 ? Math.round(questions.length * 0.6 * 60) : 600); 
+      setShowAnswer(false);
+    } catch (err) {
+      console.error('Proctoring failed:', err);
+      toast.error('Camera access and Fullscreen are required to start the exam.');
+    }
   };
+
+  const cleanupProctoring = useCallback(() => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+  }, [stream]);
+
+  // Proctoring Listeners
+  useEffect(() => {
+    if (quizState !== 'active') return;
+
+    const handleViolation = (reason) => {
+      alert(`🚨 EXAM CANCELLED: ${reason}. You must remain in Fullscreen and not switch tabs.`);
+      setQuizState('idle');
+      cleanupProctoring();
+    };
+
+    const handleVisibility = () => { if (document.hidden) handleViolation('Tab Switch Detected'); };
+    const handleFSChange = () => { if (!document.fullscreenElement) handleViolation('Exited Fullscreen'); };
+
+    document.addEventListener('visibilitychange', handleVisibility);
+    document.addEventListener('fullscreenchange', handleFSChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      document.removeEventListener('fullscreenchange', handleFSChange);
+    };
+  }, [quizState, cleanupProctoring]);
+
+  useEffect(() => {
+    if (videoRef.current && stream) videoRef.current.srcObject = stream;
+  }, [stream]);
 
   const selectOption = (idx) => {
     if (showAnswer) return;
@@ -65,7 +134,23 @@ export default function NeetAspirant() {
     if (currentQ > 0) { setCurrentQ(c => c - 1); setShowAnswer(false); }
   };
 
-  const finishQuiz = useCallback(() => { setQuizState('results'); }, []);
+  const finishQuiz = useCallback(async () => { 
+    setQuizState('results'); 
+    cleanupProctoring();
+
+    // Scoring & Rewards
+    const score = Object.entries(answers).filter(([qi, ai]) => questions[qi]?.correct === ai).length;
+    const pct = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
+    
+    if (pct >= 75) {
+      try {
+        await awardExamPoints(50);
+        toast.success('🎉 Congratulations! You earned 50 points for scoring >75%!');
+      } catch (err) {
+        console.error('Points award failed:', err);
+      }
+    }
+  }, [answers, questions, cleanupProctoring, awardExamPoints, toast]);
 
   const score = Object.entries(answers).filter(([qi, ai]) => questions[qi]?.correct === ai).length;
   const pct = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
@@ -98,12 +183,35 @@ export default function NeetAspirant() {
           <button
             key={t.id}
             className={`asp-tab ${activeTab === t.id ? 'active' : ''}`}
-            onClick={() => { setActiveTab(t.id); if (t.id !== 'exam') setQuizState('idle'); }}
+            onClick={() => { setActiveTab(t.id); if (t.id !== 'exam') { setQuizState('idle'); cleanupProctoring(); } }}
           >
             <t.icon size={16} /> {t.label}
           </button>
         ))}
       </div>
+
+      {/* Rewards Bar */}
+      {currentUser && (
+        <div className="asp-rewards-bar glass-panel animate-fade-in">
+          <div className="reward-stat">
+            <Coins size={18} color="#F5C518" />
+            <span>Points: <strong>{currentUser.points || 0}</strong></span>
+          </div>
+          <div className="reward-stat">
+            <Wallet size={18} color="#22C55E" />
+            <span>Wallet: <strong>₹{currentUser.wallet_balance || 0}</strong></span>
+          </div>
+          {(currentUser.points || 0) >= 1000 && (
+            <button className="redeem-mini-btn" onClick={async () => {
+              try {
+                await redeemPointsToWallet();
+                toast.success('Redeemed 1000 points for ₹100!');
+              } catch (err) { toast.error(err.message); }
+            }}>Redeem Now</button>
+          )}
+          <div className="reward-info">1000 Pts = ₹100 (Fees Only)</div>
+        </div>
+      )}
 
       {/* ── Content ── */}
       <div className="asp-content">
@@ -188,6 +296,12 @@ export default function NeetAspirant() {
         {/* ── Active Quiz ── */}
         {activeTab === 'exam' && quizState === 'active' && (
           <div className="asp-quiz-container" style={{ animation: 'fadeInUp 0.4s ease' }}>
+            {/* Proctoring Feed */}
+            <div className="proctor-feed">
+              <video ref={videoRef} autoPlay playsInline muted />
+              <div className="proctor-badge"><Shield size={10} /> LIVE PROCTORING</div>
+            </div>
+
             <div className="asp-quiz-header">
               <span className="asp-quiz-progress">Question {currentQ + 1} of {questions.length}</span>
               <div className="asp-quiz-timer"><Timer size={16} /> {formatTime(timer)}</div>
@@ -225,6 +339,9 @@ export default function NeetAspirant() {
               ) : (
                 <button className="asp-nav-btn" onClick={nextQ}>Next <ChevronRight size={16} /></button>
               )}
+            </div>
+            <div className="proctor-warning">
+              <AlertCircle size={14} /> Exit Fullscreen or Switch Tabs to Cancel Exam
             </div>
           </div>
         )}

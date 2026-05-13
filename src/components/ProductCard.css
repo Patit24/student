@@ -200,8 +200,9 @@
 }
 
 .add-to-bag-btn {
-  width: 40px;
+  flex: 1;
   height: 40px;
+  padding: 0 12px;
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.05);
   color: #fff;
@@ -209,32 +210,62 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .add-to-bag-btn:hover {
   background: rgba(255, 255, 255, 0.1);
   transform: translateY(-2px);
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.add-to-bag-btn span {
+  display: inline-block;
 }
 
 .buy-now-btn {
   padding: 8px 16px;
+  height: 40px;
   border-radius: 12px;
   background: linear-gradient(135deg, #6366F1, #C084FC);
   color: #fff;
   font-size: 0.8rem;
   font-weight: 700;
   text-decoration: none;
-  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+  white-space: nowrap;
 }
 
 .buy-now-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 16px rgba(99, 102, 241, 0.4);
   filter: brightness(1.1);
+}
+
+/* Beauty Specific Action States */
+.primary-action {
+  background: linear-gradient(135deg, #FF6B6B, #FFB88C) !important;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3) !important;
+  flex: 1.5;
+}
+
+.secondary-action {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.03) !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.primary-action:hover {
+  box-shadow: 0 8px 16px rgba(255, 107, 107, 0.5) !important;
 }
 
 /* 2026 Micro-Glow effect */

@@ -9,14 +9,27 @@ export function useCart() {
 
 export function CartProvider({ children }) {
   const { currentUser } = useAppContext();
-  const [cart, setCart] = useState(() => {
-    const savedCart = localStorage.getItem(`cart_${currentUser?.uid || 'guest'}`);
-    return savedCart ? JSON.parse(savedCart) : [];
-  });
+  const [cart, setCart] = useState([]);
 
+  // Load cart on mount and when user changes
+  useEffect(() => {
+    const savedCart = localStorage.getItem(`cart_${currentUser?.uid || 'guest'}`);
+    if (savedCart) {
+      try {
+        setCart(JSON.parse(savedCart));
+      } catch (e) {
+        console.error("Failed to parse cart", e);
+        setCart([]);
+      }
+    } else {
+      setCart([]);
+    }
+  }, [currentUser?.uid]);
+
+  // Save cart whenever it changes
   useEffect(() => {
     localStorage.setItem(`cart_${currentUser?.uid || 'guest'}`, JSON.stringify(cart));
-  }, [cart, currentUser]);
+  }, [cart, currentUser?.uid]);
 
   const addToCart = (product) => {
     setCart(prev => {

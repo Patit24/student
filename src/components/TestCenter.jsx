@@ -3,9 +3,15 @@ import { useAppContext } from '../context/AuthContext';
 import { Clock, AlertTriangle, CheckCircle, Send } from 'lucide-react';
 
 export default function TestCenter({ exam, studentId, onFinish }) {
-  const { mockSubmissions, setMockSubmissions, isMockMode } = useAppContext();
+  const { currentUser, mockSubmissions, setMockSubmissions, isMockMode, updatePoints } = useAppContext();
   const [answers, setAnswers] = useState({});
-  const [timeLeft, setTimeLeft] = useState(exam.duration_minutes * 60);
+  const [timeLeft, setTimeLeft] = useState(() => {
+    // JEE/NEET Special Timing: 0.6 mins per question
+    if (exam.category === 'JEE' || exam.category === 'NEET') {
+      return Math.ceil(exam.questions.length * 0.6 * 60);
+    }
+    return exam.duration_minutes * 60;
+  });
   const [submitted, setSubmitted] = useState(false);
   const [result, setResult] = useState(null);
   const [hasAgreed, setHasAgreed] = useState(false);
@@ -13,7 +19,7 @@ export default function TestCenter({ exam, studentId, onFinish }) {
   const videoRef = useRef(null);
   const intervalRef = useRef(null);
   const [warningCount, setWarningCount] = useState(0);
-  const MAX_WARNINGS = 3;
+  const MAX_WARNINGS = 2; // Strict: 2 strikes then out, but tab switch is instant
 
   // Stop camera and exit fullscreen on unmount or submit
   const cleanupProctoring = () => {
@@ -34,11 +40,16 @@ export default function TestCenter({ exam, studentId, onFinish }) {
   useEffect(() => {
     if (!hasAgreed || submitted) return;
 
-    const handleViolation = (type) => {
+    const handleViolation = (type, immediate = false) => {
+      if (immediate) {
+        alert(`🚨 SECURITY VIOLATION: ${type}. Exam cancelled and auto-submitted.`);
+        handleSubmit(true);
+        return;
+      }
       setWarningCount(prev => {
         const next = prev + 1;
         if (next >= MAX_WARNINGS) {
-          alert('🚨 STRIKE 3: Too many violations. Your exam is being auto-submitted.');
+          alert('🚨 STRIKE LIMIT REACHED: Too many violations. Your exam is being auto-submitted.');
           handleSubmit(true);
           return next;
         }
@@ -48,11 +59,11 @@ export default function TestCenter({ exam, studentId, onFinish }) {
     };
 
     const handleVisibilityChange = () => {
-      if (document.hidden) handleViolation('Tab Switched');
+      if (document.hidden) handleViolation('Tab Switched', true); // Immediate for tab switch
     };
 
     const handleBlur = () => {
-      handleViolation('Window Lost Focus');
+      handleViolation('Window Lost Focus', true); // Immediate for blur as well for maximum security
     };
 
     const handleFullscreenChange = () => {
@@ -128,6 +139,12 @@ export default function TestCenter({ exam, studentId, onFinish }) {
     const pct = mcqTotal > 0 ? Math.round((mcqScore / mcqTotal) * 100) : null;
     const passed = pct !== null ? pct >= exam.passing_score : null;
 
+    // Reward logic: 75%+ score = 50 points
+    let pointsAwarded = 0;
+    if (pct >= 75) {
+      pointsAwarded = 50;
+    }
+
     const submission = {
       exam_id: exam.id,
       student_id: studentId,
@@ -137,17 +154,27 @@ export default function TestCenter({ exam, studentId, onFinish }) {
       mcq_correct: mcqScore,
       mcq_total: mcqTotal,
       passed,
+      points_earned: pointsAwarded,
       submitted_at: new Date().toISOString(),
       teacher_feedback: null
     };
 
     if (isMockMode) {
       setMockSubmissions(prev => [...prev, { id: `sub-${Date.now()}`, ...submission }]);
+      if (pointsAwarded > 0) {
+        // In mock mode, we just toast, but normally we'd update AuthContext
+        console.log(`Mock: Awarded ${pointsAwarded} points`);
+      }
     } else {
-      import('../db.service').then(m => m.submitExamResult(submission)).catch(console.error);
+      import('../db.service').then(async (m) => {
+        await m.submitExamResult(submission);
+        if (pointsAwarded > 0) {
+          await updatePoints(pointsAwarded);
+        }
+      }).catch(console.error);
     }
 
-    setResult({ pct, passed, mcqScore, mcqTotal, autoSubmit });
+    setResult({ pct, passed, mcqScore, mcqTotal, autoSubmit, pointsAwarded });
     setSubmitted(true);
   };
 
@@ -176,6 +203,14 @@ export default function TestCenter({ exam, studentId, onFinish }) {
           </>
         ) : (
           <p className="text-muted">Short answers submitted for teacher review.</p>
+        )}
+        {result.pointsAwarded > 0 && (
+          <div className="animate-bounce" style={{ background: 'rgba(245,197,24,0.1)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(245,197,24,0.3)', marginBottom: '1.5rem' }}>
+            <p style={{ margin: 0, fontWeight: 800, color: '#F5C518', fontSize: '1.2rem' }}>
+              <Zap size={20} style={{ display: 'inline', marginRight: '0.5rem' }} /> +{result.pointsAwarded} REWARD POINTS!
+            </p>
+            <p style={{ margin: 0, fontSize: '0.75rem', opacity: 0.8 }}>Redeem 1000 points for ₹100 fee discount</p>
+          </div>
         )}
         <button className="btn btn-primary mt-4" onClick={onFinish}>Back to Dashboard</button>
       </div>
