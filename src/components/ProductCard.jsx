@@ -2,10 +2,14 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Star, Package, Download, ShoppingBag, Plus } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useAppContext } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import './ProductCard.css';
 
 export default function ProductCard({ product }) {
   const { addToCart } = useCart();
+  const { currentUser } = useAppContext();
+  const navigate = useNavigate();
   const isDigital = product.type === 'Digital';
   const isBeauty = product.type === 'Beauty';
   
@@ -67,12 +71,19 @@ export default function ProductCard({ product }) {
               <ShoppingBag size={14} />
               <span>Add to Bag</span>
             </button>
-            <Link 
-              to={productLink} 
+            <button 
+              onClick={(e) => {
+                e.preventDefault();
+                if (!currentUser) {
+                  navigate('/login', { state: { redirectTo: '/checkout', product } });
+                  return;
+                }
+                navigate('/checkout', { state: { product } });
+              }}
               className={`buy-now-btn ${isBeauty ? 'primary-action' : ''}`}
             >
               Buy Now
-            </Link>
+            </button>
           </div>
         </div>
       </div>

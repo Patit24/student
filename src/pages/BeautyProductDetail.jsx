@@ -79,7 +79,11 @@ const BeautyProductDetail = () => {
 
   const handleBuyNow = () => {
     addToCart({ ...product, selectedShade: shades[selectedShade] }, quantity);
-    navigate('/cart');
+    if (!currentUser) {
+      navigate('/login', { state: { redirectTo: '/checkout' } });
+      return;
+    }
+    navigate('/checkout');
   };
 
   return (

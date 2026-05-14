@@ -27,6 +27,13 @@ export default function Checkout() {
     }
   };
 
+  React.useEffect(() => {
+    if (!currentUser) {
+      safeToast("Please login or sign up to place an order.", "error");
+      navigate('/login', { state: { from: location.pathname + location.search } });
+    }
+  }, [currentUser, navigate, location]);
+
   const getApiUrl = () => {
     if (import.meta.env.VITE_APP_API_URL) return import.meta.env.VITE_APP_API_URL.replace(/\/$/, "");
     if (window.location.hostname === 'localhost') return 'http://localhost:4000';
@@ -61,7 +68,7 @@ export default function Checkout() {
     pincode: ''
   });
   const [isProcessing, setIsProcessing] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('razorpay'); // 'razorpay' or 'cod'
+  const [paymentMethod, setPaymentMethod] = useState('razorpay'); 
   const [couponInput, setCouponInput] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
 
@@ -77,8 +84,7 @@ export default function Checkout() {
   }
 
   const subtotalAfterCoupon = Math.max(0, subtotalAfterBundle - couponDiscountAmount);
-  const codFee = (!isDigital && paymentMethod === 'cod') ? 40 : 0;
-  const currentFinalPrice = Math.round(subtotalAfterCoupon + codFee);
+  const currentFinalPrice = Math.round(subtotalAfterCoupon);
 
   const handleApplyCoupon = async () => {
     if (!couponInput.trim()) return;
@@ -226,59 +232,14 @@ export default function Checkout() {
     }
   };
 
-  const executeCODFlow = async () => {
-    setIsProcessing(true);
-    try {
-      const orderData = {
-        userId: currentUser?.uid || 'guest',
-        userName: formData.name,
-        userEmail: formData.email,
-        userPhone: formData.phone,
-        address: formData.address,
-        city: formData.city,
-        state: formData.state,
-        pincode: formData.pincode,
-        items: checkoutItems.map(item => ({ 
-          id: item.id, 
-          title: item.title || item.name, 
-          quantity: item.quantity, 
-          price: item.salePrice || item.originalPrice || item.price,
-          type: item.type
-        })),
-        amount: currentFinalPrice,
-        subtotal: baseSubtotal,
-        couponDiscount: couponDiscountAmount,
-        codFee: codFee,
-        currency: 'INR',
-        payment_method: 'COD',
-        payment_status: 'Pending',
-        status: 'Order Placed',
-        created_at: new Date().toISOString()
-      };
-
-      await createMarketplaceOrder(orderData);
-      clearCart();
-      
-      safeToast('Order placed successfully (Cash on Delivery)!', 'success');
-      
-      setTimeout(() => {
-        navigate(currentUser ? '/student' : '/marketplace');
-      }, 1500);
-    } catch (error) {
-      console.error('COD Error:', error);
-      safeToast('Failed to place COD order.', 'error');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
   const handlePayment = async (e) => {
     e.preventDefault();
-    if (paymentMethod === 'razorpay') {
-      await handleRazorpayPayment();
-    } else {
-      await executeCODFlow();
+    if (!currentUser) {
+      safeToast("Login required to proceed.", "error");
+      navigate('/login');
+      return;
     }
+    await handleRazorpayPayment();
   };
 
   return (
@@ -337,8 +298,7 @@ export default function Checkout() {
               <h3>Payment Method</h3>
               <div className="payment-options">
                 <div 
-                  className={`payment-option ${paymentMethod === 'razorpay' ? 'selected' : ''}`}
-                  onClick={() => setPaymentMethod('razorpay')}
+                  className="payment-option selected"
                 >
                   <CreditCard size={24} />
                   <div className="payment-opt-info">
@@ -346,22 +306,9 @@ export default function Checkout() {
                     <span className="pay-sub">UPI, Cards, Netbanking (Razorpay)</span>
                   </div>
                 </div>
-                
-                {!isDigital && (
-                  <div 
-                    className={`payment-option ${paymentMethod === 'cod' ? 'selected' : ''}`}
-                    onClick={() => setPaymentMethod('cod')}
-                  >
-                    <Gift size={24} />
-                    <div className="payment-opt-info">
-                      <span className="pay-title">Cash on Delivery</span>
-                      <span className="pay-sub">Pay when you receive the product</span>
-                    </div>
-                  </div>
-                )}
               </div>
               <button type="submit" className="pay-now-btn" disabled={isProcessing}>
-                {isProcessing ? 'Initializing...' : (paymentMethod === 'razorpay' ? `Pay ₹${currentFinalPrice}` : 'Confirm COD Order')}
+                {isProcessing ? 'Initializing...' : `Pay ₹${currentFinalPrice}`}
                 <Lock size={16} />
               </button>
               <p className="secure-badge"><Shield size={14}/> 256-bit SSL Encrypted</p>
@@ -426,13 +373,7 @@ export default function Checkout() {
                   <span>-₹{couponDiscountAmount}</span>
                 </div>
               )}
-              {!isDigital && paymentMethod === 'cod' && (
-                <div className="totals-row">
-                  <span>COD Handling Fee</span>
-                  <span>₹40</span>
-                </div>
-              )}
-              {!isDigital && paymentMethod !== 'cod' && (
+              {!isDigital && (
                 <div className="totals-row">
                   <span>Shipping</span>
                   <span style={{ color: '#10B981' }}>FREE</span>

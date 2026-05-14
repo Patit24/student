@@ -1,12 +1,22 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useAppContext } from '../context/AuthContext';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, ArrowLeft, CreditCard } from 'lucide-react';
 import './Cart.css';
 
 export default function Cart() {
   const { cart, removeFromCart, updateQuantity, cartTotal, cartCount } = useCart();
+  const { currentUser } = useAppContext();
   const navigate = useNavigate();
+
+  const handleCheckout = () => {
+    if (!currentUser) {
+      navigate('/login', { state: { from: '/checkout' } });
+      return;
+    }
+    navigate('/checkout');
+  };
 
   if (cart.length === 0) {
     return (
@@ -85,7 +95,7 @@ export default function Cart() {
                 <span>₹{cartTotal}</span>
               </div>
               
-              <button onClick={() => navigate('/checkout')} className="checkout-btn">
+              <button onClick={handleCheckout} className="checkout-btn">
                 Proceed to Checkout <ArrowRight size={18} />
               </button>
               
