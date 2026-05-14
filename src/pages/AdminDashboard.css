@@ -197,6 +197,144 @@
 }
 
 /* Responsive Overrides */
+/* Order Management Styles */
+.address-snippet {
+  font-size: 0.7rem;
+  color: var(--admin-text-secondary);
+  margin-top: 4px;
+  max-width: 220px;
+  line-height: 1.3;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 4px 8px;
+  border-radius: 6px;
+  border-left: 2px solid var(--admin-accent);
+}
+
+.order-items-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 250px;
+}
+
+.order-item-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.8rem;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.order-item-row .qty {
+  color: var(--admin-accent);
+  font-weight: 800;
+  font-size: 0.7rem;
+}
+
+.order-item-row .title {
+  color: #e2e8f0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.financial-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.financial-cell .amount {
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #fff;
+}
+
+.pay-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.pay-status.success { color: #4ade80; }
+.pay-status.pending { color: #fbbf24; }
+
+.status-control-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.status-select {
+  background: #000;
+  color: #fff;
+  border: 1px solid var(--admin-border);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.current-status-tag {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+.current-status-tag.order-placed { background: #3b82f6; color: #fff; }
+.current-status-tag.shipped { background: #8b5cf6; color: #fff; }
+.current-status-tag.delivered { background: #10b981; color: #fff; }
+.current-status-tag.cancelled { background: #ef4444; color: #fff; }
+.current-status-tag.pending { background: #f59e0b; color: #fff; }
+
+.delivery-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.delivery-input-group .label {
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: var(--admin-text-secondary);
+  letter-spacing: 1px;
+}
+
+.delivery-date-input {
+  background: #000;
+  color: #fff;
+  border: 1px solid var(--admin-border);
+  padding: 6px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  width: 130px;
+}
+
+.btn-icon.action-btn {
+  color: var(--admin-accent);
+  background: rgba(245, 197, 24, 0.1);
+}
+
+.btn-icon.delete-btn {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.btn-icon:hover {
+  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.1);
+}
+
 @media (max-width: 1024px) {
   .admin-sidebar {
     width: 100%;

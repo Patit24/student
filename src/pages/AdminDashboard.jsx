@@ -239,11 +239,12 @@ export default function AdminDashboard() {
   const handleStatusChange = async (order, newStatus, deliveryDate) => {
     try {
       const finalDate = deliveryDate === null ? order.expectedDelivery : deliveryDate;
-      await updateOrderStatus(order.id, newStatus, finalDate);
-      toast.success('Order updated! ✨');
+      const finalStatus = newStatus === null ? order.status : newStatus;
+      await updateOrderStatus(order.id, finalStatus, finalDate);
+      toast.success('Order synchronized! ✨');
       
-      if (newStatus === 'Order Placed' && order.userPhone && newStatus !== order.status) {
-        const message = `Hello ${order.userName},\n\nYour order for *${order.productTitle}* has been successfully placed! We will notify you once it ships.`;
+      if (finalStatus === 'Order Placed' && order.userPhone && finalStatus !== order.status) {
+        const message = `Hello ${order.userName},\n\nYour order for *${order.productTitle || (order.items?.map(i => i.title).join(', '))}* has been successfully placed! We will notify you once it ships.`;
         const waUrl = `https://wa.me/${order.userPhone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
         window.open(waUrl, '_blank');
       }
@@ -647,74 +648,124 @@ export default function AdminDashboard() {
             )}
             {activeTab === 'orders' && (
               <div className="glass-card p-8 animate-premium">
-                <h3 className="mb-6 flex items-center gap-2"><PackageCheck size={20} color="#f5c518" /> Marketplace Orders</h3>
+                <div className="flex justify-between items-center mb-8">
+                  <h3 className="flex items-center gap-3 text-xl font-black italic tracking-tighter">
+                    <PackageCheck size={28} color="var(--admin-accent)" /> 
+                    MARKETPLACE ORDERS
+                  </h3>
+                  <div className="badge badge-success">
+                    {marketplaceOrders.length} ORDERS TOTAL
+                  </div>
+                </div>
+
                 <div className="table-responsive">
                   <table className="premium-table">
                     <thead>
                       <tr>
-                        <th>Customer</th>
-                        <th>Product</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th>Expected Delivery</th>
-                        <th>Actions</th>
+                        <th>Customer & Logistics</th>
+                        <th>Order Contents</th>
+                        <th>Financials</th>
+                        <th>Execution Status</th>
+                        <th>Logistics Timeline</th>
+                        <th style={{ textAlign: 'right' }}>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {marketplaceOrders.map(order => (
                         <tr key={order.id}>
                           <td>
-                            <strong>{order.userName}</strong><br/>
-                            <small className="text-muted">{order.userPhone}</small><br/>
-                            {order.address && (
-                              <div style={{ fontSize: '0.7rem', color: '#7a8ba8', marginTop: '4px', maxWidth: '200px' }}>
-                                {order.address}, {order.city}, {order.state} - {order.pincode}
-                              </div>
-                            )}
-                          </td>
-                          <td>{order.productTitle}</td>
-                          <td>₹{order.amount}</td>
-                          <td>
-                            <select 
-                              className="input-premium" 
-                              style={{ padding: '0.3rem', fontSize: '0.8rem', background: '#111' }}
-                              value={order.status || 'Pending'}
-                              onChange={(e) => handleStatusChange(order, e.target.value, null)}
-                            >
-                              <option value="Pending">Pending</option>
-                              <option value="Order Placed">Order Placed</option>
-                              <option value="Shipped">Shipped</option>
-                              <option value="Out for Delivery">Out for Delivery</option>
-                              <option value="Delivered">Delivered</option>
-                              <option value="Cancelled">Cancelled</option>
-                            </select>
-                          </td>
-                          <td>
-                            <input 
-                              type="date" 
-                              className="input-premium"
-                              style={{ padding: '0.3rem', fontSize: '0.8rem', background: '#111' }}
-                              value={order.expectedDelivery || ''}
-                              onChange={(e) => handleStatusChange(order, order.status || 'Pending', e.target.value)}
-                            />
-                          </td>
-                          <td>
-                            <div className="flex items-center gap-2">
-                              <span className={order.payment_status === 'Paid' ? 'badge badge-success' : 'badge badge-pending'}>
-                                {order.payment_status}
-                              </span>
-                              {order.payment_status === 'COD' && (
-                                <button className="btn-icon" style={{ color: '#EF4444' }} onClick={() => handleDeleteOrder(order.id)} title="Delete COD Order">
-                                  <Trash2 size={16} />
-                                </button>
+                            <div className="flex flex-col gap-1">
+                              <strong className="text-white">{order.userName}</strong>
+                              <code className="text-[10px] text-accent opacity-70">{order.id.slice(0, 8)}</code>
+                              <small className="text-secondary">{order.userPhone}</small>
+                              {order.address && (
+                                <div className="address-snippet">
+                                  {order.address}, {order.city}, {order.pincode}
+                                </div>
                               )}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="order-items-compact">
+                              {order.items && order.items.length > 0 ? (
+                                order.items.map((item, idx) => (
+                                  <div key={idx} className="order-item-row">
+                                    <span className="qty">x{item.quantity}</span>
+                                    <span className="title" title={item.title}>{item.title}</span>
+                                  </div>
+                                ))
+                              ) : (
+                                <span className="title">{order.productTitle || 'Legacy Order'}</span>
+                              )}
+                            </div>
+                          </td>
+                          <td>
+                            <div className="financial-cell">
+                              <div className="amount">₹{order.amount}</div>
+                              <div className={`pay-status ${order.payment_status === 'Paid' ? 'success' : 'pending'}`}>
+                                {order.payment_status === 'Paid' ? <ShieldCheck size={10}/> : <Activity size={10}/>}
+                                {order.payment_status}
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="status-control-cell">
+                              <select 
+                                className="status-select"
+                                value={order.status || 'Pending'}
+                                onChange={(e) => handleStatusChange(order, e.target.value, null)}
+                              >
+                                <option value="Pending">🕒 Pending</option>
+                                <option value="Order Placed">📦 Order Placed</option>
+                                <option value="Shipped">🚚 Shipped</option>
+                                <option value="Out for Delivery">🏠 Out for Delivery</option>
+                                <option value="Delivered">✅ Delivered</option>
+                                <option value="Cancelled">❌ Cancelled</option>
+                              </select>
+                              <div className={`current-status-tag ${String(order.status || 'Pending').toLowerCase().replace(/\s+/g, '-')}`}>
+                                {order.status || 'Pending'}
+                              </div>
+                            </div>
+                          </td>
+                          <td>
+                            <div className="delivery-input-group">
+                              <span className="label">EXPECTED ARRIVAL</span>
+                              <input 
+                                type="date" 
+                                className="delivery-date-input"
+                                value={order.expectedDelivery || ''}
+                                onChange={(e) => handleStatusChange(order, null, e.target.value)}
+                              />
+                            </div>
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            <div className="flex justify-end gap-2">
+                              <button 
+                                className="btn-icon action-btn" 
+                                onClick={() => handleStatusChange(order, order.status, order.expectedDelivery)}
+                                title="Synchronize Changes"
+                              >
+                                <CheckCircle size={16} />
+                              </button>
+                              <button 
+                                className="btn-icon delete-btn" 
+                                onClick={() => handleDeleteOrder(order.id)}
+                                title="Remove Order"
+                              >
+                                <Trash2 size={16} />
+                              </button>
                             </div>
                           </td>
                         </tr>
                       ))}
                       {marketplaceOrders.length === 0 && (
                         <tr>
-                          <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: '#7a8ba8' }}>No orders found yet.</td>
+                          <td colSpan="6" style={{ textAlign: 'center', padding: '4rem', color: 'var(--admin-text-secondary)' }}>
+                            <div className="flex flex-col items-center gap-4">
+                              <Package size={48} style={{ opacity: 0.1 }} />
+                              <p>No transactions found in the logs.</p>
+                            </div>
+                          </td>
                         </tr>
                       )}
                     </tbody>
