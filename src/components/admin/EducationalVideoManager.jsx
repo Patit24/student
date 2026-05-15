@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, Trash2, Video, Globe, FileVideo, Loader2, Plus, Play } from 'lucide-react';
+import { Trash2, Video, FileVideo, Loader2, Plus, Play, Zap } from 'lucide-react';
 import { uploadFileToStorage, addEducationalVideo, subscribeEducationalVideos, deleteEducationalVideo } from '../../db.service';
 import { useToast } from '../Toast';
 
