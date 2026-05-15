@@ -6,7 +6,7 @@ import {
   Monitor, Globe, Activity, Plus, Download
 } from 'lucide-react';
 import { useAppContext } from '../context/AuthContext';
-import { getMarketplaceProducts, subscribeGlobalAssets, markAssetPurchased } from '../db.service';
+import { getMarketplaceProducts, subscribeGlobalAssets, markAssetPurchased, subscribeEducationalVideos } from '../db.service';
 import ProductCarousel from '../components/ProductCarousel';
 import { useToast } from '../components/Toast';
 import Navbar from '../components/Navbar';
@@ -134,6 +134,7 @@ export default function Homepage() {
   const [globalAssets, setGlobalAssets] = useState([]);
   const [marketplaceProducts, setMarketplaceProducts] = useState([]);
   const [beautyProducts, setBeautyProducts] = useState([]);
+  const [eduVideos, setEduVideos] = useState([]);
 
   useEffect(() => {
     async function loadShop() {
@@ -163,6 +164,11 @@ export default function Homepage() {
       setLatestBlogs(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
     return unsub;
+  }, []);
+
+  useEffect(() => {
+    const unsub = subscribeEducationalVideos(setEduVideos);
+    return () => unsub();
   }, []);
 
   // ── Auto-Download Logic ──
@@ -456,6 +462,97 @@ export default function Homepage() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* ── EDUCATIONAL VIDEOS (3D SaaS Style) ── */}
+      <section className="hp-section" style={{ background: '#050505', padding: '8rem 2rem', borderTop: '1px solid rgba(255,255,255,0.03)' }}>
+        <div className="container">
+          <div className="flex justify-between items-end mb-12">
+            <div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(245,197,24,0.1)', color: '#F5C518', padding: '0.4rem 1rem', borderRadius: '99px', fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '1rem' }}>
+                <Video size={14} /> Masterclass Series
+              </div>
+              <h2 style={{ fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', fontWeight: 900, letterSpacing: '-1px', margin: 0 }}>
+                Learn from <span className="hp-yellow">The Best.</span>
+              </h2>
+              <p style={{ color: '#7a8ba8', fontSize: '1.1rem', marginTop: '1rem', maxWidth: '600px' }}>
+                Access our premium educational video library. Visual learning redefined for modern aspirants.
+              </p>
+            </div>
+          </div>
+
+          <div className="edu-video-scroller" style={{ display: 'flex', gap: '2rem', overflowX: 'auto', padding: '1rem 0 3rem', scrollSnapType: 'x mandatory' }}>
+            {eduVideos.map((video, i) => (
+              <div 
+                key={video.id} 
+                className="edu-video-card group"
+                onClick={() => navigate(`/video/${video.id}`)}
+                style={{ 
+                  flex: '0 0 400px', 
+                  scrollSnapAlign: 'start',
+                  cursor: 'pointer',
+                  borderRadius: '24px',
+                  background: 'rgba(255,255,255,0.02)',
+                  border: '1px solid rgba(255,255,255,0.05)',
+                  overflow: 'hidden',
+                  transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                  position: 'relative'
+                }}
+              >
+                <div style={{ position: 'relative', height: '225px', overflow: 'hidden' }}>
+                  <img src={video.thumbnailUrl} alt={video.title} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.6s ease' }} className="group-hover:scale-110" />
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%)' }} />
+                  <div className="edu-play-overlay">
+                    <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: '#F5C518', display: 'flex', alignItems: 'center', justify_content: 'center', color: 'black', boxShadow: '0 0 30px rgba(245,197,24,0.3)' }}>
+                      <Play fill="currentColor" size={24} />
+                    </div>
+                  </div>
+                  <div style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)', padding: '5px 12px', borderRadius: '8px', fontSize: '0.7rem', fontWeight: 800, color: '#fff', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    {video.category}
+                  </div>
+                </div>
+                <div style={{ padding: '1.5rem' }}>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: '0 0 10px 0', color: '#fff', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', height: '2.8rem' }}>
+                    {video.title}
+                  </h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', color: '#7a8ba8', fontSize: '0.8rem', fontWeight: 600 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Clock size={14} /> 45 Mins</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}><Users size={14} /> 1.2k views</span>
+                  </div>
+                </div>
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%)', opacity: 0, transition: '0.5s' }} className="group-hover:opacity-100" />
+              </div>
+            ))}
+            {eduVideos.length === 0 && (
+              <div style={{ width: '100%', padding: '4rem 0', textAlign: 'center', opacity: 0.3 }}>
+                <Video size={48} style={{ margin: '0 auto 1rem' }} />
+                <p>Curating masterclasses for you...</p>
+              </div>
+            )}
+          </div>
+        </div>
+        <style dangerouslySetInnerHTML={{ __html: `
+          .edu-video-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            border-color: rgba(245,197,24,0.3);
+            box-shadow: 0 30px 60px -15px rgba(0,0,0,0.8), 0 0 20px rgba(245,197,24,0.05);
+          }
+          .edu-play-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          }
+          .edu-video-card:hover .edu-play-overlay {
+            opacity: 1;
+            transform: scale(1);
+          }
+          .edu-video-scroller::-webkit-scrollbar { display: none; }
+        `}} />
       </section>
 
       {/* ── PUBLIC/GLOBAL LIBRARY ── */}

@@ -758,3 +758,24 @@ export async function deductWalletAndMarkPaid(userId, batchId, amount) {
   });
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// EDUCATIONAL VIDEOS
+// ─────────────────────────────────────────────────────────────────────────────
+
+export function subscribeEducationalVideos(callback) {
+  const q = query(collection(db, 'educational_videos'), orderBy('created_at', 'desc'));
+  return onSnapshot(q, snap => {
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+  });
+}
+
+export async function addEducationalVideo(data) {
+  return await addDoc(collection(db, 'educational_videos'), {
+    ...data,
+    created_at: serverTimestamp()
+  });
+}
+
+export async function deleteEducationalVideo(id) {
+  await deleteDoc(doc(db, 'educational_videos', id));
+}

@@ -11,13 +11,14 @@ import {
   MessageSquare, Video, CheckSquare, ChevronRight, PackageCheck,
   TrendingDown, Info, Settings, ShieldAlert, Globe2, Microscope, Plus, Brain, Gift
 } from 'lucide-react';
-import { subscribeGlobalAssets, uploadGlobalAsset, deleteGlobalAsset, uploadFileToStorage, updateOrderStatus, subscribeCoupons, createCoupon, deleteCoupon, deleteMarketplaceOrder } from '../db.service';
+import { subscribeGlobalAssets, uploadGlobalAsset, deleteGlobalAsset, uploadFileToStorage, updateOrderStatus, subscribeCoupons, createCoupon, deleteCoupon, deleteMarketplaceOrder, subscribeEducationalVideos, addEducationalVideo, deleteEducationalVideo } from '../db.service';
 import { useToast } from '../components/Toast';
 import { collection, query, where, onSnapshot, updateDoc, doc, deleteDoc, serverTimestamp, addDoc, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
 import AdminBlogManager from '../components/AdminBlogManager';
 import TutorCourseManager from '../components/TutorCourseManager';
 import ProductManager from '../components/admin/ProductManager';
+import EducationalVideoManager from '../components/admin/EducationalVideoManager';
 import './AdminDashboard.css';
 
 export default function AdminDashboard() {
@@ -363,6 +364,9 @@ export default function AdminDashboard() {
               </button>
               <button className={`tab-btn ${activeTab === 'coupons' ? 'active' : ''}`} onClick={() => setActiveTab('coupons')}>
                 <Gift size={18} /> Coupons
+              </button>
+              <button className={`tab-btn ${activeTab === 'videos' ? 'active' : ''}`} onClick={() => setActiveTab('videos')}>
+                <Video size={18} /> Videos
               </button>
             </nav>
 
@@ -772,6 +776,9 @@ export default function AdminDashboard() {
                   </table>
                 </div>
               </div>
+            )}
+            {activeTab === 'videos' && (
+              <EducationalVideoManager />
             )}
 
             {activeTab === 'coupons' && (

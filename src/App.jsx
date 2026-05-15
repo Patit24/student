@@ -28,6 +28,7 @@ import NeetAspirant from './pages/NeetAspirant';
 import JeeAspirant from './pages/JeeAspirant';
 import MyOrders from './pages/MyOrders';
 import BeautyProductDetail from './pages/BeautyProductDetail';
+import VideoDetail from './pages/VideoDetail';
 import Footer from './components/Footer';
 import { AlertTriangle, Lock } from 'lucide-react';
 import './index.css';
@@ -65,6 +66,7 @@ function AppRoutes() {
       <Route path="/orders" element={<MyOrders />} />
       <Route path="/cart" element={<Cart />} />
       <Route path="/beauty-product/:productId" element={<BeautyProductDetail />} />
+      <Route path="/video/:videoId" element={<VideoDetail />} />
 
       {!currentUser ? (
         <>
