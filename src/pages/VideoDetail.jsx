@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Play, Calendar, User, Share2, ThumbsUp, ChevronRight, Loader2, ArrowLeft, Youtube, Clock } from 'lucide-react';
+import { Play, Calendar, User, Share2, ThumbsUp, ChevronRight, Loader2, ArrowLeft, Clock } from 'lucide-react';
 import { subscribeEducationalVideos } from '../db.service';
-import './VideoDetail.css';
 
 export default function VideoDetail() {
   const { videoId } = useParams();
@@ -121,7 +120,7 @@ export default function VideoDetail() {
               <h3 className="sidebar-title">Recommended Lessons</h3>
               <div className="related-list">
                 {relatedVideos.map(rv => (
-                  <div key={rv.id} className="related-card" onClick={() => navigate(\`/video/\${rv.id}\`)}>
+                  <div key={rv.id} className="related-card" onClick={() => navigate(`/video/${rv.id}`)}>
                     <div className="related-thumb">
                       <img src={rv.thumbnailUrl} alt={rv.title} />
                       <div className="play-overlay"><Play size={16} fill="white"/></div>
@@ -151,7 +150,7 @@ export default function VideoDetail() {
         </div>
       </div>
 
-      <style dangerouslySetInnerHTML={{ __html: \`
+      <style dangerouslySetInnerHTML={{ __html: `
         :root {
           --accent: #f5c518;
           --bg: #050505;
@@ -419,7 +418,7 @@ export default function VideoDetail() {
             max-width: 100%;
           }
         }
-      \`}} />
+      `}} />
     </div>
   );
 }

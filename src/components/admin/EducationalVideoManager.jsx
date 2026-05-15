@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, Trash2, Video, Globe, FileVideo, Youtube, Loader2, Plus, Play } from 'lucide-react';
+import { Upload, Trash2, Video, Globe, FileVideo, Loader2, Plus, Play } from 'lucide-react';
 import { uploadFileToStorage, addEducationalVideo, subscribeEducationalVideos, deleteEducationalVideo } from '../../db.service';
 import { useToast } from '../Toast';
 
@@ -140,7 +140,7 @@ export default function EducationalVideoManager() {
                     className={`flex-1 py-3 rounded-xl border flex items-center justify-center gap-2 transition-all ${form.sourceType === 'youtube' ? 'bg-[rgba(245,197,24,0.1)] border-[var(--admin-accent)] text-[var(--admin-accent)]' : 'border-white/10 text-white/40'}`}
                     onClick={() => setForm({...form, sourceType: 'youtube'})}
                   >
-                    <Youtube size={16} /> YouTube
+                    <Play size={16} /> YouTube
                   </button>
                   <button 
                     type="button"
@@ -250,7 +250,7 @@ export default function EducationalVideoManager() {
                 </div>
                 {video.sourceType === 'youtube' && (
                   <div className="absolute top-2 right-2 p-1.5 rounded-lg bg-red-600 text-white shadow-lg">
-                    <Youtube size={14} />
+                    <Play size={14} />
                   </div>
                 )}
               </div>

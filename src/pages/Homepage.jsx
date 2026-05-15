@@ -503,7 +503,7 @@ export default function Homepage() {
                   <img src={video.thumbnailUrl} alt={video.title} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.6s ease' }} className="group-hover:scale-110" />
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%)' }} />
                   <div className="edu-play-overlay">
-                    <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: '#F5C518', display: 'flex', alignItems: 'center', justify_content: 'center', color: 'black', boxShadow: '0 0 30px rgba(245,197,24,0.3)' }}>
+                    <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: '#F5C518', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'black', boxShadow: '0 0 30px rgba(245,197,24,0.3)' }}>
                       <Play fill="currentColor" size={24} />
                     </div>
                   </div>
