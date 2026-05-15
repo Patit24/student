@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   BookOpen, Zap, Shield, Play, Users, Star, ShoppingBag, Heart,
   ChevronRight, MonitorPlay, Brain, Lock, CheckCircle, Search, MapPin, FileText, CheckSquare,
-  Monitor, Globe, Activity, Plus, Download
+  Monitor, Globe, Activity, Plus, Download, Video, Clock
 } from 'lucide-react';
 import { useAppContext } from '../context/AuthContext';
 import { getMarketplaceProducts, subscribeGlobalAssets, markAssetPurchased, subscribeEducationalVideos } from '../db.service';
