@@ -19,6 +19,7 @@ import AdminBlogManager from '../components/AdminBlogManager';
 import TutorCourseManager from '../components/TutorCourseManager';
 import ProductManager from '../components/admin/ProductManager';
 import EducationalVideoManager from '../components/admin/EducationalVideoManager';
+import ContestManager from '../components/admin/ContestManager';
 import './AdminDashboard.css';
 
 export default function AdminDashboard() {
@@ -367,6 +368,9 @@ export default function AdminDashboard() {
               </button>
               <button className={`tab-btn ${activeTab === 'videos' ? 'active' : ''}`} onClick={() => setActiveTab('videos')}>
                 <Video size={18} /> Videos
+              </button>
+              <button className={`tab-btn ${activeTab === 'contests' ? 'active' : ''}`} onClick={() => setActiveTab('contests')}>
+                <Trophy size={18} /> Contests
               </button>
             </nav>
 
@@ -779,6 +783,10 @@ export default function AdminDashboard() {
             )}
             {activeTab === 'videos' && (
               <EducationalVideoManager />
+            )}
+
+            {activeTab === 'contests' && (
+              <ContestManager />
             )}
 
             {activeTab === 'coupons' && (

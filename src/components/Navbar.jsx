@@ -88,6 +88,7 @@ export default function Navbar() {
               <Link to="/courses" style={navLink}>Courses</Link>
               {currentUser?.role !== 'student' && <Link to="/marketplace" style={navLink}>Shop</Link>}
               <Link to="/about" style={navLink}>About</Link>
+              <Link to="/ppr-global" style={navLink}>PPR Global</Link>
               <Link to="/blogs" style={navLink}>Blogs</Link>
               <Link to="/login" className="btn btn-outline" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>Log In</Link>
               <Link to="/signup" className="hp-btn-primary" style={{ padding: '0.45rem 1.1rem', fontSize: '0.85rem' }}>
@@ -131,6 +132,7 @@ export default function Navbar() {
           <Link to="/courses" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>Courses</Link>
           {currentUser?.role !== 'student' && <Link to="/marketplace" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>Shop</Link>}
           <Link to="/about" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>About</Link>
+          <Link to="/ppr-global" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>PPR Global</Link>
           <Link to="/blogs" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>Blogs</Link>
           <Link to="/cart" onClick={() => setIsMenuOpen(false)} style={{ ...navLink, display: 'block', textAlign: 'center', fontSize: '1.1rem' }}>Cart ({cartCount})</Link>
           <hr style={{ borderColor: 'rgba(255,255,255,0.05)' }} />
