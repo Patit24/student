@@ -106,8 +106,8 @@ export default function PprGlobal() {
 
   // Live Stats State
   const [stats, setStats] = useState({
+    activeDevelopers: 2,
     projectsCompleted: 24,
-    activeClients: 12,
     satisfaction: 100
   });
 
@@ -152,8 +152,8 @@ export default function PprGlobal() {
   useEffect(() => {
     // Keep stats configured for software service division
     setStats({
+      activeDevelopers: 2,
       projectsCompleted: 24,
-      activeClients: 12,
       satisfaction: 100
     });
   }, []);
@@ -189,8 +189,8 @@ export default function PprGlobal() {
       });
     };
 
-    countTo(statVal1, stats.projectsCompleted, 2.5);
-    countTo(statVal2, stats.activeClients, 2.8);
+    countTo(statVal1, stats.activeDevelopers, 2.5);
+    countTo(statVal2, stats.projectsCompleted, 2.8);
     countTo(statVal3, stats.satisfaction, 2);
 
     // 3. ScrollTrigger Reveals for Service and Process elements
@@ -272,9 +272,9 @@ export default function PprGlobal() {
                   <span style={{ color: '#10b981', fontSize: '0.7rem' }}>↑ Live Apps</span>
                 </div>
                 <div style={{ background: 'rgba(16, 185, 129, 0.05)', height: '120px', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.1)', padding: '15px' }}>
-                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600 }}>Active Clients</span>
-                  <p style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff', margin: '5px 0 0' }}>{stats.activeClients}</p>
-                  <span style={{ color: '#10b981', fontSize: '0.7rem' }}>Global Reach</span>
+                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600 }}>Satisfaction Rate</span>
+                  <p style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff', margin: '5px 0 0' }}>{stats.satisfaction}%</p>
+                  <span style={{ color: '#10b981', fontSize: '0.7rem' }}>Highly Rated</span>
                 </div>
               </div>
               <div style={{ background: 'rgba(255,255,255,0.02)', height: '140px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', padding: '15px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px' }}>
@@ -337,11 +337,11 @@ export default function PprGlobal() {
             <div className="pprg-stats-row" ref={statsRef}>
               <div className="pprg-stat-card">
                 <div className="pprg-stat-number"><span ref={statVal1}>0</span>+</div>
-                <div className="pprg-stat-label">Projects Completed</div>
+                <div className="pprg-stat-label">Active Developers</div>
               </div>
               <div className="pprg-stat-card">
                 <div className="pprg-stat-number"><span ref={statVal2}>0</span>+</div>
-                <div className="pprg-stat-label">Active Clients</div>
+                <div className="pprg-stat-label">Projects Completed</div>
               </div>
               <div className="pprg-stat-card">
                 <div className="pprg-stat-number"><span ref={statVal3}>0</span>%</div>
