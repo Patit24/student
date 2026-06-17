@@ -143,7 +143,7 @@ export default function PprGlobal() {
       // Open WhatsApp API dynamic link with pre-filled message as requested
       const text = `Hi PPR Global, I would like to schedule a consultation.\nName: ${form.name}\nEmail: ${form.email}\nPhone: ${form.phone}\nService: ${form.service}\nDetails: ${form.msg}`;
       const encodedText = encodeURIComponent(text);
-      window.open(`https://wa.me/919014842370?text=${encodedText}`, '_blank');
+      window.open(`https://wa.me/918420117943?text=${encodedText}`, '_blank');
 
       setForm({ name: '', email: '', phone: '', company: '', service: 'website', msg: '' });
     }, 1500);
@@ -680,18 +680,18 @@ export default function PprGlobal() {
             <p>Have an idea or a requirement? Send us your message or schedule a WhatsApp text conversation directly with our engineers. We respond within 12 hours.</p>
             
             <div className="pprg-contact-methods">
-              <a href="https://wa.me/919014842370" target="_blank" rel="noopener noreferrer" className="pprg-contact-item pprg-glass-panel">
+              <a href="https://wa.me/918420117943" target="_blank" rel="noopener noreferrer" className="pprg-contact-item pprg-glass-panel">
                 <Phone size={20} color="#10b981" />
                 <div>
                   <h4 style={{ margin: 0, fontWeight: 800 }}>Chat on WhatsApp</h4>
-                  <p style={{ margin: '0.2rem 0 0', color: 'var(--ppr-text-slate)', fontSize: '0.8rem' }}>+91 9014842370 (Instant Response)</p>
+                  <p style={{ margin: '0.2rem 0 0', color: 'var(--ppr-text-slate)', fontSize: '0.8rem' }}>+91 8420117943 (Instant Response)</p>
                 </div>
               </a>
-              <a href="mailto:info@ppreducation.com" className="pprg-contact-item pprg-glass-panel">
+              <a href="mailto:tuhin5purkait@gmail.com" className="pprg-contact-item pprg-glass-panel">
                 <Mail size={20} color="#3b82f6" />
                 <div>
                   <h4 style={{ margin: 0, fontWeight: 800 }}>Email Direct</h4>
-                  <p style={{ margin: '0.2rem 0 0', color: 'var(--ppr-text-slate)', fontSize: '0.8rem' }}>info@ppreducation.com</p>
+                  <p style={{ margin: '0.2rem 0 0', color: 'var(--ppr-text-slate)', fontSize: '0.8rem' }}>tuhin5purkait@gmail.com</p>
                 </div>
               </a>
             </div>
