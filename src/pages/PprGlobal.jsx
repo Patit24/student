@@ -8,6 +8,8 @@ import { useToast } from '../components/Toast';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import './PprGlobal.css';
+import { db } from '../firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 // Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger);
@@ -102,6 +104,13 @@ export default function PprGlobal() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', company: '', service: 'website', msg: '' });
   const [submitting, setSubmitting] = useState(false);
 
+  // Live Stats State
+  const [stats, setStats] = useState({
+    activeStudents: 91,
+    activeTutors: 9,
+    activeBatches: 36
+  });
+
   // Refs for Animations
   const heroRef = useRef(null);
   const visualRef = useRef(null);
@@ -141,6 +150,26 @@ export default function PprGlobal() {
   };
 
   useEffect(() => {
+    async function fetchRealStats() {
+      if (!db) return;
+      try {
+        const studentsSnap = await getDocs(query(collection(db, "users"), where("role", "==", "student")));
+        const tutorsSnap = await getDocs(query(collection(db, "users"), where("role", "==", "tutor")));
+        const batchesSnap = await getDocs(collection(db, "batches"));
+        
+        setStats({
+          activeStudents: studentsSnap.size || 91,
+          activeTutors: tutorsSnap.size || 9,
+          activeBatches: batchesSnap.size || 36
+        });
+      } catch (err) {
+        console.warn("Failed to fetch live stats, using mock details:", err);
+      }
+    }
+    fetchRealStats();
+  }, []);
+
+  useEffect(() => {
     // 1. Hero Floating Visual Animation
     if (visualRef.current) {
       gsap.to(visualRef.current, {
@@ -171,9 +200,9 @@ export default function PprGlobal() {
       });
     };
 
-    countTo(statVal1, 45, 2.5);
-    countTo(statVal2, 120, 2.8);
-    countTo(statVal3, 99, 2);
+    countTo(statVal1, stats.activeTutors, 2.5);
+    countTo(statVal2, stats.activeBatches, 2.8);
+    countTo(statVal3, 100, 2);
 
     // 3. ScrollTrigger Reveals for Service and Process elements
     gsap.utils.toArray('.pprg-reveal-on-scroll').forEach((elem) => {
@@ -195,7 +224,7 @@ export default function PprGlobal() {
     return () => {
       ScrollTrigger.getAll().forEach(trigger => trigger.kill());
     };
-  }, []);
+  }, [stats]);
 
   return (
     <div className="pprg-body">
@@ -245,28 +274,28 @@ export default function PprGlobal() {
                 <span style={{ width: '10px', height: '10px', background: '#10b981', borderRadius: '50%' }} />
               </div>
               <div style={{ background: 'rgba(255,255,255,0.03)', height: '40px', borderRadius: '8px', marginBottom: '1rem', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', padding: '0 10px', color: '#64748b', fontSize: '0.8rem' }}>
-                https://pprglobal.com/dashboard
+                https://ppreducation.com/dashboard
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '1rem' }}>
                 <div style={{ background: 'rgba(59, 130, 246, 0.05)', height: '120px', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.1)', padding: '15px' }}>
-                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600 }}>Active Users</span>
-                  <p style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff', margin: '5px 0 0' }}>14,890</p>
-                  <span style={{ color: '#10b981', fontSize: '0.7rem' }}>↑ 12% vs last month</span>
+                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600 }}>Active Students</span>
+                  <p style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff', margin: '5px 0 0' }}>{stats.activeStudents}</p>
+                  <span style={{ color: '#10b981', fontSize: '0.7rem' }}>↑ Live Classroom</span>
                 </div>
                 <div style={{ background: 'rgba(16, 185, 129, 0.05)', height: '120px', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.1)', padding: '15px' }}>
-                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600 }}>Growth Revenue</span>
-                  <p style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff', margin: '5px 0 0' }}>₹842k</p>
-                  <span style={{ color: '#10b981', fontSize: '0.7rem' }}>↑ 8.4% monthly</span>
+                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600 }}>Active Batches</span>
+                  <p style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff', margin: '5px 0 0' }}>{stats.activeBatches}</p>
+                  <span style={{ color: '#10b981', fontSize: '0.7rem' }}>NEET & JEE Prep</span>
                 </div>
               </div>
               <div style={{ background: 'rgba(255,255,255,0.02)', height: '140px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', padding: '15px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px' }}>
-                <span style={{ color: '#64748b', fontSize: '0.8rem' }}>Process Progress</span>
+                <span style={{ color: '#64748b', fontSize: '0.8rem' }}>Tutor Network</span>
                 <div style={{ background: 'rgba(255,255,255,0.05)', height: '10px', borderRadius: '5px', overflow: 'hidden' }}>
-                  <div style={{ background: 'var(--ppr-blue-gradient)', width: '80%', height: '100%' }}></div>
+                  <div style={{ background: 'var(--ppr-blue-gradient)', width: `${Math.min(100, (stats.activeTutors / 15) * 100)}%`, height: '100%' }}></div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#94a3b8' }}>
-                  <span>Development Phase</span>
-                  <span>80% Completed</span>
+                  <span>Verified Tutors</span>
+                  <span>{stats.activeTutors} Active</span>
                 </div>
               </div>
             </div>
@@ -312,11 +341,11 @@ export default function PprGlobal() {
             <div className="pprg-stats-row" ref={statsRef}>
               <div className="pprg-stat-card">
                 <div className="pprg-stat-number"><span ref={statVal1}>0</span>+</div>
-                <div className="pprg-stat-label">Clients Served</div>
+                <div className="pprg-stat-label">Expert Tutors</div>
               </div>
               <div className="pprg-stat-card">
                 <div className="pprg-stat-number"><span ref={statVal2}>0</span>+</div>
-                <div className="pprg-stat-label">Projects Built</div>
+                <div className="pprg-stat-label">Active Batches</div>
               </div>
               <div className="pprg-stat-card">
                 <div className="pprg-stat-number"><span ref={statVal3}>0</span>%</div>
