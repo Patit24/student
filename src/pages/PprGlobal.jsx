@@ -106,9 +106,9 @@ export default function PprGlobal() {
 
   // Live Stats State
   const [stats, setStats] = useState({
-    activeStudents: 91,
-    activeTutors: 9,
-    activeBatches: 36
+    projectsCompleted: 24,
+    activeClients: 12,
+    satisfaction: 100
   });
 
   // Refs for Animations
@@ -150,23 +150,12 @@ export default function PprGlobal() {
   };
 
   useEffect(() => {
-    async function fetchRealStats() {
-      if (!db) return;
-      try {
-        const studentsSnap = await getDocs(query(collection(db, "users"), where("role", "==", "student")));
-        const tutorsSnap = await getDocs(query(collection(db, "users"), where("role", "==", "tutor")));
-        const batchesSnap = await getDocs(collection(db, "batches"));
-        
-        setStats({
-          activeStudents: studentsSnap.size || 91,
-          activeTutors: tutorsSnap.size || 9,
-          activeBatches: batchesSnap.size || 36
-        });
-      } catch (err) {
-        console.warn("Failed to fetch live stats, using mock details:", err);
-      }
-    }
-    fetchRealStats();
+    // Keep stats configured for software service division
+    setStats({
+      projectsCompleted: 24,
+      activeClients: 12,
+      satisfaction: 100
+    });
   }, []);
 
   useEffect(() => {
@@ -200,9 +189,9 @@ export default function PprGlobal() {
       });
     };
 
-    countTo(statVal1, stats.activeTutors, 2.5);
-    countTo(statVal2, stats.activeBatches, 2.8);
-    countTo(statVal3, 100, 2);
+    countTo(statVal1, stats.projectsCompleted, 2.5);
+    countTo(statVal2, stats.activeClients, 2.8);
+    countTo(statVal3, stats.satisfaction, 2);
 
     // 3. ScrollTrigger Reveals for Service and Process elements
     gsap.utils.toArray('.pprg-reveal-on-scroll').forEach((elem) => {
@@ -274,28 +263,35 @@ export default function PprGlobal() {
                 <span style={{ width: '10px', height: '10px', background: '#10b981', borderRadius: '50%' }} />
               </div>
               <div style={{ background: 'rgba(255,255,255,0.03)', height: '40px', borderRadius: '8px', marginBottom: '1rem', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', padding: '0 10px', color: '#64748b', fontSize: '0.8rem' }}>
-                https://ppreducation.com/dashboard
+                https://ppreducation.in/dashboard
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '1rem' }}>
                 <div style={{ background: 'rgba(59, 130, 246, 0.05)', height: '120px', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.1)', padding: '15px' }}>
-                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600 }}>Active Students</span>
-                  <p style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff', margin: '5px 0 0' }}>{stats.activeStudents}</p>
-                  <span style={{ color: '#10b981', fontSize: '0.7rem' }}>↑ Live Classroom</span>
+                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600 }}>Projects Completed</span>
+                  <p style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff', margin: '5px 0 0' }}>{stats.projectsCompleted}+</p>
+                  <span style={{ color: '#10b981', fontSize: '0.7rem' }}>↑ Live Apps</span>
                 </div>
                 <div style={{ background: 'rgba(16, 185, 129, 0.05)', height: '120px', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.1)', padding: '15px' }}>
-                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600 }}>Active Batches</span>
-                  <p style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff', margin: '5px 0 0' }}>{stats.activeBatches}</p>
-                  <span style={{ color: '#10b981', fontSize: '0.7rem' }}>NEET & JEE Prep</span>
+                  <span style={{ color: '#94a3b8', fontSize: '0.75rem', fontWeight: 600 }}>Active Clients</span>
+                  <p style={{ fontSize: '1.8rem', fontWeight: 900, color: '#fff', margin: '5px 0 0' }}>{stats.activeClients}</p>
+                  <span style={{ color: '#10b981', fontSize: '0.7rem' }}>Global Reach</span>
                 </div>
               </div>
               <div style={{ background: 'rgba(255,255,255,0.02)', height: '140px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', padding: '15px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px' }}>
-                <span style={{ color: '#64748b', fontSize: '0.8rem' }}>Tutor Network</span>
-                <div style={{ background: 'rgba(255,255,255,0.05)', height: '10px', borderRadius: '5px', overflow: 'hidden' }}>
-                  <div style={{ background: 'var(--ppr-blue-gradient)', width: `${Math.min(100, (stats.activeTutors / 15) * 100)}%`, height: '100%' }}></div>
+                <span style={{ color: '#64748b', fontSize: '0.8rem' }}>Lead Developers</span>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                  <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ width: '6px', height: '6px', background: '#3b82f6', borderRadius: '50%' }}></span>
+                    Tuhin Purkait
+                  </div>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '6px 12px', borderRadius: '8px', fontSize: '0.8rem', color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ width: '6px', height: '6px', background: '#10b981', borderRadius: '50%' }}></span>
+                    Patit Paban Roy
+                  </div>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#94a3b8' }}>
-                  <span>Verified Tutors</span>
-                  <span>{stats.activeTutors} Active</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#94a3b8', marginTop: '4px' }}>
+                  <span>Core Founders & Engineers</span>
+                  <span>2 Active</span>
                 </div>
               </div>
             </div>
@@ -334,18 +330,18 @@ export default function PprGlobal() {
             </div>
             <h2 className="pprg-section-title">Founded on Innovation and Teamwork</h2>
             <p className="pprg-about-story">
-              PPR Global was founded by two passionate technology professionals with a vision to create impactful digital products. We combine creativity, strategy, and technology to help businesses establish a powerful online presence, digitize their offline models, and streamline operations.
+              PPR Global was founded by Tuhin Purkait and Patit Paban Roy, two passionate technology professionals with a vision to create impactful digital products. We combine creativity, strategy, and technology to help businesses establish a powerful online presence, digitize their offline models, and streamline operations.
             </p>
             
             {/* Statistics Row */}
             <div className="pprg-stats-row" ref={statsRef}>
               <div className="pprg-stat-card">
                 <div className="pprg-stat-number"><span ref={statVal1}>0</span>+</div>
-                <div className="pprg-stat-label">Expert Tutors</div>
+                <div className="pprg-stat-label">Projects Completed</div>
               </div>
               <div className="pprg-stat-card">
                 <div className="pprg-stat-number"><span ref={statVal2}>0</span>+</div>
-                <div className="pprg-stat-label">Active Batches</div>
+                <div className="pprg-stat-label">Active Clients</div>
               </div>
               <div className="pprg-stat-card">
                 <div className="pprg-stat-number"><span ref={statVal3}>0</span>%</div>
