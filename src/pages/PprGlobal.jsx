@@ -114,10 +114,6 @@ export default function PprGlobal() {
   // Refs for Animations
   const heroRef = useRef(null);
   const visualRef = useRef(null);
-  const statsRef = useRef(null);
-  const statVal1 = useRef(null);
-  const statVal2 = useRef(null);
-  const statVal3 = useRef(null);
   const timelineRef = useRef(null);
 
   // Filter projects
@@ -169,29 +165,6 @@ export default function PprGlobal() {
         ease: "power1.inOut"
       });
     }
-
-    // 2. Scroll-Triggered Counter Animations for Stats Section
-    const countTo = (refElement, endValue, duration) => {
-      let obj = { val: 0 };
-      gsap.to(obj, {
-        val: endValue,
-        duration: duration,
-        scrollTrigger: {
-          trigger: statsRef.current,
-          start: "top 85%",
-          toggleActions: "play none none none"
-        },
-        onUpdate: function () {
-          if (refElement.current) {
-            refElement.current.innerText = Math.floor(obj.val);
-          }
-        }
-      });
-    };
-
-    countTo(statVal1, stats.activeDevelopers, 2.5);
-    countTo(statVal2, stats.projectsCompleted, 2.8);
-    countTo(statVal3, stats.satisfaction, 2);
 
     // 3. ScrollTrigger Reveals for Service and Process elements
     gsap.utils.toArray('.pprg-reveal-on-scroll').forEach((elem) => {
@@ -332,22 +305,7 @@ export default function PprGlobal() {
             <p className="pprg-about-story">
               PPR Global was founded by Tuhin Purkait and Patit Paban Roy, two passionate technology professionals with a vision to create impactful digital products. We combine creativity, strategy, and technology to help businesses establish a powerful online presence, digitize their offline models, and streamline operations.
             </p>
-            
-            {/* Statistics Row */}
-            <div className="pprg-stats-row" ref={statsRef}>
-              <div className="pprg-stat-card">
-                <div className="pprg-stat-number"><span ref={statVal1}>0</span>+</div>
-                <div className="pprg-stat-label">Active Developers</div>
-              </div>
-              <div className="pprg-stat-card">
-                <div className="pprg-stat-number"><span ref={statVal2}>0</span>+</div>
-                <div className="pprg-stat-label">Projects Completed</div>
-              </div>
-              <div className="pprg-stat-card">
-                <div className="pprg-stat-number"><span ref={statVal3}>0</span>%</div>
-                <div className="pprg-stat-label">Satisfaction</div>
-              </div>
-            </div>
+
           </div>
         </div>
       </section>
